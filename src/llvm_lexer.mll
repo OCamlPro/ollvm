@@ -19,9 +19,9 @@
   * }}}                                                                      *)
 
 {
-
-  open Util
   open Llvm_parser
+
+  exception Lex_error_unterminated_string of Lexing.position
 
   let kw = function
   | "target"                       -> KW_TARGET
@@ -252,8 +252,8 @@ and comment = parse
 
 and string b p = parse
   | '"' { Buffer.contents b }
-  | eol { raise (P.Lex_error_unterminated_string p) }
-  | eof { raise (P.Lex_error_unterminated_string p) }
+  | eol { raise (Lex_error_unterminated_string p) }
+  | eof { raise (Lex_error_unterminated_string p) }
   | _ as c { Buffer.add_char b c; string b p lexbuf }
 
 and ident_body = parse

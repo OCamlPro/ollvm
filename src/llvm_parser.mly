@@ -463,7 +463,8 @@ instr:
 
   (* memory instrs, partial support *)
   | i = ident EQ KW_ALLOCA t = typ n = alloc_attr?
-    { let n = Util.O.unopt 1 n in INSTR_Mem (MEM_Alloca (i, n, t)) }
+    { let n = match n with None -> 1 | Some x -> x in
+      INSTR_Mem (MEM_Alloca (i, n, t)) }
   | i = ident EQ KW_LOAD KW_VOLATILE? tp = typ v = value comma_align? (*TODO: support more options *)
     { INSTR_Mem (MEM_Load (i, tp, v)) }
   | KW_STORE KW_VOLATILE? tv = typ v = value COMMA
