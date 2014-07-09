@@ -193,7 +193,7 @@
 }
 
 let ws = [' ' '\t']
-let eol = ('\n' | '\r' | "\r\n" "\n\r")
+let eol = ('\n' | '\r' | "\r\n" | "\n\r")
 let digit = ['0'-'9']
 let upletter = ['A'-'Z']
 let lowletter = ['a'-'z']
