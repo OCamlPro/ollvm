@@ -109,55 +109,59 @@ type typ =
 
 type tident = typ * ident
 
-type cmp =
-  | Cmp_Eq
-  | Cmp_Ne
-  | Cmp_Ugt
-  | Cmp_Uge
-  | Cmp_Ult
-  | Cmp_Ule
-  | Cmp_Sgt
-  | Cmp_Sge
-  | Cmp_Slt
-  | Cmp_Sle
+type icmp =
+  | Eq
+  | Ne
+  | Ugt
+  | Uge
+  | Ult
+  | Ule
+  | Sgt
+  | Sge
+  | Slt
+  | Sle
 
-type binop = typ * value * value
+type binop_op =
+  | Add
+  | FAdd
+  | Sub
+  | FSub
+  | Mul
+  | FMul
+  | UDiv
+  | SDiv
+  | FDiv
+  | URem
+  | SRem
+  | FRem
+  | Shl
+  | LShr
+  | AShr
+  | And
+  | Or
+  | Xor
 
-and conversion = typ * value * typ
+type conversion_type =
+  | Trunc
+  | Zext
+  | Sext
+  | Fptrunc
+  | Fpext
+  | Uitofp
+  | Sitofp
+  | Fptoui
+  | Fptosi
+  | Inttoptr
+  | Ptrtoint
+  | Bitcast
+
+type binop = binop_op * typ * value * value
 
 and expr =
-  | EXPR_Add  of binop
-  | EXPR_FAdd
-  | EXPR_Sub  of binop
-  | EXPR_FSub
-  | EXPR_Mul  of binop
-  | EXPR_FMul
-  | EXPR_UDiv of binop
-  | EXPR_SDiv of binop
-  | EXPR_FDiv
-  | EXPR_URem of binop
-  | EXPR_SRem of binop
-  | EXPR_FRem
-  | EXPR_Shl  of binop
-  | EXPR_LShr of binop
-  | EXPR_AShr of binop
-  | EXPR_And  of binop
-  | EXPR_Or   of binop
-  | EXPR_Xor  of binop
-  | EXPR_ICmp of (cmp * typ * value * value)
+  | EXPR_Binop of binop
+  | EXPR_ICmp of (icmp * typ * value * value)
   | EXPR_FCmp
-  | EXPR_Trunc    of conversion
-  | EXPR_ZExt     of conversion
-  | EXPR_SExt     of conversion
-  | EXPR_FPTrunc  of conversion
-  | EXPR_FPExt    of conversion
-  | EXPR_UIToFP   of conversion
-  | EXPR_SIToFP   of conversion
-  | EXPR_FPToUI   of conversion
-  | EXPR_FPToSI   of conversion
-  | EXPR_IntToPtr of conversion
-  | EXPR_PtrToInt of conversion
-  | EXPR_BitCast  of conversion
+  | EXPR_Conversion of (conversion_type * typ * value * typ)
   | EXPR_GetElementPtr of (typ * value * (typ * value) list)
   | EXPR_ExtractElement
   | EXPR_InsertElement
@@ -243,4 +247,3 @@ and instr =
   | INSTR_Fence
   | INSTR_LandingPad
   | INSTR_Label of ident
-
