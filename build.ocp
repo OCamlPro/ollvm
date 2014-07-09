@@ -1,0 +1,14 @@
+begin program "llvm"
+
+  dirname = ["src"]
+
+  files = [
+    "LLVM.ml";
+    "llvm_lexer.mll";
+    "llvm_parser.mly";
+    "main.ml"
+  ]
+
+  ocamlyacc = [ "menhir" ]
+
+end
