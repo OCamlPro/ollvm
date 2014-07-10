@@ -6,6 +6,7 @@ begin program "llvm"
     "LLVM.ml";
     "llvm_lexer.mll";
     "llvm_parser.mly";
+    "printer.ml";
     "main.ml"
   ]
 
