@@ -107,8 +107,6 @@ type typ =
   | TYPE_Opaque
   | TYPE_Vector of (int * typ)
 
-type tident = typ * ident
-
 type icmp =
   | Eq
   | Ne
@@ -121,25 +119,27 @@ type icmp =
   | Slt
   | Sle
 
-type binop_op =
+type ibinop =
   | Add
-  | FAdd
   | Sub
-  | FSub
   | Mul
-  | FMul
   | UDiv
   | SDiv
-  | FDiv
   | URem
   | SRem
-  | FRem
   | Shl
   | LShr
   | AShr
   | And
   | Or
   | Xor
+
+type fbinop =
+  | FAdd
+  | FSub
+  | FMul
+  | FDiv
+  | FRem
 
 type conversion_type =
   | Trunc
@@ -155,12 +155,9 @@ type conversion_type =
   | Ptrtoint
   | Bitcast
 
-type binop = binop_op * typ * value * value
-
-and expr =
-  | EXPR_Binop of binop
+type expr =
+  | EXPR_IBinop of ibinop * typ * value * value
   | EXPR_ICmp of (icmp * typ * value * value)
-  | EXPR_FCmp
   | EXPR_Conversion of (conversion_type * typ * value * typ)
   | EXPR_GetElementPtr of (typ * value * (typ * value) list)
   | EXPR_ExtractElement
@@ -168,6 +165,21 @@ and expr =
   | EXPR_ShuffleVector
   | EXPR_ExtractValue
   | EXPR_InsertValue
+  | EXPR_Call of typ * ident * (typ * value) list
+  | EXPR_Alloca of (int * typ)
+  | EXPR_Load of (typ * value)
+  | EXPR_Phi of (typ * (value * ident) list)
+  | EXPR_Select of (typ * value * typ * value * value)
+  | EXPR_VAArg
+  | EXPR_LandingPad
+  | EXPR_Label of ident
+
+and expr_unit =
+  | EXPR_UNIT_IGNORED of expr
+  | EXPR_UNIT_Store of (typ * value * typ * ident)
+  | EXPR_UNIT_Fence
+  | EXPR_UNIT_AtomicCmpXchg
+  | EXPR_UNIT_AtomicRMW
 
 and value =
   | VALUE_Ident of ident
@@ -183,25 +195,18 @@ and value =
   | VALUE_Zero_initializer
   | VALUE_Expr of expr
 
-type tvalue = typ * value
-
-type call = typ * ident * (typ * value) list
-
-type terminator =
-  | TERM_Ret of (typ * value)
-  | TERM_Ret_void
-  | TERM_Br of (value * ident * ident) (*types are constant *)
-  | TERM_Br_1 of ident
-  | TERM_Switch of (typ * value * value * (typ * value * ident) list)
-  | TERM_IndirectBr
+and terminator =
   | TERM_Invoke of (typ * ident * (typ * value) list * ident * ident)
-  | TERM_Resume of (typ * value)
-  | TERM_Unreachable
 
-type memop =
-  | MEM_Alloca of (ident * int * typ)
-  | MEM_Load of (ident * typ * value)
-  | MEM_Store of (typ * value * typ * ident)
+and terminator_unit =
+  | TERM_UNIT_Ret of (typ * value)
+  | TERM_UNIT_Ret_void
+  | TERM_UNIT_Br of (value * ident * ident) (*types are constant *)
+  | TERM_UNIT_Br_1 of ident
+  | TERM_UNIT_Switch of (typ * value * value * (typ * value * ident) list)
+  | TERM_UNIT_IndirectBr
+  | TERM_UNIT_Resume of (typ * value)
+  | TERM_UNIT_Unreachable
 
 type module_ = toplevelentry list
 
@@ -229,21 +234,12 @@ and declaration = {
 and definition = {
   df_ret_typ: typ;
      df_name: ident;
-     df_args: tident list;
+     df_args: (typ * ident) list;
    df_instrs: instr list;
 }
 
 and instr =
-  | INSTR_Assign of (ident * expr)
-  | INSTR_Call of (ident * call)
-  | INSTR_Call_unit of call
-  | INSTR_PHI of (ident * typ * (value * ident) list)
-  | INSTR_Terminator of terminator
-  | INSTR_Select of (ident * typ * value * typ * value * value)
-  | INSTR_VAArg
-  | INSTR_Mem of memop
-  | INSTR_AtomicCmpXchg
-  | INSTR_AtomicRMW
-  | INSTR_Fence
-  | INSTR_LandingPad
-  | INSTR_Label of ident
+  | INSTR_Expr_Assign of (ident * expr)
+  | INSTR_Expr_Unit of expr_unit
+  | INSTR_Terminator of (ident * terminator)
+  | INSTR_Terminator_Unit of terminator_unit
