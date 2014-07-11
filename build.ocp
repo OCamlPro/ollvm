@@ -6,7 +6,24 @@ begin program "llvm"
     "LLVM.ml";
     "llvm_lexer.mll";
     "llvm_parser.mly";
+    "printer.ml";
     "main.ml"
+  ]
+
+  ocamlyacc = [ "menhir" ]
+
+end
+
+begin program "llvm_ocp"
+
+  dirname = ["src"]
+
+  files = [
+    "LLVM.ml";
+    "llvm_lexer.mll";
+    "llvm_parser.mly";
+    "printer.ml";
+    "llvm_ocp.ml";
   ]
 
   ocamlyacc = [ "menhir" ]
