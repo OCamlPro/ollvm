@@ -79,10 +79,10 @@ let pprint =
     | TYPE_Half             -> "half"
     | TYPE_Float            -> "float"
     | TYPE_Double           -> "double"
+    | TYPE_Label            -> "label"
     | TYPE_X86_fp80         -> assert false
     | TYPE_Fp128            -> assert false
     | TYPE_Ppc_fp128        -> assert false
-    | TYPE_Label            -> "label"
     | TYPE_Metadata         -> assert false
     | TYPE_X86_mmx          -> assert false
     | TYPE_Ident i          -> assert false (* i : ident *)
@@ -108,6 +108,24 @@ let pprint =
     | Slt -> "slt"
     | Sle -> "cmp"
 
+  and fcmp : LLVM.fcmp -> string = function
+    | False -> "false"
+    | Oeq -> "oeq"
+    | Ogt -> "ogt"
+    | Oge -> "oge"
+    | Olt -> "olt"
+    | Ole -> "ole"
+    | One -> "one"
+    | Ord -> "ord"
+    | Uno -> "uno"
+    | Ueq -> "ueq"
+    | Ugt -> "ugt"
+    | Uge -> "uge"
+    | Ult -> "ult"
+    | Ule -> "ule"
+    | Une -> "une"
+    | True -> "true"
+
   and ibinop : LLVM.ibinop -> string = function
     | Add  -> "add"
     | Sub  -> "sub"
@@ -124,11 +142,11 @@ let pprint =
     | Xor  -> "xor"
 
   and fbinop = function
-    | FAdd
-    | FSub
-    | FMul
-    | FDiv
-    | FRem -> "Unsupported float binop_op"
+    | FAdd -> "fadd"
+    | FSub -> "fsub"
+    | FMul -> "fmul"
+    | FDiv -> "fdiv"
+    | FRem -> "frem"
 
   and conversion_type : LLVM.conversion_type -> string = function
     | Trunc
@@ -151,6 +169,12 @@ let pprint =
 
     | EXPR_ICmp (c, t, v1, v2) ->
        sprintf "icmp %s %s %s, %s" (icmp c) (typ t) (value v1) (value v2)
+
+    | EXPR_FBinop (op, t, v1, v2) ->
+       sprintf "%s %s %s, %s" (fbinop op) (typ t) (value v1) (value v2)
+
+    | EXPR_FCmp (c, t, v1, v2) ->
+       sprintf "icmp %s %s %s, %s" (fcmp c) (typ t) (value v1) (value v2)
 
     | EXPR_Conversion (c, t1, v, t2) ->
        sprintf "%s %s %s, %s" (conversion_type c) (typ t1) (value v) (typ t2)

@@ -119,6 +119,24 @@ type icmp =
   | Slt
   | Sle
 
+type fcmp =
+  | False
+  | Oeq
+  | Ogt
+  | Oge
+  | Olt
+  | Ole
+  | One
+  | Ord
+  | Uno
+  | Ueq
+  | Ugt
+  | Uge
+  | Ult
+  | Ule
+  | Une
+  | True
+
 type ibinop =
   | Add
   | Sub
@@ -158,6 +176,8 @@ type conversion_type =
 type expr =
   | EXPR_IBinop of ibinop * typ * value * value
   | EXPR_ICmp of (icmp * typ * value * value)
+  | EXPR_FBinop of fbinop * typ * value * value
+  | EXPR_FCmp of (fcmp * typ * value * value)
   | EXPR_Conversion of (conversion_type * typ * value * typ)
   | EXPR_GetElementPtr of (typ * value * (typ * value) list)
   | EXPR_ExtractElement
