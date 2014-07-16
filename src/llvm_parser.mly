@@ -311,11 +311,22 @@ expr:
 
   | l = LABEL { EXPR_Label (ID_Local l) }
 
-  | KW_EXTRACTELEMENT { failwith "EXPR_ExtractElement" }
-  | KW_INSERTELEMENT  { failwith "EXPR_InsertElement"  }
+  | KW_EXTRACTELEMENT t1 = typ v = value COMMA t2 = typ i = value
+    { EXPR_ExtractElement (t1, v, (t2, i)) }
+
+  | KW_INSERTELEMENT t1 = typ v = value
+    COMMA t2 = typ nv = value COMMA t3 = typ i = value
+    { EXPR_InsertElement (t1, v, (t2, nv), (t3, i))  }
+
+  | KW_EXTRACTVALUE t = typ v = value COMMA
+    idx = separated_nonempty_list (COMMA, INTEGER)
+    { EXPR_ExtractValue (t, v, idx) }
+
+  | KW_INSERTVALUE t1 = typ v = value COMMA t2 = typ nv = value COMMA
+    idx = separated_nonempty_list (COMMA, INTEGER)
+    { EXPR_InsertValue (t1, v, (t2, nv), idx) }
+
   | KW_SHUFFLEVECTOR  { failwith "EXPR_ShuffleVector"  }
-  | KW_EXTRACTVALUE { failwith "EXPR_ExtractValue" }
-  | KW_INSERTVALUE  { failwith "EXPR_InsertValue"  }
   | KW_VAARG  { failwith"INSTR_VAArg"  }
   | KW_LANDINGPAD    { failwith"INSTR_LandingPad"    }
 

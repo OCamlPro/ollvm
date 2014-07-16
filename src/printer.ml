@@ -86,12 +86,12 @@ let pprint =
     | TYPE_Metadata         -> assert false
     | TYPE_X86_mmx          -> assert false
     | TYPE_Ident i          -> assert false (* i : ident *)
-    | TYPE_Array (i, t)     -> assert false (* (i, t) : int * typ *)
+    | TYPE_Array (i, t)     -> sprintf "[%d x %s]" i (typ t)
     | TYPE_Function (t, tl) -> assert false (* (t, tl) : (typ * typ list) *)
-    | TYPE_Struct tl        -> assert false (* tl : typ list *)
-    | TYPE_Packed_struct tl -> assert false (* tl : typ list *)
+    | TYPE_Struct tl        -> "{ " ^ (list ", " typ tl) ^ " }"
+    | TYPE_Packed_struct tl ->  "<{ " ^ (list ", " typ tl) ^ " }>"
     | TYPE_Opaque           -> assert false
-    | TYPE_Vector (i, t)    -> assert false (* (i, t) : (int * typ) *)
+    | TYPE_Vector (i, t)    -> sprintf "<%d x %s>" i (typ t)
 
   and tident =
     fun (t, i) ->  typ t ^ " " ^ ident i
@@ -203,12 +203,25 @@ let pprint =
 
     | EXPR_Label i -> "label " ^ ident i
 
+    | EXPR_ExtractElement (t1, vec, idx) ->
+       sprintf "extractelement %s %s, %s"
+               (typ t1) (value vec) (tvalue idx)
+
+    | EXPR_InsertElement (t1, vec, new_val, idx) ->
+       sprintf "insertelement %s %s, %s, %s"
+               (typ t1) (value vec) (tvalue new_val) (tvalue idx)
+
+    | EXPR_ExtractValue (t, v, idx) ->
+       sprintf "extractvalue %s %s, %s"
+               (typ t) (value v) (list ", " string_of_int idx)
+
+    | EXPR_InsertValue (t, v, new_val, idx) ->
+       sprintf "insertvalue %s %s, %s, %s"
+               (typ t) (value v) (tvalue new_val) (list ", " string_of_int idx)
+
     | EXPR_LandingPad
-    | EXPR_ExtractElement
-    | EXPR_InsertElement
     | EXPR_ShuffleVector
-    | EXPR_ExtractValue
-    | EXPR_InsertValue               -> assert false
+              -> assert false
 
   and expr_unit = function
     | EXPR_UNIT_IGNORED e -> expr e

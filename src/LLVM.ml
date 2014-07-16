@@ -176,28 +176,28 @@ type conversion_type =
 
 type expr =
   | EXPR_IBinop of ibinop * typ * value * value
-  | EXPR_ICmp of (icmp * typ * value * value)
+  | EXPR_ICmp of icmp * typ * value * value
   | EXPR_FBinop of fbinop * typ * value * value
-  | EXPR_FCmp of (fcmp * typ * value * value)
-  | EXPR_Conversion of (conversion_type * typ * value * typ)
-  | EXPR_GetElementPtr of (typ * value * (typ * value) list)
-  | EXPR_ExtractElement
-  | EXPR_InsertElement
+  | EXPR_FCmp of fcmp * typ * value * value
+  | EXPR_Conversion of conversion_type * typ * value * typ
+  | EXPR_GetElementPtr of typ * value * (typ * value) list
+  | EXPR_ExtractElement of typ * value * (typ * value)
+  | EXPR_InsertElement of typ * value * (typ* value) * (typ * value)
   | EXPR_ShuffleVector
-  | EXPR_ExtractValue
-  | EXPR_InsertValue
+  | EXPR_ExtractValue of typ * value * int list
+  | EXPR_InsertValue of typ * value * (typ * value) * int list
   | EXPR_Call of typ * ident * (typ * value) list
-  | EXPR_Alloca of (int * typ)
-  | EXPR_Load of (typ * value)
-  | EXPR_Phi of (typ * (value * ident) list)
-  | EXPR_Select of (typ * value * typ * value * value)
+  | EXPR_Alloca of int * typ
+  | EXPR_Load of typ * value
+  | EXPR_Phi of typ * (value * ident) list
+  | EXPR_Select of typ * value * typ * value * value
   | EXPR_VAArg
   | EXPR_LandingPad
   | EXPR_Label of ident
 
 and expr_unit =
   | EXPR_UNIT_IGNORED of expr
-  | EXPR_UNIT_Store of (typ * value * typ * ident)
+  | EXPR_UNIT_Store of typ * value * typ * ident
   | EXPR_UNIT_Fence
   | EXPR_UNIT_AtomicCmpXchg
   | EXPR_UNIT_AtomicRMW
