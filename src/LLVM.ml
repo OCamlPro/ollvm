@@ -4,6 +4,7 @@
   * Copyright (c) 2012 Raphaël Proust <raphlalou@gmail.com>                  *
   * Copyright (c) 2012 INRIA - Raphaël Proust <raphlalou@gmail.com>          *
   * Copyright (c) 2012 ENS - Raphaël Proust <raphlalou@gmail.com>            *
+  * Copyright (c) 2014 OCamlPro - Julien Sagot <ju.sagot@gmail.com>          *
   *                                                                          *
   * Permission to use, copy, modify, and distribute this software for any    *
   * purpose with or without fee is hereby granted, provided that the above   *
