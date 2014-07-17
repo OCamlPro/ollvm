@@ -118,96 +118,43 @@ type typ =
   | TYPE_Opaque
   | TYPE_Vector of (int * typ)
 
-type icmp =
-  | Eq
-  | Ne
-  | Ugt
-  | Uge
-  | Ult
-  | Ule
-  | Sgt
-  | Sge
-  | Slt
-  | Sle
+type icmp = Eq|Ne|Ugt|Uge|Ult|Ule|Sgt|Sge|Slt|Sle
 
-type fcmp =
-  | False
-  | Oeq
-  | Ogt
-  | Oge
-  | Olt
-  | Ole
-  | One
-  | Ord
-  | Uno
-  | Ueq
-  | Ugt
-  | Uge
-  | Ult
-  | Ule
-  | Une
-  | True
+type fcmp = False|Oeq|Ogt|Oge|Olt|Ole|One|Ord|Uno|Ueq|Ugt|Uge|Ult|Ule|Une|True
 
-type ibinop =
-  | Add
-  | Sub
-  | Mul
-  | UDiv
-  | SDiv
-  | URem
-  | SRem
-  | Shl
-  | LShr
-  | AShr
-  | And
-  | Or
-  | Xor
+type ibinop = Add|Sub|Mul|UDiv|SDiv|URem|SRem|Shl|LShr|AShr|And|Or|Xor
 
-type fbinop =
-  | FAdd
-  | FSub
-  | FMul
-  | FDiv
-  | FRem
+type fbinop = FAdd|FSub|FMul|FDiv|FRem
 
-type conversion_type =
-  | Trunc
-  | Zext
-  | Sext
-  | Fptrunc
-  | Fpext
-  | Uitofp
-  | Sitofp
-  | Fptoui
-  | Fptosi
-  | Inttoptr
-  | Ptrtoint
-  | Bitcast
+type conversion_type = Trunc|Zext|Sext|Fptrunc|Fpext|Uitofp|Sitofp|Fptoui
+                       |Fptosi|Inttoptr|Ptrtoint|Bitcast
 
-type expr =
+type tvalue = typ * value
+
+ and expr =
   | EXPR_IBinop of ibinop * typ * value * value
   | EXPR_ICmp of icmp * typ * value * value
   | EXPR_FBinop of fbinop * typ * value * value
   | EXPR_FCmp of fcmp * typ * value * value
   | EXPR_Conversion of conversion_type * typ * value * typ
-  | EXPR_GetElementPtr of typ * value * (typ * value) list
-  | EXPR_ExtractElement of typ * value * (typ * value)
-  | EXPR_InsertElement of typ * value * (typ* value) * (typ * value)
+  | EXPR_GetElementPtr of tvalue * tvalue list
+  | EXPR_ExtractElement of tvalue * tvalue
+  | EXPR_InsertElement of tvalue * tvalue * tvalue
   | EXPR_ShuffleVector
-  | EXPR_ExtractValue of typ * value * int list
-  | EXPR_InsertValue of typ * value * (typ * value) * int list
-  | EXPR_Call of typ * ident * (typ * value) list
+  | EXPR_ExtractValue of tvalue * int list
+  | EXPR_InsertValue of tvalue * tvalue * int list
+  | EXPR_Call of typ * ident * tvalue list
   | EXPR_Alloca of int * typ
-  | EXPR_Load of typ * value
+  | EXPR_Load of tvalue
   | EXPR_Phi of typ * (value * ident) list
-  | EXPR_Select of typ * value * typ * value * value
+  | EXPR_Select of tvalue * tvalue * tvalue (* if * then * else *)
   | EXPR_VAArg
   | EXPR_LandingPad
   | EXPR_Label of ident
 
 and expr_unit =
   | EXPR_UNIT_IGNORED of expr
-  | EXPR_UNIT_Store of typ * value * typ * ident
+  | EXPR_UNIT_Store of tvalue * (typ * ident)
   | EXPR_UNIT_Fence
   | EXPR_UNIT_AtomicCmpXchg
   | EXPR_UNIT_AtomicRMW
@@ -219,24 +166,24 @@ and value =
   | VALUE_Bool of bool
   | VALUE_Null
   | VALUE_Undef
-  | VALUE_Struct of (typ * value) list
-  | VALUE_Packed_struct of (typ * value) list
-  | VALUE_Array of (typ * value) list
-  | VALUE_Vector of (typ * value) list
+  | VALUE_Struct of tvalue list
+  | VALUE_Packed_struct of tvalue list
+  | VALUE_Array of tvalue list
+  | VALUE_Vector of tvalue list
   | VALUE_Zero_initializer
   | VALUE_Expr of expr
 
 and terminator =
-  | TERM_Invoke of (typ * ident * (typ * value) list * ident * ident)
+  | TERM_Invoke of (typ * ident * tvalue list * ident * ident)
 
 and terminator_unit =
-  | TERM_UNIT_Ret of (typ * value)
+  | TERM_UNIT_Ret of tvalue
   | TERM_UNIT_Ret_void
   | TERM_UNIT_Br of (value * ident * ident) (*types are constant *)
   | TERM_UNIT_Br_1 of ident
   | TERM_UNIT_Switch of (typ * value * value * (typ * value * ident) list)
   | TERM_UNIT_IndirectBr
-  | TERM_UNIT_Resume of (typ * value)
+  | TERM_UNIT_Resume of tvalue
   | TERM_UNIT_Unreachable
 
 type module_ = toplevelentry list

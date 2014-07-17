@@ -297,9 +297,9 @@ expr:
   | c = conversion t1 = typ v = value KW_TO t2 = typ
     { EXPR_Conversion (c, t1, v, t2) }
 
-  | KW_GETELEMENTPTR ?KW_INBOUNDS t = typ v = value
-    ptrs = list(preceded(COMMA, pair(typ, value)))
-    { EXPR_GetElementPtr (t, v, ptrs) }
+  | KW_GETELEMENTPTR ?KW_INBOUNDS ptr = tvalue
+    idx = list(preceded(COMMA, pair(typ, value)))
+    { EXPR_GetElementPtr (ptr, idx) }
 
   | KW_TAIL? KW_CALL cconv? list(typ_attr) t = typ
     n = ident a = delimited(LPAREN, separated_list(COMMA, call_arg), RPAREN)
@@ -316,25 +316,25 @@ expr:
   | KW_PHI t = typ table = separated_nonempty_list(COMMA, phi_table_entry)
     { EXPR_Phi (t, table) }
 
-  | KW_SELECT t = typ v = value COMMA t1 = typ v1 = value COMMA t2 = typ v2 = value
-    { EXPR_Select (t, v, t1, v1, v2) }
+  | KW_SELECT if_ = tvalue COMMA then_ = tvalue COMMA else_= tvalue
+    { EXPR_Select (if_, then_, else_) }
 
   | l = LABEL { EXPR_Label (ID_Local l) }
 
-  | KW_EXTRACTELEMENT t1 = typ v = value COMMA t2 = typ i = value
-    { EXPR_ExtractElement (t1, v, (t2, i)) }
+  | KW_EXTRACTELEMENT vec = tvalue COMMA idx = tvalue
+    { EXPR_ExtractElement (vec, idx) }
 
-  | KW_INSERTELEMENT t1 = typ v = value
-    COMMA t2 = typ nv = value COMMA t3 = typ i = value
-    { EXPR_InsertElement (t1, v, (t2, nv), (t3, i))  }
+  | KW_INSERTELEMENT vec = tvalue
+    COMMA new_el = tvalue COMMA idx = tvalue
+    { EXPR_InsertElement (vec, new_el, idx)  }
 
-  | KW_EXTRACTVALUE t = typ v = value COMMA
+  | KW_EXTRACTVALUE tv = tvalue COMMA
     idx = separated_nonempty_list (COMMA, INTEGER)
-    { EXPR_ExtractValue (t, v, idx) }
+    { EXPR_ExtractValue (tv, idx) }
 
-  | KW_INSERTVALUE t1 = typ v = value COMMA t2 = typ nv = value COMMA
+  | KW_INSERTVALUE agg = tvalue COMMA new_val = tvalue COMMA
     idx = separated_nonempty_list (COMMA, INTEGER)
-    { EXPR_InsertValue (t1, v, (t2, nv), idx) }
+    { EXPR_InsertValue (agg, new_val, idx) }
 
   | KW_SHUFFLEVECTOR  { failwith "EXPR_ShuffleVector"  }
   | KW_VAARG  { failwith"INSTR_VAArg"  }
@@ -344,9 +344,9 @@ expr_unit:
 
   | e = expr { EXPR_UNIT_IGNORED e }
 
-  | KW_STORE KW_VOLATILE? tv = typ v = value COMMA
-    ti = typ i = ident preceded(COMMA, align)?
-    { EXPR_UNIT_Store (tv, v, ti, i) }
+  | KW_STORE KW_VOLATILE? all = tvalue COMMA tptr = typ ptr = ident
+    preceded(COMMA, align)?
+    { EXPR_UNIT_Store (all, (tptr, ptr)) }
 
   | KW_ATOMICCMPXCHG { failwith"INSTR_AtomicCmpXchg" }
   | KW_ATOMICRMW     { failwith"INSTR_AtomicRMW"     }
@@ -427,3 +427,6 @@ value:
 %inline ident:
   | l = GLOBAL { ID_Global l }
   | l = LOCAL  { ID_Local l  }
+
+tvalue:
+  | t = typ v = value { (t, v) }

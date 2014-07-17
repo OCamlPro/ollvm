@@ -189,8 +189,8 @@ let pprint =
     | EXPR_Conversion (c, t1, v, t2) ->
        sprintf "%s %s %s, %s" (conversion_type c) (typ t1) (value v) (typ t2)
 
-    | EXPR_GetElementPtr (t, v, tvl) ->
-       sprintf "getelementptr %s %s, %s" (typ t) (value v) (list ", " tvalue tvl)
+    | EXPR_GetElementPtr (tv, tvl) ->
+       sprintf "getelementptr %s, %s" (tvalue tv) (list ", " tvalue tvl)
 
     | EXPR_Call (t, i, tvl) ->
        sprintf "call %s %s(%s)" (typ t) (ident i) (list ", " tvalue tvl)
@@ -205,29 +205,28 @@ let pprint =
        sprintf "phi %s [%s]"
                (typ t) (list "], [" (fun (v, i) -> value v ^ ", " ^ ident i) vil)
 
-    | EXPR_Select (t1, v1, t2, v2, v3) ->
-       sprintf "select %s %s, %s %s, %s %s"
-               (typ t1) (value v1) (typ t2) (value v2) (typ t2) (value v3)
+    | EXPR_Select (if_, then_, else_) ->
+       sprintf "select %s, %s, %s"
+               (tvalue if_) (tvalue then_) (tvalue else_)
 
     | EXPR_VAArg -> "vaarg"
 
     | EXPR_Label i -> "label " ^ ident i
 
-    | EXPR_ExtractElement (t1, vec, idx) ->
-       sprintf "extractelement %s %s, %s"
-               (typ t1) (value vec) (tvalue idx)
+    | EXPR_ExtractElement (vec, idx) ->
+       sprintf "extractelement %s, %s" (tvalue vec) (tvalue idx)
 
-    | EXPR_InsertElement (t1, vec, new_val, idx) ->
-       sprintf "insertelement %s %s, %s, %s"
-               (typ t1) (value vec) (tvalue new_val) (tvalue idx)
+    | EXPR_InsertElement (vec, new_val, idx) ->
+       sprintf "insertelement %s, %s, %s"
+               (tvalue vec) (tvalue new_val) (tvalue idx)
 
-    | EXPR_ExtractValue (t, v, idx) ->
-       sprintf "extractvalue %s %s, %s"
-               (typ t) (value v) (list ", " string_of_int idx)
+    | EXPR_ExtractValue (agg, idx) ->
+       sprintf "extractvalue %s, %s"
+               (tvalue agg) (list ", " string_of_int idx)
 
-    | EXPR_InsertValue (t, v, new_val, idx) ->
-       sprintf "insertvalue %s %s, %s, %s"
-               (typ t) (value v) (tvalue new_val) (list ", " string_of_int idx)
+    | EXPR_InsertValue (agg, new_val, idx) ->
+       sprintf "insertvalue %s, %s, %s"
+               (tvalue agg) (tvalue new_val) (list ", " string_of_int idx)
 
     | EXPR_LandingPad
     | EXPR_ShuffleVector
@@ -235,8 +234,8 @@ let pprint =
 
   and expr_unit = function
     | EXPR_UNIT_IGNORED e -> expr e
-    | EXPR_UNIT_Store (t1, v, t2, i) ->
-       sprintf "store %s %s, %s %s" (typ t1) (value v) (typ t2) (ident i)
+    | EXPR_UNIT_Store (v, (tptr, ptr)) ->
+       sprintf "store %s, %s %s" (tvalue v) (typ tptr) (ident ptr)
     | EXPR_UNIT_AtomicCmpXchg
     | EXPR_UNIT_AtomicRMW
     | EXPR_UNIT_Fence -> assert false
