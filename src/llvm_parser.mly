@@ -47,7 +47,7 @@
 %token KW_TYPE KW_X KW_OPAQUE
 %token KW_GLOBAL KW_ADDRSPACE KW_CONSTANT KW_SECTION KW_THREAD_LOCAL
 %token KW_ZEROEXT KW_SIGNEXT KW_INREG KW_BYVAL KW_SRET KW_NOALIAS KW_NOCAPTURE KW_NEST
-%token KW_ADDRESS_SAFETY KW_ALIGNSTACK KW_ALWAYSINLINE KW_NONLAZYBIND KW_INLINEHINT KW_NAKED KW_NOIMPLICITFLOAT KW_NOINLINE KW_NOREDZONE KW_NORETURN KW_NOUNWIND KW_OPTSIZE KW_READNONE KW_READONLY KW_RETURNS_TWICE KW_SSP KW_SSPREQ KW_UWTABLE
+%token KW_ALIGNSTACK KW_ALWAYSINLINE KW_BUILTIN KW_COLD KW_INLINEHINT KW_JUMPTABLE KW_MINSIZE KW_NAKED KW_NOBUILTIN KW_NODUPLICATE KW_NOIMPLICITFLOAT KW_NOINLINE KW_NONLAZYBIND KW_NOREDZONE KW_NORETURN KW_NOUNWIND KW_OPTNONE KW_OPTSIZE KW_READNONE KW_READONLY KW_RETURNS_TWICE KW_SANITIZE_ADDRESS KW_SANITIZE_MEMORY KW_SANITIZE_THREAD KW_SSP KW_SSPREQ KW_SSPSTRONG KW_UWTABLE
 %token KW_ALIGN
 %token KW_GC
 %token KW_ADD KW_FADD KW_SUB KW_FSUB KW_MUL KW_FMUL KW_UDIV KW_SDIV KW_FDIV KW_UREM KW_SREM KW_FREM KW_SHL KW_LSHR KW_ASHR KW_AND KW_OR KW_XOR KW_ICMP KW_FCMP KW_PHI KW_CALL KW_TRUNC KW_ZEXT KW_SEXT KW_FPTRUNC KW_FPEXT KW_UITOFP KW_SITOFP KW_FPTOUI KW_FPTOSI KW_INTTOPTR KW_PTRTOINT KW_BITCAST KW_SELECT KW_VAARG KW_RET KW_BR KW_SWITCH KW_INDIRECTBR KW_INVOKE KW_RESUME KW_UNREACHABLE KW_ALLOCA KW_LOAD KW_STORE KW_ATOMICCMPXCHG KW_ATOMICRMW KW_FENCE KW_GETELEMENTPTR KW_INBOUNDS KW_EXTRACTELEMENT KW_INSERTELEMENT KW_SHUFFLEVECTOR KW_EXTRACTVALUE KW_INSERTVALUE KW_LANDINGPAD
@@ -105,9 +105,9 @@ definition:
   | KW_DEFINE linkage? visibility? cconv?
     df_ret_typ = ret_type name = GLOBAL
     df_args = delimited(LPAREN, separated_list(COMMA, df_arg), RPAREN)
-    df_attr = list(fn_attr_gen) EOL?
+    df_attrs = list(fn_attr) EOL?
     df_instrs = delimited(pair(LCURLY, EOL+), list(terminated(instr, EOL+)), RCURLY)
-    { {df_ret_typ; df_name = ID_Global name; df_args; df_instrs;} }
+    { {df_ret_typ; df_name = ID_Global name; df_args; df_attrs; df_instrs;} }
 
 declaration:
   | KW_DECLARE linkage? visibility? cconv? KW_UNNAMED_ADDR?
@@ -196,24 +196,34 @@ call_arg:
   | t = typ list(typ_attr) i = value { (t, i) }
 
 fn_attr:
-  | KW_ADDRESS_SAFETY                       { Some FNATTR_Address_safety  }
-  | KW_ALIGNSTACK LPAREN p = INTEGER RPAREN { Some (FNATTR_Alignstack p)  }
-  | KW_ALWAYSINLINE                         { Some FNATTR_Alwaysinline    }
-  | KW_NONLAZYBIND                          { Some FNATTR_Nonlazybind     }
-  | KW_INLINEHINT                           { Some FNATTR_Inlinehint      }
-  | KW_NAKED                                { Some FNATTR_Naked           }
-  | KW_NOIMPLICITFLOAT                      { Some FNATTR_Noimplicitfloat }
-  | KW_NOINLINE                             { Some FNATTR_Noinline        }
-  | KW_NOREDZONE                            { Some FNATTR_Noredzone       }
-  | KW_NORETURN                             { Some FNATTR_Noreturn        }
-  | KW_NOUNWIND                             { Some FNATTR_Nounwind        }
-  | KW_OPTSIZE                              { Some FNATTR_Optsize         }
-  | KW_READNONE                             { Some FNATTR_Readnone        }
-  | KW_READONLY                             { Some FNATTR_Readonly        }
-  | KW_RETURNS_TWICE                        { Some FNATTR_Returns_twice   }
-  | KW_SSP                                  { Some FNATTR_Ssp             }
-  | KW_SSPREQ                               { Some FNATTR_Sspreq          }
-  | KW_UWTABLE                              { Some FNATTR_Uwtable         }
+  | KW_ALIGNSTACK LPAREN p = INTEGER RPAREN { FNATTR_Alignstack p    }
+  | KW_ALWAYSINLINE                         { FNATTR_Alwaysinline    }
+  | KW_BUILTIN                              { FNATTR_Nobuiltin       }
+  | KW_COLD                                 { FNATTR_Cold            }
+  | KW_INLINEHINT                           { FNATTR_Inlinehint      }
+  | KW_JUMPTABLE                            { FNATTR_Jumptable       }
+  | KW_MINSIZE                              { FNATTR_Minsize         }
+  | KW_NAKED                                { FNATTR_Naked           }
+  | KW_NOBUILTIN                            { FNATTR_Nobuiltin       }
+  | KW_NODUPLICATE                          { FNATTR_Noduplicate     }
+  | KW_NOIMPLICITFLOAT                      { FNATTR_Noimplicitfloat }
+  | KW_NOINLINE                             { FNATTR_Noinline        }
+  | KW_NONLAZYBIND                          { FNATTR_Nonlazybind     }
+  | KW_NOREDZONE                            { FNATTR_Noredzone       }
+  | KW_NORETURN                             { FNATTR_Noreturn        }
+  | KW_NOUNWIND                             { FNATTR_Nounwind        }
+  | KW_OPTNONE                              { FNATTR_Optnone         }
+  | KW_OPTSIZE                              { FNATTR_Optsize         }
+  | KW_READNONE                             { FNATTR_Readnone        }
+  | KW_READONLY                             { FNATTR_Readonly        }
+  | KW_RETURNS_TWICE                        { FNATTR_Returns_twice   }
+  | KW_SANITIZE_ADDRESS                     { FNATTR_Sanitize_address}
+  | KW_SANITIZE_MEMORY                      { FNATTR_Sanitize_memory }
+  | KW_SANITIZE_THREAD                      { FNATTR_Sanitize_thread }
+  | KW_SSP                                  { FNATTR_Ssp             }
+  | KW_SSPREQ                               { FNATTR_Sspreq          }
+  | KW_SSPSTRONG                            { FNATTR_Sspstrong       }
+  | KW_UWTABLE                              { FNATTR_Uwtable         }
 
 fn_attr_gen:
   | f = fn_attr { Some f }

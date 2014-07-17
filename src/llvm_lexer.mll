@@ -68,23 +68,33 @@
   | "noalias"                      -> KW_NOALIAS
   | "nocapture"                    -> KW_NOCAPTURE
   | "nest"                         -> KW_NEST
-  | "address_safety"               -> KW_ADDRESS_SAFETY
   | "alignstack"                   -> KW_ALIGNSTACK
   | "alwaysinline"                 -> KW_ALWAYSINLINE
-  | "nonlazybind"                  -> KW_NONLAZYBIND
+  | "builtin"                      -> KW_BUILTIN
+  | "cold"                         -> KW_COLD
   | "inlinehint"                   -> KW_INLINEHINT
+  | "jumptable"                    -> KW_JUMPTABLE
+  | "minsize"                      -> KW_MINSIZE
   | "naked"                        -> KW_NAKED
+  | "nobuiltin"                    -> KW_NOBUILTIN
+  | "noduplicate"                  -> KW_NODUPLICATE
   | "noimplicitfloat"              -> KW_NOIMPLICITFLOAT
   | "noinline"                     -> KW_NOINLINE
+  | "nonlazybind"                  -> KW_NONLAZYBIND
   | "noredzone"                    -> KW_NOREDZONE
   | "noreturn"                     -> KW_NORETURN
   | "nounwind"                     -> KW_NOUNWIND
+  | "optnone"                      -> KW_OPTNONE
   | "optsize"                      -> KW_OPTSIZE
   | "readnone"                     -> KW_READNONE
   | "readonly"                     -> KW_READONLY
   | "returns_twice"                -> KW_RETURNS_TWICE
+  | "sanitize_address"             -> KW_SANITIZE_ADDRESS
+  | "sanitize_memory"              -> KW_SANITIZE_MEMORY
+  | "sanitize_thread"              -> KW_SANITIZE_THREAD
   | "ssp"                          -> KW_SSP
   | "sspreq"                       -> KW_SSPREQ
+  | "sspstrong"                    -> KW_SSPSTRONG
   | "uwtable"                      -> KW_UWTABLE
   | "align"                        -> KW_ALIGN
   | "gc"                           -> KW_GC

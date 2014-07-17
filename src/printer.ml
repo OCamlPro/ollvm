@@ -49,24 +49,34 @@ let pprint =
     | TYPEATTR_Nest -> "typ_attr"
 
   and fn_attr : LLVM.fn_attr -> string = function
-    | FNATTR_Address_safety -> "fn_attr"
-    | FNATTR_Alignstack i -> "fn_attr"
-    | FNATTR_Alwaysinline -> "fn_attr"
-    | FNATTR_Nonlazybind -> "fn_attr"
-    | FNATTR_Inlinehint -> "fn_attr"
-    | FNATTR_Naked -> "fn_attr"
-    | FNATTR_Noimplicitfloat -> "fn_attr"
-    | FNATTR_Noinline -> "fn_attr"
-    | FNATTR_Noredzone -> "fn_attr"
-    | FNATTR_Noreturn -> "fn_attr"
-    | FNATTR_Nounwind -> "fn_attr"
-    | FNATTR_Optsize -> "fn_attr"
-    | FNATTR_Readnone -> "fn_attr"
-    | FNATTR_Readonly -> "fn_attr"
-    | FNATTR_Returns_twice -> "fn_attr"
-    | FNATTR_Ssp -> "fn_attr"
-    | FNATTR_Sspreq -> "fn_attr"
-    | FNATTR_Uwtable -> "fn_attr"
+    | FNATTR_Alignstack i -> sprintf "alignstack(%d)" i
+    | FNATTR_Alwaysinline -> "alwaysinline"
+    | FNATTR_Builtin -> "builtin"
+    | FNATTR_Cold -> "cold"
+    | FNATTR_Inlinehint -> "inlinehint"
+    | FNATTR_Jumptable -> "jumptable"
+    | FNATTR_Minsize -> "minsize"
+    | FNATTR_Naked -> "naked"
+    | FNATTR_Nobuiltin -> "nobuiltin"
+    | FNATTR_Noduplicate -> "noduplicate"
+    | FNATTR_Noimplicitfloat -> "noimplicitfloat"
+    | FNATTR_Noinline -> "noinline"
+    | FNATTR_Nonlazybind -> "nonlazybind"
+    | FNATTR_Noredzone -> "noredzone"
+    | FNATTR_Noreturn -> "noreturn"
+    | FNATTR_Nounwind -> "nounwind"
+    | FNATTR_Optnone -> "optnone"
+    | FNATTR_Optsize -> "optsize"
+    | FNATTR_Readnone -> "readone"
+    | FNATTR_Readonly -> "readonly"
+    | FNATTR_Returns_twice -> "returns_twice"
+    | FNATTR_Sanitize_address -> "sanitize_address"
+    | FNATTR_Sanitize_memory -> "sanitize_memory"
+    | FNATTR_Sanitize_thread -> "sanitize_thread"
+    | FNATTR_Ssp -> "ssp"
+    | FNATTR_Sspreq -> "sspreq"
+    | FNATTR_Sspstrong -> "sspstrong"
+    | FNATTR_Uwtable -> "uwtable"
 
   and ident : LLVM.ident -> string = function
     | ID_Global s -> "@" ^ s
@@ -296,11 +306,13 @@ let pprint =
       df_ret_typ = t;
       df_name = i;
       df_args = til;
+      df_attrs = al;
       df_instrs = il;
-    } -> sprintf "define %s %s(%s) {\n%s\n}"
+    } -> sprintf "define %s %s(%s) %s {\n%s\n}"
                         (typ t)
                         (ident i)
                         (list ", " tident til)
+                        (list " " fn_attr al)
                         (list "\n" instr il)
 
   and instr : LLVM.instr -> string = function

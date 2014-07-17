@@ -64,23 +64,33 @@ type typ_attr =
   | TYPEATTR_Nest
 
 type fn_attr =
-  | FNATTR_Address_safety
   | FNATTR_Alignstack of int
   | FNATTR_Alwaysinline
-  | FNATTR_Nonlazybind
+  | FNATTR_Builtin
+  | FNATTR_Cold
   | FNATTR_Inlinehint
+  | FNATTR_Jumptable
+  | FNATTR_Minsize
   | FNATTR_Naked
+  | FNATTR_Nobuiltin
+  | FNATTR_Noduplicate
   | FNATTR_Noimplicitfloat
   | FNATTR_Noinline
+  | FNATTR_Nonlazybind
   | FNATTR_Noredzone
   | FNATTR_Noreturn
   | FNATTR_Nounwind
+  | FNATTR_Optnone
   | FNATTR_Optsize
   | FNATTR_Readnone
   | FNATTR_Readonly
   | FNATTR_Returns_twice
+  | FNATTR_Sanitize_address
+  | FNATTR_Sanitize_memory
+  | FNATTR_Sanitize_thread
   | FNATTR_Ssp
   | FNATTR_Sspreq
+  | FNATTR_Sspstrong
   | FNATTR_Uwtable
 
 type ident =
@@ -256,6 +266,7 @@ and definition = {
   df_ret_typ: typ;
      df_name: ident;
      df_args: (typ * ident) list;
+    df_attrs: fn_attr list;
    df_instrs: instr list;
 }
 
