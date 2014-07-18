@@ -66,25 +66,25 @@
 %%
 
 module_:
-  | EOL* m = list(toplevelentry_eol) EOF { m }
+  | EOL* m=list(toplevelentry_eol) EOF { m }
 
 toplevelentry_eol:
-  | tle = toplevelentry EOL+ { tle }
+  | tle=toplevelentry EOL+ { tle }
 
 toplevelentry:
-  | d = definition                        { TLE_Definition d              }
-  | d = declaration                       { TLE_Declaration d             }
-  | KW_TARGET KW_DATALAYOUT EQ s = STRING { TLE_Datalayout s              }
-  | KW_TARGET KW_TRIPLE EQ s = STRING     { TLE_Target s                  }
-  | i = LOCAL EQ KW_TYPE t = typ          { TLE_Type_decl (ID_Local i, t) }
-  | g = global_decl                       { TLE_Global g                  }
+  | d=definition                        { TLE_Definition d              }
+  | d=declaration                       { TLE_Declaration d             }
+  | KW_TARGET KW_DATALAYOUT EQ s=STRING { TLE_Datalayout s              }
+  | KW_TARGET KW_TRIPLE EQ s=STRING     { TLE_Target s                  }
+  | i=LOCAL EQ KW_TYPE t=typ          { TLE_Type_decl (ID_Local i, t) }
+  | g=global_decl                       { TLE_Global g                  }
 
 global_decl:
-  | ident = GLOBAL EQ
+  | ident=GLOBAL EQ
       linkage? visibility? KW_THREAD_LOCAL? addrspace? KW_UNNAMED_ADDR?
-      g_constant = global_is_constant g_typ = typ g_value = value?
+      g_constant=global_is_constant g_typ=typ g_value=value?
       global_attr?
-      { {g_ident = ID_Global ident; g_typ; g_constant; g_value;} }
+      { {g_ident=ID_Global ident; g_typ; g_constant; g_value;} }
 
 global_attr:
   | comma_section             { }
@@ -96,25 +96,25 @@ global_attr:
   | KW_CONSTANT { true }
 
 %inline addrspace:
-  | KW_ADDRSPACE LPAREN n = INTEGER RPAREN { n }
+  | KW_ADDRSPACE LPAREN n=INTEGER RPAREN { n }
 
 %inline comma_section:
-  | COMMA KW_SECTION s = STRING { s }
+  | COMMA KW_SECTION s=STRING { s }
 
 definition:
   | KW_DEFINE linkage? visibility? cconv?
-    df_ret_typ = ret_type name = GLOBAL
-    df_args = delimited(LPAREN, separated_list(COMMA, df_arg), RPAREN)
-    df_attrs = list(fn_attr) EOL?
-    df_instrs = delimited(pair(LCURLY, EOL+), list(terminated(instr, EOL+)), RCURLY)
-    { {df_ret_typ; df_name = ID_Global name; df_args; df_attrs; df_instrs;} }
+    df_ret_typ=ret_type name=GLOBAL
+    df_args=delimited(LPAREN, separated_list(COMMA, df_arg), RPAREN)
+    df_attrs=list(fn_attr) EOL?
+    df_instrs=delimited(pair(LCURLY, EOL+), list(terminated(instr, EOL+)), RCURLY)
+    { {df_ret_typ; df_name=ID_Global name; df_args; df_attrs; df_instrs;} }
 
 declaration:
   | KW_DECLARE linkage? visibility? cconv? KW_UNNAMED_ADDR?
-    dc_ret_typ = ret_type name = GLOBAL
-    LPAREN dc_args = separated_list(COMMA, dc_arg) RPAREN
+    dc_ret_typ=ret_type name=GLOBAL
+    LPAREN dc_args=separated_list(COMMA, dc_arg) RPAREN
     list(fn_attr_gen)
-    { {dc_ret_typ; dc_name = ID_Global name; dc_args;} }
+    { {dc_ret_typ; dc_name=ID_Global name; dc_args;} }
 
 linkage:
   | KW_PRIVATE                      { LINKAGE_Private                      }
@@ -147,10 +147,10 @@ cconv:
   | n=CC            { CC_Cc n   }
 
 ret_type:
-  | list(typ_attr) t = typ { t }
+  | list(typ_attr) t=typ { t }
 
 typ:
-  | n = I                                    { TYPE_I n              }
+  | n=I                                    { TYPE_I n              }
   | KW_VOID                                  { TYPE_Void             }
   | KW_HALF                                  { TYPE_Half             }
   | KW_FLOAT                                 { TYPE_Float            }
@@ -161,20 +161,20 @@ typ:
   | KW_LABEL                                 { TYPE_Label            }
   | KW_METADATA                              { TYPE_Metadata         }
   | KW_X86_MMX                               { TYPE_X86_mmx          }
-  | t = typ STAR                             { TYPE_Pointer t        }
-  | i = ident                                { TYPE_Ident i          }
-  | LSQUARE n = INTEGER KW_X t = typ RSQUARE { TYPE_Array (n, t)     }
-  | t = typ LPAREN ts = separated_list(COMMA, typ) RPAREN
+  | t=typ STAR                             { TYPE_Pointer t        }
+  | i=ident                                { TYPE_Ident i          }
+  | LSQUARE n=INTEGER KW_X t=typ RSQUARE { TYPE_Array (n, t)     }
+  | t=typ LPAREN ts=separated_list(COMMA, typ) RPAREN
                                              { TYPE_Function (t, ts) }
-  | LCURLY ts = separated_list(COMMA, typ) RCURLY
+  | LCURLY ts=separated_list(COMMA, typ) RCURLY
                                              { TYPE_Struct ts        }
-  | LTLCURLY ts = separated_list(COMMA, typ) RCURLYGT
+  | LTLCURLY ts=separated_list(COMMA, typ) RCURLYGT
                                              { TYPE_Packed_struct ts }
   | KW_OPAQUE                                { TYPE_Opaque           }
-  | LT n = INTEGER KW_X t = typ GT           { TYPE_Vector (n, t)    }
+  | LT n=INTEGER KW_X t=typ GT           { TYPE_Vector (n, t)    }
 
 %inline typ_i:
-  | n = I { n }
+  | n=I { n }
 
 typ_attr:
   | KW_ZEROEXT   { TYPEATTR_Zeroext   }
@@ -187,16 +187,16 @@ typ_attr:
   | KW_NEST      { TYPEATTR_Nest      }
 
 df_arg:
-  | t = typ list(typ_attr) i = ident { (t, i) }
+  | t=typ list(typ_attr) i=ident { (t, i) }
 
 dc_arg:
-  | t = typ list(typ_attr) { t }
+  | t=typ list(typ_attr) { t }
 
 call_arg:
-  | t = typ list(typ_attr) i = value { (t, i) }
+  | t=typ list(typ_attr) i=value { (t, i) }
 
 fn_attr:
-  | KW_ALIGNSTACK LPAREN p = INTEGER RPAREN { FNATTR_Alignstack p    }
+  | KW_ALIGNSTACK LPAREN p=INTEGER RPAREN { FNATTR_Alignstack p    }
   | KW_ALWAYSINLINE                         { FNATTR_Alwaysinline    }
   | KW_BUILTIN                              { FNATTR_Nobuiltin       }
   | KW_COLD                                 { FNATTR_Cold            }
@@ -226,13 +226,13 @@ fn_attr:
   | KW_UWTABLE                              { FNATTR_Uwtable         }
 
 fn_attr_gen:
-  | f = fn_attr { Some f }
+  | f=fn_attr { Some f }
   | KW_ALIGN INTEGER  { None }
   | KW_GC STRING      { None }
   | KW_SECTION STRING { None }
 
 %inline align:
-  | KW_ALIGN p = INTEGER { p }
+  | KW_ALIGN p=INTEGER { p }
 
 (* Operators that may appear with `nuw`/`nsw` keywords *)
 binop_nuw_nsw_opt:
@@ -283,57 +283,57 @@ conversion:
   | KW_BITCAST  { Bitcast }
 
 binop:
-  | op = binop_nuw_nsw_opt KW_NUW? KW_NSW? { op }
-  | op = binop_exact_opt KW_EXACT? { op }
-  | op = binop_no_opt { op }
+  | op=binop_nuw_nsw_opt KW_NUW? KW_NSW? { op }
+  | op=binop_exact_opt KW_EXACT? { op }
+  | op=binop_no_opt { op }
 
 expr:
-  | op = binop t = typ o1 = value COMMA o2 = value
+  | op=binop t=typ o1=value COMMA o2=value
     { EXPR_IBinop (op, t, o1, o2) }
 
-  | KW_ICMP op = icmp t = typ o1 = value COMMA o2 = value
+  | KW_ICMP op=icmp t=typ o1=value COMMA o2=value
     { EXPR_ICmp (op, t, o1, o2) }
 
-  | c = conversion t1 = typ v = value KW_TO t2 = typ
+  | c=conversion t1=typ v=value KW_TO t2=typ
     { EXPR_Conversion (c, t1, v, t2) }
 
-  | KW_GETELEMENTPTR ?KW_INBOUNDS ptr = tvalue
-    idx = list(preceded(COMMA, pair(typ, value)))
+  | KW_GETELEMENTPTR ?KW_INBOUNDS ptr=tvalue
+    idx=list(preceded(COMMA, pair(typ, value)))
     { EXPR_GetElementPtr (ptr, idx) }
 
-  | KW_TAIL? KW_CALL cconv? list(typ_attr) t = typ
-    n = ident a = delimited(LPAREN, separated_list(COMMA, call_arg), RPAREN)
+  | KW_TAIL? KW_CALL cconv? list(typ_attr) t=typ
+    n=ident a=delimited(LPAREN, separated_list(COMMA, call_arg), RPAREN)
     list(fn_attr)
     { EXPR_Call (t, n, a) }
 
-  | KW_ALLOCA t = typ n = alloc_attr?
-    { let n = match n with None -> 1 | Some x -> x in
+  | KW_ALLOCA t=typ n=alloc_attr?
+    { let n=match n with None -> 1 | Some x -> x in
       EXPR_Alloca (n, t) }
 
-  | KW_LOAD KW_VOLATILE? tp = typ v = value preceded(COMMA, align)?
+  | KW_LOAD KW_VOLATILE? tp=typ v=value preceded(COMMA, align)?
     { EXPR_Load (tp, v) }
 
-  | KW_PHI t = typ table = separated_nonempty_list(COMMA, phi_table_entry)
+  | KW_PHI t=typ table=separated_nonempty_list(COMMA, phi_table_entry)
     { EXPR_Phi (t, table) }
 
-  | KW_SELECT if_ = tvalue COMMA then_ = tvalue COMMA else_= tvalue
+  | KW_SELECT if_=tvalue COMMA then_=tvalue COMMA else_= tvalue
     { EXPR_Select (if_, then_, else_) }
 
-  | l = LABEL { EXPR_Label (ID_Local l) }
+  | l=LABEL { EXPR_Label (ID_Local l) }
 
-  | KW_EXTRACTELEMENT vec = tvalue COMMA idx = tvalue
+  | KW_EXTRACTELEMENT vec=tvalue COMMA idx=tvalue
     { EXPR_ExtractElement (vec, idx) }
 
-  | KW_INSERTELEMENT vec = tvalue
-    COMMA new_el = tvalue COMMA idx = tvalue
+  | KW_INSERTELEMENT vec=tvalue
+    COMMA new_el=tvalue COMMA idx=tvalue
     { EXPR_InsertElement (vec, new_el, idx)  }
 
-  | KW_EXTRACTVALUE tv = tvalue COMMA
-    idx = separated_nonempty_list (COMMA, INTEGER)
+  | KW_EXTRACTVALUE tv=tvalue COMMA
+    idx=separated_nonempty_list (COMMA, INTEGER)
     { EXPR_ExtractValue (tv, idx) }
 
-  | KW_INSERTVALUE agg = tvalue COMMA new_val = tvalue COMMA
-    idx = separated_nonempty_list (COMMA, INTEGER)
+  | KW_INSERTVALUE agg=tvalue COMMA new_val=tvalue COMMA
+    idx=separated_nonempty_list (COMMA, INTEGER)
     { EXPR_InsertValue (agg, new_val, idx) }
 
   | KW_SHUFFLEVECTOR  { failwith "EXPR_ShuffleVector"  }
@@ -342,9 +342,9 @@ expr:
 
 expr_unit:
 
-  | e = expr { EXPR_UNIT_IGNORED e }
+  | e=expr { EXPR_UNIT_IGNORED e }
 
-  | KW_STORE KW_VOLATILE? all = tvalue COMMA tptr = typ ptr = ident
+  | KW_STORE KW_VOLATILE? all=tvalue COMMA tptr=typ ptr=ident
     preceded(COMMA, align)?
     { EXPR_UNIT_Store (all, (tptr, ptr)) }
 
@@ -354,79 +354,79 @@ expr_unit:
 
 terminator_unit:
 
-  | KW_RET t = typ o = value
+  | KW_RET t=typ o=value
     { TERM_UNIT_Ret (t, o) }
 
   | KW_RET KW_VOID
     { TERM_UNIT_Ret_void }
 
-  | KW_BR t = typ_i o = value COMMA
-    KW_LABEL o1 = ident COMMA KW_LABEL o2 = ident
+  | KW_BR t=typ_i o=value COMMA
+    KW_LABEL o1=ident COMMA KW_LABEL o2=ident
     { TERM_UNIT_Br (o, o1, o2) }
 
-  | KW_BR KW_LABEL o = ident
+  | KW_BR KW_LABEL o=ident
     { TERM_UNIT_Br_1 o }
 
-  | KW_SWITCH t = typ v = value COMMA
-    KW_LABEL def = value LSQUARE EOL? table = list(switch_table_entry) RSQUARE
+  | KW_SWITCH t=typ v=value COMMA
+    KW_LABEL def=value LSQUARE EOL? table=list(switch_table_entry) RSQUARE
     { TERM_UNIT_Switch (t, v, def, table) }
 
   | KW_INDIRECTBR
     { failwith "TERM_UNIT_IndirectBr" }
 
-  | KW_RESUME t = typ o = value
+  | KW_RESUME t=typ o=value
     { TERM_UNIT_Resume (t, o) }
 
   | KW_UNREACHABLE
     { TERM_UNIT_Unreachable }
 
 terminator:
-  | KW_INVOKE cconv? t = ret_type i = ident
-    LPAREN a = separated_list(COMMA, call_arg) RPAREN
-    list(fn_attr) KW_TO KW_LABEL l1 = ident
-    KW_UNWIND KW_LABEL l2 = ident
+  | KW_INVOKE cconv? t=ret_type i=ident
+    LPAREN a=separated_list(COMMA, call_arg) RPAREN
+    list(fn_attr) KW_TO KW_LABEL l1=ident
+    KW_UNWIND KW_LABEL l2=ident
     { TERM_Invoke (t, i, a, l1, l2)  }
 
 instr:
   (* assignement and calls *)
-  | i = ident EQ e = expr       { INSTR_Expr_Assign (i, e) }
-  | e = expr_unit               { INSTR_Expr_Unit e        }
-  | i = ident EQ t = terminator { INSTR_Terminator (i, t)  }
-  | t = terminator_unit         { INSTR_Terminator_Unit t  }
+  | i=ident EQ e=expr       { INSTR_Expr_Assign (i, e) }
+  | e=expr_unit               { INSTR_Expr_Unit e        }
+  | i=ident EQ t=terminator { INSTR_Terminator (i, t)  }
+  | t=terminator_unit         { INSTR_Terminator_Unit t  }
 
 alloc_attr:
-  | COMMA typ_i n = INTEGER { n }
+  | COMMA typ_i n=INTEGER { n }
   | COMMA align { 1 }
-  | COMMA typ_i n = INTEGER COMMA align { n }
+  | COMMA typ_i n=INTEGER COMMA align { n }
 
 %inline phi_table_entry:
-  | LSQUARE v = value COMMA l = ident RSQUARE { (v, l) }
+  | LSQUARE v=value COMMA l=ident RSQUARE { (v, l) }
 
 %inline switch_table_entry:
-  | t = typ o = value COMMA KW_LABEL l = ident EOL? { (t, o, l) }
+  | t=typ o=value COMMA KW_LABEL l=ident EOL? { (t, o, l) }
 
 value:
-  | i = INTEGER        { VALUE_Integer i  }
-  | f = FLOAT          { VALUE_Float f    }
+  | i=INTEGER        { VALUE_Integer i  }
+  | f=FLOAT          { VALUE_Float f    }
   | KW_TRUE            { VALUE_Bool true  }
   | KW_FALSE           { VALUE_Bool false }
-  | i = ident          { VALUE_Ident i    }
+  | i=ident          { VALUE_Ident i    }
   | KW_NULL            { VALUE_Null       }
   | KW_UNDEF           { VALUE_Undef      }
-  | LCURLY l = separated_list(COMMA, pair(typ, value)) RCURLY
+  | LCURLY l=separated_list(COMMA, pair(typ, value)) RCURLY
                        { VALUE_Struct l }
-  | LTLCURLY l = separated_list(COMMA, pair(typ, value)) RCURLYGT
+  | LTLCURLY l=separated_list(COMMA, pair(typ, value)) RCURLYGT
                        { VALUE_Struct l }
-  | LSQUARE l = separated_list(COMMA, pair(typ, value)) RSQUARE
+  | LSQUARE l=separated_list(COMMA, pair(typ, value)) RSQUARE
                        { VALUE_Array l }
-  | LT l = separated_list(COMMA, pair(typ, value)) GT
+  | LT l=separated_list(COMMA, pair(typ, value)) GT
                        { VALUE_Vector l }
   | KW_ZEROINITIALIZER { VALUE_Zero_initializer }
-  | e = expr           { VALUE_Expr e }
+  | e=expr           { VALUE_Expr e }
 
 %inline ident:
-  | l = GLOBAL { ID_Global l }
-  | l = LOCAL  { ID_Local l  }
+  | l=GLOBAL { ID_Global l }
+  | l=LOCAL  { ID_Local l  }
 
 tvalue:
-  | t = typ v = value { (t, v) }
+  | t=typ v=value { (t, v) }
