@@ -13,19 +13,3 @@ begin program "llvm"
   ocamlyacc = [ "menhir" "--explain" ]
 
 end
-
-begin program "llvm_ocp"
-
-  dirname = ["src"]
-
-  files = [
-    "LLVM.ml";
-    "llvm_lexer.mll";
-    "llvm_parser.mly";
-    "printer.ml";
-    "llvm_ocp.ml";
-  ]
-
-  ocamlyacc = [ "menhir" "--explain" ]
-
-end
