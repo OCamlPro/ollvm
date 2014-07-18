@@ -10,7 +10,7 @@ begin program "llvm"
     "main.ml"
   ]
 
-  ocamlyacc = [ "menhir" ]
+  ocamlyacc = [ "menhir" "--explain" ]
 
 end
 
@@ -26,6 +26,6 @@ begin program "llvm_ocp"
     "llvm_ocp.ml";
   ]
 
-  ocamlyacc = [ "menhir" ]
+  ocamlyacc = [ "menhir" "--explain" ]
 
 end
