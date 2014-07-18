@@ -260,8 +260,8 @@ expr:
     { let n=match n with None -> 1 | Some x -> x in
       EXPR_Alloca (n, t) }
 
-  | KW_LOAD KW_VOLATILE? tp=typ v=value preceded(COMMA, align)?
-    { EXPR_Load (tp, v) }
+  | KW_LOAD KW_VOLATILE? tv=tvalue preceded(COMMA, align)?
+    { EXPR_Load tv }
 
   | KW_PHI t=typ table=separated_nonempty_list(COMMA, phi_table_entry)
     { EXPR_Phi (t, table) }

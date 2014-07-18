@@ -198,8 +198,8 @@ let pprint =
     | EXPR_Alloca (n, t) ->
        sprintf "alloca %s, %s %i" (typ t) (typ t) (n)
 
-    | EXPR_Load (t, v) ->
-       sprintf "load %s %s" (typ t) (value v)
+    | EXPR_Load (tv) ->
+       "load" ^ tvalue tv
 
     | EXPR_Phi (t, vil) ->
        sprintf "phi %s [%s]"
