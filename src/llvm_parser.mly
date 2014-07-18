@@ -91,14 +91,14 @@ global_attr:
   | comma_section preceded(COMMA, align) { }
   | preceded(COMMA, align)               { }
 
-%inline global_is_constant:
+global_is_constant:
   | KW_GLOBAL { false }
   | KW_CONSTANT { true }
 
-%inline addrspace:
+addrspace:
   | KW_ADDRSPACE LPAREN n=INTEGER RPAREN { n }
 
-%inline comma_section:
+comma_section:
   | COMMA KW_SECTION s=STRING { s }
 
 definition:
@@ -134,7 +134,7 @@ linkage:
   | KW_DLLIMPORT                    { LINKAGE_Dllimport                    }
   | KW_DLLEXPORT                    { LINKAGE_Dllexport                    }
 
-%inline visibility:
+visibility:
   | KW_DEFAULT   { VISIBILITY_Default   }
   | KW_HIDDEN    { VISIBILITY_Hidden    }
   | KW_PROTECTED { VISIBILITY_Protected }
@@ -173,7 +173,7 @@ typ:
   | KW_OPAQUE                                { TYPE_Opaque           }
   | LT n=INTEGER KW_X t=typ GT           { TYPE_Vector (n, t)    }
 
-%inline typ_i:
+typ_i:
   | n=I { n }
 
 typ_attr:
@@ -231,7 +231,7 @@ fn_attr_gen:
   | KW_GC STRING      { None }
   | KW_SECTION STRING { None }
 
-%inline align:
+align:
   | KW_ALIGN p=INTEGER { p }
 
 (* Operators that may appear with `nuw`/`nsw` keywords *)
@@ -399,10 +399,10 @@ alloc_attr:
   | COMMA align { 1 }
   | COMMA typ_i n=INTEGER COMMA align { n }
 
-%inline phi_table_entry:
+phi_table_entry:
   | LSQUARE v=value COMMA l=ident RSQUARE { (v, l) }
 
-%inline switch_table_entry:
+switch_table_entry:
   | t=typ o=value COMMA KW_LABEL l=ident EOL? { (t, o, l) }
 
 value:
@@ -424,7 +424,7 @@ value:
   | KW_ZEROINITIALIZER { VALUE_Zero_initializer }
   | e=expr           { VALUE_Expr e }
 
-%inline ident:
+ident:
   | l=GLOBAL { ID_Global l }
   | l=LOCAL  { ID_Local l  }
 
