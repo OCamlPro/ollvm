@@ -75,37 +75,35 @@ toplevelentry:
   | d=declaration                       { TLE_Declaration d             }
   | KW_TARGET KW_DATALAYOUT EQ s=STRING { TLE_Datalayout s              }
   | KW_TARGET KW_TRIPLE EQ s=STRING     { TLE_Target s                  }
-  | i=LOCAL EQ KW_TYPE t=typ          { TLE_Type_decl (ID_Local i, t) }
+  | i=LOCAL EQ KW_TYPE t=typ            { TLE_Type_decl (ID_Local i, t) }
   | g=global_decl                       { TLE_Global g                  }
 
 global_decl:
   | ident=GLOBAL EQ
       linkage? visibility? KW_THREAD_LOCAL? addrspace? KW_UNNAMED_ADDR?
-      g_constant=global_is_constant g_typ=typ g_value=value?
-      global_attr?
+      g_constant=global_is_constant g_typ=typ g_value=const?
+      preceded(COMMA, global_attr)?
       { {g_ident=ID_Global ident; g_typ; g_constant; g_value;} }
 
 global_attr:
-  | comma_section             { }
-  | comma_section preceded(COMMA, align) { }
-  | preceded(COMMA, align)               { }
+  | KW_SECTION STRING              { }
+  | KW_SECTION STRING COMMA align  { }
+  | align                          { }
 
 global_is_constant:
   | KW_GLOBAL { false }
   | KW_CONSTANT { true }
 
-addrspace:
-  | KW_ADDRSPACE LPAREN n=INTEGER RPAREN { n }
+addrspace: KW_ADDRSPACE LPAREN n=INTEGER RPAREN { n }
 
-comma_section:
-  | COMMA KW_SECTION s=STRING { s }
+comma_section: COMMA KW_SECTION s=STRING { s }
 
 definition:
   | KW_DEFINE linkage? visibility? cconv?
     df_ret_typ=ret_type name=GLOBAL
-    df_args=delimited(LPAREN, separated_list(COMMA, df_arg), RPAREN)
-    df_attrs=list(fn_attr) EOL?
-    df_instrs=delimited(pair(LCURLY, EOL+), list(terminated(instr, EOL+)), RCURLY)
+    LPAREN df_args=separated_list(COMMA, df_arg) RPAREN
+    df_attrs=list(fn_attr) EOL*
+    LCURLY EOL* df_instrs=list(terminated(instr, EOL+)) RCURLY
     { {df_ret_typ; df_name=ID_Global name; df_args; df_attrs; df_instrs;} }
 
 declaration:
@@ -146,31 +144,25 @@ ret_type:
   | list(typ_attr) t=typ { t }
 
 typ:
-  | n=I                                    { TYPE_I n              }
-  | KW_VOID                                  { TYPE_Void             }
-  | KW_HALF                                  { TYPE_Half             }
-  | KW_FLOAT                                 { TYPE_Float            }
-  | KW_DOUBLE                                { TYPE_Double           }
-  | KW_X86_FP80                              { TYPE_X86_fp80         }
-  | KW_FP128                                 { TYPE_Fp128            }
-  | KW_PPC_FP128                             { TYPE_Ppc_fp128        }
-  | KW_LABEL                                 { TYPE_Label            }
-  | KW_METADATA                              { TYPE_Metadata         }
-  | KW_X86_MMX                               { TYPE_X86_mmx          }
-  | t=typ STAR                             { TYPE_Pointer t        }
-  | i=ident                                { TYPE_Ident i          }
-  | LSQUARE n=INTEGER KW_X t=typ RSQUARE { TYPE_Array (n, t)     }
-  | t=typ LPAREN ts=separated_list(COMMA, typ) RPAREN
-                                             { TYPE_Function (t, ts) }
-  | LCURLY ts=separated_list(COMMA, typ) RCURLY
-                                             { TYPE_Struct ts        }
-  | LTLCURLY ts=separated_list(COMMA, typ) RCURLYGT
-                                             { TYPE_Packed_struct ts }
-  | KW_OPAQUE                                { TYPE_Opaque           }
-  | LT n=INTEGER KW_X t=typ GT           { TYPE_Vector (n, t)    }
-
-typ_i:
-  | n=I { n }
+  | n=I                                               { TYPE_I n              }
+  | KW_VOID                                           { TYPE_Void             }
+  | KW_HALF                                           { TYPE_Half             }
+  | KW_FLOAT                                          { TYPE_Float            }
+  | KW_DOUBLE                                         { TYPE_Double           }
+  | KW_X86_FP80                                       { TYPE_X86_fp80         }
+  | KW_FP128                                          { TYPE_Fp128            }
+  | KW_PPC_FP128                                      { TYPE_Ppc_fp128        }
+  | KW_LABEL                                          { TYPE_Label            }
+  | KW_METADATA                                       { TYPE_Metadata         }
+  | KW_X86_MMX                                        { TYPE_X86_mmx          }
+  | t=typ STAR                                        { TYPE_Pointer t        }
+  | i=ident                                           { TYPE_Ident i          }
+  | LSQUARE n=INTEGER KW_X t=typ RSQUARE              { TYPE_Array (n, t)     }
+  | t=typ LPAREN ts=separated_list(COMMA, typ) RPAREN { TYPE_Function (t, ts) }
+  | LCURLY ts=separated_list(COMMA, typ) RCURLY       { TYPE_Struct ts        }
+  | LTLCURLY ts=separated_list(COMMA, typ) RCURLYGT   { TYPE_Packed_struct ts }
+  | KW_OPAQUE                                         { TYPE_Opaque           }
+  | LT n=INTEGER KW_X t=typ GT                        { TYPE_Vector (n, t)    }
 
 typ_attr:
   | KW_ZEROEXT   { TYPEATTR_Zeroext   }
@@ -182,101 +174,65 @@ typ_attr:
   | KW_NOCAPTURE { TYPEATTR_Nocapture }
   | KW_NEST      { TYPEATTR_Nest      }
 
-df_arg:
-  | t=typ list(typ_attr) i=ident { (t, i) }
-
-dc_arg:
-  | t=typ list(typ_attr) { t }
-
-call_arg:
-  | t=typ list(typ_attr) i=value { (t, i) }
+dc_arg: t=typ typ_attr*      { t      }
+df_arg: t=dc_arg i=ident     { (t, i) }
+call_arg: t=dc_arg i=value   { (t, i) }
 
 fn_attr:
   | KW_ALIGNSTACK LPAREN p=INTEGER RPAREN { FNATTR_Alignstack p    }
-  | KW_ALWAYSINLINE                         { FNATTR_Alwaysinline    }
-  | KW_BUILTIN                              { FNATTR_Nobuiltin       }
-  | KW_COLD                                 { FNATTR_Cold            }
-  | KW_INLINEHINT                           { FNATTR_Inlinehint      }
-  | KW_JUMPTABLE                            { FNATTR_Jumptable       }
-  | KW_MINSIZE                              { FNATTR_Minsize         }
-  | KW_NAKED                                { FNATTR_Naked           }
-  | KW_NOBUILTIN                            { FNATTR_Nobuiltin       }
-  | KW_NODUPLICATE                          { FNATTR_Noduplicate     }
-  | KW_NOIMPLICITFLOAT                      { FNATTR_Noimplicitfloat }
-  | KW_NOINLINE                             { FNATTR_Noinline        }
-  | KW_NONLAZYBIND                          { FNATTR_Nonlazybind     }
-  | KW_NOREDZONE                            { FNATTR_Noredzone       }
-  | KW_NORETURN                             { FNATTR_Noreturn        }
-  | KW_NOUNWIND                             { FNATTR_Nounwind        }
-  | KW_OPTNONE                              { FNATTR_Optnone         }
-  | KW_OPTSIZE                              { FNATTR_Optsize         }
-  | KW_READNONE                             { FNATTR_Readnone        }
-  | KW_READONLY                             { FNATTR_Readonly        }
-  | KW_RETURNS_TWICE                        { FNATTR_Returns_twice   }
-  | KW_SANITIZE_ADDRESS                     { FNATTR_Sanitize_address}
-  | KW_SANITIZE_MEMORY                      { FNATTR_Sanitize_memory }
-  | KW_SANITIZE_THREAD                      { FNATTR_Sanitize_thread }
-  | KW_SSP                                  { FNATTR_Ssp             }
-  | KW_SSPREQ                               { FNATTR_Sspreq          }
-  | KW_SSPSTRONG                            { FNATTR_Sspstrong       }
-  | KW_UWTABLE                              { FNATTR_Uwtable         }
+  | KW_ALWAYSINLINE                       { FNATTR_Alwaysinline    }
+  | KW_BUILTIN                            { FNATTR_Nobuiltin       }
+  | KW_COLD                               { FNATTR_Cold            }
+  | KW_INLINEHINT                         { FNATTR_Inlinehint      }
+  | KW_JUMPTABLE                          { FNATTR_Jumptable       }
+  | KW_MINSIZE                            { FNATTR_Minsize         }
+  | KW_NAKED                              { FNATTR_Naked           }
+  | KW_NOBUILTIN                          { FNATTR_Nobuiltin       }
+  | KW_NODUPLICATE                        { FNATTR_Noduplicate     }
+  | KW_NOIMPLICITFLOAT                    { FNATTR_Noimplicitfloat }
+  | KW_NOINLINE                           { FNATTR_Noinline        }
+  | KW_NONLAZYBIND                        { FNATTR_Nonlazybind     }
+  | KW_NOREDZONE                          { FNATTR_Noredzone       }
+  | KW_NORETURN                           { FNATTR_Noreturn        }
+  | KW_NOUNWIND                           { FNATTR_Nounwind        }
+  | KW_OPTNONE                            { FNATTR_Optnone         }
+  | KW_OPTSIZE                            { FNATTR_Optsize         }
+  | KW_READNONE                           { FNATTR_Readnone        }
+  | KW_READONLY                           { FNATTR_Readonly        }
+  | KW_RETURNS_TWICE                      { FNATTR_Returns_twice   }
+  | KW_SANITIZE_ADDRESS                   { FNATTR_Sanitize_address}
+  | KW_SANITIZE_MEMORY                    { FNATTR_Sanitize_memory }
+  | KW_SANITIZE_THREAD                    { FNATTR_Sanitize_thread }
+  | KW_SSP                                { FNATTR_Ssp             }
+  | KW_SSPREQ                             { FNATTR_Sspreq          }
+  | KW_SSPSTRONG                          { FNATTR_Sspstrong       }
+  | KW_UWTABLE                            { FNATTR_Uwtable         }
 
 fn_attr_gen:
-  | f=fn_attr { Some f }
-  | KW_ALIGN INTEGER  { None }
-  | KW_GC STRING      { None }
-  | KW_SECTION STRING { None }
+  | f=fn_attr                                           { Some f }
+  | KW_ALIGN INTEGER | KW_GC STRING | KW_SECTION STRING { None   }
 
-align:
-  | KW_ALIGN p=INTEGER { p }
+align: KW_ALIGN p=INTEGER { p }
 
-(* Operators that may appear with `nuw`/`nsw` keywords *)
-binop_nuw_nsw_opt:
-  | KW_ADD { Add }
-  | KW_SUB { Sub }
-  | KW_MUL { Mul }
-  | KW_SHL { Shl }
 
-(* Operators that may appear with `exact` keyword *)
-binop_exact_opt:
-  | KW_UDIV { UDiv }
-  | KW_SDIV { SDiv }
-  | KW_LSHR { LShr }
-  | KW_ASHR { AShr }
+binop_nuw_nsw_opt: (* may appear with `nuw`/`nsw` keywords *)
+  |KW_ADD{Add}|KW_SUB{Sub}|KW_MUL{Mul}|KW_SHL{Shl}
 
-(* Operators that can not appear with any keyword *)
-binop_no_opt:
-  | KW_UREM { URem }
-  | KW_SREM { SRem }
-  | KW_AND  { And }
-  | KW_OR   { Or }
-  | KW_XOR  { Xor }
+binop_exact_opt: (* may appear with `exact` keyword *)
+  |KW_UDIV{UDiv}|KW_SDIV{SDiv}|KW_LSHR{LShr}|KW_ASHR{AShr}
+
+binop_no_opt: (* can not appear with any keyword *)
+  |KW_UREM{URem}|KW_SREM{SRem}|KW_AND{And}|KW_OR{Or}|KW_XOR{Xor}
 
 icmp:
-  | KW_EQ  { Eq }
-  | KW_NE  { Ne }
-  | KW_UGT { Ugt }
-  | KW_UGE { Uge }
-  | KW_ULT { Ult }
-  | KW_ULE { Ule }
-  | KW_SGT { Sgt }
-  | KW_SGE { Sge }
-  | KW_SLT { Slt }
-  | KW_SLE { Sle }
+  |KW_EQ{Eq}|KW_NE{Ne}|KW_UGT{Ugt}|KW_UGE{Uge} |KW_ULT{Ult}|KW_ULE{Ule}
+  |KW_SGT{Sgt}|KW_SGE{Sge}|KW_SLT{Slt}|KW_SLE{Sle}
 
 conversion:
-  | KW_TRUNC    { Trunc }
-  | KW_ZEXT     { Zext }
-  | KW_SEXT     { Sext }
-  | KW_FPTRUNC  { Fptrunc }
-  | KW_FPEXT    { Fpext }
-  | KW_UITOFP   { Uitofp }
-  | KW_SITOFP   { Sitofp }
-  | KW_FPTOUI   { Fptoui }
-  | KW_FPTOSI   { Fptosi }
-  | KW_INTTOPTR { Inttoptr}
-  | KW_PTRTOINT { Ptrtoint }
-  | KW_BITCAST  { Bitcast }
+  |KW_TRUNC{Trunc}|KW_ZEXT{Zext}|KW_SEXT{Sext}|KW_FPTRUNC{Fptrunc}
+  |KW_FPEXT{Fpext}|KW_UITOFP{Uitofp}|KW_SITOFP{Sitofp}|KW_FPTOUI{Fptoui}
+  |KW_FPTOSI{Fptosi}|KW_INTTOPTR{Inttoptr}|KW_PTRTOINT{Ptrtoint}
+  |KW_BITCAST{Bitcast}
 
 binop:
   | op=binop_nuw_nsw_opt KW_NUW? KW_NSW? { op }
@@ -294,7 +250,7 @@ expr:
     { EXPR_Conversion (c, t1, v, t2) }
 
   | KW_GETELEMENTPTR ?KW_INBOUNDS ptr=tvalue
-    idx=list(preceded(COMMA, pair(typ, value)))
+    idx=preceded(COMMA, tvalue)*
     { EXPR_GetElementPtr (ptr, idx) }
 
   | KW_TAIL? KW_CALL cconv? list(typ_attr) t=typ
@@ -356,7 +312,7 @@ terminator_unit:
   | KW_RET KW_VOID
     { TERM_UNIT_Ret_void }
 
-  | KW_BR t=typ_i o=value COMMA
+  | KW_BR t=typ o=value COMMA
     KW_LABEL o1=ident COMMA KW_LABEL o2=ident
     { TERM_UNIT_Br (o, o1, o2) }
 
@@ -384,16 +340,15 @@ terminator:
     { TERM_Invoke (t, i, a, l1, l2)  }
 
 instr:
-  (* assignement and calls *)
   | i=ident EQ e=expr       { INSTR_Expr_Assign (i, e) }
-  | e=expr_unit               { INSTR_Expr_Unit e        }
+  | e=expr_unit             { INSTR_Expr_Unit e        }
   | i=ident EQ t=terminator { INSTR_Terminator (i, t)  }
-  | t=terminator_unit         { INSTR_Terminator_Unit t  }
+  | t=terminator_unit       { INSTR_Terminator_Unit t  }
 
 alloc_attr:
-  | COMMA typ_i n=INTEGER { n }
-  | COMMA align { 1 }
-  | COMMA typ_i n=INTEGER COMMA align { n }
+  | COMMA typ n=INTEGER             { n }
+  | COMMA align                     { 1 }
+  | COMMA typ n=INTEGER COMMA align { n }
 
 phi_table_entry:
   | LSQUARE v=value COMMA l=ident RSQUARE { (v, l) }
@@ -401,28 +356,27 @@ phi_table_entry:
 switch_table_entry:
   | t=typ o=value COMMA KW_LABEL l=ident EOL? { (t, o, l) }
 
+const:
+  | i=INTEGER                                         { VALUE_Integer i        }
+  | f=FLOAT                                           { VALUE_Float f          }
+  | KW_TRUE                                           { VALUE_Bool true        }
+  | KW_FALSE                                          { VALUE_Bool false       }
+  | i=ident                                           { VALUE_Ident i          }
+  | KW_NULL                                           { VALUE_Null             }
+  | KW_UNDEF                                          { VALUE_Undef            }
+  | KW_ZEROINITIALIZER                                { VALUE_Zero_initializer }
+  | LCURLY l=separated_list(COMMA, tconst) RCURLY     { VALUE_Struct l         }
+  | LTLCURLY l=separated_list(COMMA, tconst) RCURLYGT { VALUE_Struct l         }
+  | LSQUARE l=separated_list(COMMA, tconst) RSQUARE   { VALUE_Array l          }
+  | LT l=separated_list(COMMA, tconst) GT             { VALUE_Vector l         }
+
 value:
-  | i=INTEGER        { VALUE_Integer i  }
-  | f=FLOAT          { VALUE_Float f    }
-  | KW_TRUE            { VALUE_Bool true  }
-  | KW_FALSE           { VALUE_Bool false }
-  | i=ident          { VALUE_Ident i    }
-  | KW_NULL            { VALUE_Null       }
-  | KW_UNDEF           { VALUE_Undef      }
-  | LCURLY l=separated_list(COMMA, pair(typ, value)) RCURLY
-                       { VALUE_Struct l }
-  | LTLCURLY l=separated_list(COMMA, pair(typ, value)) RCURLYGT
-                       { VALUE_Struct l }
-  | LSQUARE l=separated_list(COMMA, pair(typ, value)) RSQUARE
-                       { VALUE_Array l }
-  | LT l=separated_list(COMMA, pair(typ, value)) GT
-                       { VALUE_Vector l }
-  | KW_ZEROINITIALIZER { VALUE_Zero_initializer }
-  | e=expr           { VALUE_Expr e }
+  | c=const { c            }
+  | e=expr  { VALUE_Expr e }
 
 ident:
   | l=GLOBAL { ID_Global l }
   | l=LOCAL  { ID_Local l  }
 
-tvalue:
-  | t=typ v=value { (t, v) }
+tvalue: t=typ v=value { (t, v) }
+tconst: t=typ c=const { (t, c) }
