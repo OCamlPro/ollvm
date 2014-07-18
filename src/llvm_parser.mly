@@ -64,11 +64,9 @@
 
 %%
 
+(* NB: Will produve parsing error with file not ending with a EOL *)
 module_:
-  | EOL* m=list(toplevelentry_eol) EOF { m }
-
-toplevelentry_eol:
-  | tle=toplevelentry EOL+ { tle }
+  | EOL* m=terminated(toplevelentry, EOL+)* EOF { m }
 
 toplevelentry:
   | d=definition                        { TLE_Definition d              }
