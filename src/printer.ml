@@ -211,8 +211,6 @@ let pprint =
 
     | EXPR_VAArg -> "vaarg"
 
-    | EXPR_Label i -> "label " ^ ident i
-
     | EXPR_ExtractElement (vec, idx) ->
        sprintf "extractelement %s, %s" (tvalue vec) (tvalue idx)
 
@@ -306,13 +304,19 @@ let pprint =
       df_name = i;
       df_args = til;
       df_attrs = al;
-      df_instrs = il;
-    } -> sprintf "define %s %s(%s) %s {\n%s\n}"
+      df_instrs = (entry_block, other_blocks);
+    } -> sprintf "define %s %s(%s) %s {\n%s\n%s\n}"
                         (typ t)
                         (ident i)
                         (list ", " tident til)
                         (list " " fn_attr al)
-                        (list "\n" instr il)
+                        (unnamed_block entry_block)
+                        (list "\n" named_block other_blocks)
+
+  and unnamed_block : LLVM.unnamed_block -> string = fun b -> list "\n" instr b
+
+  and named_block : LLVM.named_block -> string = fun (i, b) ->
+    i ^ ":\n" ^ (unnamed_block b)
 
   and instr : LLVM.instr -> string = function
     | INSTR_Expr_Assign (i, e) -> ident i ^ " = " ^ expr e

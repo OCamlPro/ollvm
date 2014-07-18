@@ -150,7 +150,6 @@ type tvalue = typ * value
   | EXPR_Select of tvalue * tvalue * tvalue (* if * then * else *)
   | EXPR_VAArg
   | EXPR_LandingPad
-  | EXPR_Label of ident
 
 and expr_unit =
   | EXPR_UNIT_IGNORED of expr
@@ -214,7 +213,7 @@ and definition = {
      df_name: ident;
      df_args: (typ * ident) list;
     df_attrs: fn_attr list;
-   df_instrs: instr list;
+   df_instrs: unnamed_block * named_block list;
 }
 
 and instr =
@@ -222,3 +221,7 @@ and instr =
   | INSTR_Expr_Unit of expr_unit
   | INSTR_Terminator of (ident * terminator)
   | INSTR_Terminator_Unit of terminator_unit
+
+and unnamed_block = instr list
+
+and named_block = string * unnamed_block

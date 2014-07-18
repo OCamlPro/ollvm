@@ -101,8 +101,21 @@ definition:
     df_ret_typ=ret_type name=GLOBAL
     LPAREN df_args=separated_list(COMMA, df_arg) RPAREN
     df_attrs=list(fn_attr) EOL*
-    LCURLY EOL* df_instrs=list(terminated(instr, EOL+)) RCURLY
-    { {df_ret_typ; df_name=ID_Global name; df_args; df_attrs; df_instrs;} }
+    LCURLY EOL*
+    df_entry_block=unnamed_block
+    df_other_blocks=named_block*
+    RCURLY
+    { {df_ret_typ;
+       df_name=ID_Global name;
+       df_args;
+       df_attrs;
+       df_instrs=(df_entry_block, df_other_blocks);} }
+
+unnamed_block:
+  | b=terminated(instr, EOL+)* { b }
+
+named_block:
+  | i=LABEL b=unnamed_block { (i, b) }
 
 declaration:
   | KW_DECLARE linkage? visibility? cconv? KW_UNNAMED_ADDR?
@@ -212,7 +225,6 @@ fn_attr_gen:
 
 align: KW_ALIGN p=INTEGER { p }
 
-
 binop_nuw_nsw_opt: (* may appear with `nuw`/`nsw` keywords *)
   |KW_ADD{Add}|KW_SUB{Sub}|KW_MUL{Mul}|KW_SHL{Shl}
 
@@ -268,8 +280,6 @@ expr:
 
   | KW_SELECT if_=tvalue COMMA then_=tvalue COMMA else_= tvalue
     { EXPR_Select (if_, then_, else_) }
-
-  | l=LABEL { EXPR_Label (ID_Local l) }
 
   | KW_EXTRACTELEMENT vec=tvalue COMMA idx=tvalue
     { EXPR_ExtractElement (vec, idx) }
