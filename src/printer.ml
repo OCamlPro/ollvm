@@ -289,8 +289,9 @@ let pprint =
       g_typ = t;
       g_constant = b;
       g_value = vo;
-    } -> "global" ^ ident i ^ typ t ^ (string_of_bool b)
-         ^ (match vo with None -> "" | Some v -> value v)
+    } -> sprintf "%s = %s %s %s"
+                 (ident i) (if b then "constant" else "global") (typ t)
+                 (match vo with None -> "" | Some v -> value v)
 
   and declaration : LLVM.declaration -> string = fun {
       dc_ret_typ = t;
