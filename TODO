@@ -1,0 +1,31 @@
+= TODO LIST =
+
+- Implement functions with unnamed arguments.
+   Unnamed arguments are numered starting from 0. (i.e. %0, %1, ...)
+   (e.g. define void @autogen_SD0(i8*, i32*, i64*, i32, i64, i8))
+
+- Fix parser conflicts
+
+- Fix/complete metadata
+   Parsing is incomplete:
+   - metadata as function argument.
+   - `null` value (with no type) in metadata node.
+   - metadata at the end of a value list of variable length.
+   Parsing looses information (everything becomes `metadata !""`)
+
+- Implement `align` keyword
+   Some things may be specified with `, align [X]`:
+   - Global variables
+   - alloca / load / store instructions
+   - functions
+
+- Implement `section` keyword
+   - Global variables
+   - functions
+
+- Implement `volatile` keyword
+   - load / store instructions
+   - cmpxchg
+   - atomicrmw
+
+- Implement fast math flags for floatinf point binop.
