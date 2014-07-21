@@ -28,7 +28,7 @@
 (*TODO: floats *)
 (*TODO: don't throw things away *)
 
-%token<string> GLOBAL LOCAL
+%token<LLVM.ident_format * string> GLOBAL LOCAL
 %token LPAREN RPAREN LCURLY RCURLY LTLCURLY RCURLYGT LSQUARE RSQUARE LT GT EQ COMMA EOF EOL STAR
 
 %token<string> STRING
@@ -59,29 +59,49 @@
 %token KW_TAIL
 %token KW_VOLATILE
 
+%token<LLVM.ident_format * string> METADATA_ID
+%token<string> METADATA_STRING
+%token BANGLCURLY
 
 %start<LLVM.module_> module_
 
 %%
 
-(* NB: Will produve parsing error with file not ending with a EOL *)
+(* NB: Will produce parsing error with file not ending with a EOL *)
 module_:
   | EOL* m=terminated(toplevelentry, EOL+)* EOF { m }
 
 toplevelentry:
-  | d=definition                        { TLE_Definition d              }
-  | d=declaration                       { TLE_Declaration d             }
-  | KW_TARGET KW_DATALAYOUT EQ s=STRING { TLE_Datalayout s              }
-  | KW_TARGET KW_TRIPLE EQ s=STRING     { TLE_Target s                  }
-  | i=LOCAL EQ KW_TYPE t=typ            { TLE_Type_decl (ID_Local i, t) }
-  | g=global_decl                       { TLE_Global g                  }
+  | d=definition                        { TLE_Definition d               }
+  | d=declaration                       { TLE_Declaration d              }
+  | KW_TARGET KW_DATALAYOUT EQ s=STRING { TLE_Datalayout s               }
+  | KW_TARGET KW_TRIPLE EQ s=STRING     { TLE_Target s                   }
+  | i=LOCAL EQ KW_TYPE t=typ            { TLE_Type_decl
+                                            (ID_Local (fst i, snd i), t) }
+  | g=global_decl                       { TLE_Global g                   }
+  | id=METADATA_ID EQ KW_METADATA? m=metadata
+                                        { TLE_Metadata (snd id, m)       }
+(* metadata are not implemented yet, but are at least (partially) parsed *)
+metadata:
+  | METADATA_ID               (* ident *)
+  | METADATA_ID METADATA_ID (* alias *)
+  | METADATA_STRING
+  | BANGLCURLY separated_list(COMMA, metadata_field) RCURLY (* EOL? *)
+    { METADATA_VALUE_String "" }
+
+metadata_field:
+  | tvalue
+  | KW_METADATA? metadata {}
 
 global_decl:
   | ident=GLOBAL EQ
       linkage? visibility? KW_THREAD_LOCAL? addrspace? KW_UNNAMED_ADDR?
       g_constant=global_is_constant g_typ=typ g_value=const?
       preceded(COMMA, global_attr)?
-      { {g_ident=ID_Global ident; g_typ; g_constant; g_value;} }
+      { { g_ident=ID_Global (fst ident, snd ident);
+          g_typ;
+          g_constant;
+          g_value; } }
 
 global_attr:
   | KW_SECTION STRING              { }
@@ -105,24 +125,25 @@ definition:
     df_entry_block=unnamed_block
     df_other_blocks=named_block*
     RCURLY
-    { {df_ret_typ;
-       df_name=ID_Global name;
-       df_args;
-       df_attrs;
-       df_instrs=(df_entry_block, df_other_blocks);} }
+    { { df_ret_typ;
+        df_name=ID_Global (fst name, snd name);
+        df_args;
+        df_attrs;
+        df_instrs=(df_entry_block, df_other_blocks);} }
 
 unnamed_block:
-  | b=terminated(instr, EOL+)* { b }
+  | b=terminated(pair(instr, preceded(COMMA, metadata)*), EOL+)*
+    { List.map fst b }
 
 named_block:
-  | i=LABEL b=unnamed_block { (i, b) }
+  | i=LABEL EOL+ b=unnamed_block { (i, b) }
 
 declaration:
   | KW_DECLARE linkage? visibility? cconv? KW_UNNAMED_ADDR?
     dc_ret_typ=ret_type name=GLOBAL
     LPAREN dc_args=separated_list(COMMA, dc_arg) RPAREN
     list(fn_attr_gen)
-    { {dc_ret_typ; dc_name=ID_Global name; dc_args;} }
+    { {dc_ret_typ; dc_name=ID_Global (fst name, snd name); dc_args;} }
 
 linkage:
   | KW_PRIVATE                      { LINKAGE_Private                      }
@@ -383,8 +404,8 @@ value:
   | e=expr  { VALUE_Expr e }
 
 ident:
-  | l=GLOBAL { ID_Global l }
-  | l=LOCAL  { ID_Local l  }
+  | l=GLOBAL { ID_Global (fst l, snd l) }
+  | l=LOCAL  { ID_Local (fst l, snd l)  }
 
 tvalue: t=typ v=value { (t, v) }
 tconst: t=typ c=const { (t, c) }

@@ -78,9 +78,29 @@ let pprint =
     | FNATTR_Sspstrong -> "sspstrong"
     | FNATTR_Uwtable -> "uwtable"
 
+  and metadata_ident : LLVM.metadata_ident -> string =
+    fun m -> "!" ^ m
+
+  and metadata_value : LLVM.metadata_value -> string = function
+    | METADATA_VALUE_Ident i -> metadata_ident i
+    | METADATA_VALUE_String s -> "!\"" ^ s ^ "\""
+    | METADATA_VALUE_Struct ml ->
+       "!{"
+       ^ list ", " (fun (t, v) -> typ t ^ " " ^ metadata_value v) ml
+       ^ "}"
+    | METADATA_VALUE_Value v -> value v
+    | METADATA_VALUE_Alias (id1, id2) ->
+       metadata_ident id1 ^ " " ^ metadata_ident id2
+
   and ident : LLVM.ident -> string = function
-    | ID_Global s -> "@" ^ s
-    | ID_Local s  -> "%" ^ s
+    | ID_Global (f, i) -> "@" ^ ident_format f i
+    | ID_Local (f, i)  -> "%" ^ ident_format f i
+
+  and ident_format : LLVM.ident_format -> string -> string =
+    fun f i -> match f with
+               | ID_FORMAT_Named
+               | ID_FORMAT_Unnamed -> i
+               | ID_FORMAT_NamedString -> "\"" ^ i ^ "\""
 
   and typ : LLVM.typ -> string = function
     | TYPE_I i              -> "i" ^ string_of_int i
@@ -93,7 +113,7 @@ let pprint =
     | TYPE_X86_fp80         -> assert false
     | TYPE_Fp128            -> assert false
     | TYPE_Ppc_fp128        -> assert false
-    | TYPE_Metadata         -> assert false
+    | TYPE_Metadata         -> "metadata"
     | TYPE_X86_mmx          -> assert false
     | TYPE_Ident i          -> assert false (* i : ident *)
     | TYPE_Array (i, t)     -> sprintf "[%d x %s]" i (typ t)
@@ -283,6 +303,7 @@ let pprint =
     | TLE_Definition d -> definition d
     | TLE_Type_decl (i, t) -> ident i ^ typ t
     | TLE_Global g -> global g
+    | TLE_Metadata (id, m) -> metadata_ident id ^ " = " ^ metadata_value m
 
   and global : LLVM.global -> string = fun {
       g_ident = i;

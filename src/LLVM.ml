@@ -42,18 +42,18 @@ type linkage =
   | LINKAGE_Dllimport
   | LINKAGE_Dllexport
 
-type visibility =
+and visibility =
   | VISIBILITY_Default
   | VISIBILITY_Hidden
   | VISIBILITY_Protected
 
-type cconv =
+and cconv =
   | CC_Ccc
   | CC_Fastcc
   | CC_Coldcc
   | CC_Cc of int
 
-type typ_attr =
+and typ_attr =
   | TYPEATTR_Zeroext
   | TYPEATTR_Signext
   | TYPEATTR_Inreg
@@ -63,7 +63,7 @@ type typ_attr =
   | TYPEATTR_Nocapture
   | TYPEATTR_Nest
 
-type fn_attr =
+and fn_attr =
   | FNATTR_Alignstack of int
   | FNATTR_Alwaysinline
   | FNATTR_Builtin
@@ -93,11 +93,16 @@ type fn_attr =
   | FNATTR_Sspstrong
   | FNATTR_Uwtable
 
-type ident =
-  | ID_Global of string
-  | ID_Local  of string
+and ident_format =
+  | ID_FORMAT_Named
+  | ID_FORMAT_NamedString
+  | ID_FORMAT_Unnamed
 
-type typ =
+and ident =
+  | ID_Global of ident_format * string
+  | ID_Local  of ident_format * string
+
+and typ =
   | TYPE_I of int
   | TYPE_Pointer of typ
   | TYPE_Void
@@ -118,18 +123,27 @@ type typ =
   | TYPE_Opaque
   | TYPE_Vector of (int * typ)
 
-type icmp = Eq|Ne|Ugt|Uge|Ult|Ule|Sgt|Sge|Slt|Sle
+and metadata_ident = string
 
-type fcmp = False|Oeq|Ogt|Oge|Olt|Ole|One|Ord|Uno|Ueq|Ugt|Uge|Ult|Ule|Une|True
+and metadata_value =
+  | METADATA_VALUE_Ident of metadata_ident
+  | METADATA_VALUE_String of string
+  | METADATA_VALUE_Struct of (typ * metadata_value) list
+  | METADATA_VALUE_Value of value
+  | METADATA_VALUE_Alias of metadata_ident * metadata_ident
 
-type ibinop = Add|Sub|Mul|UDiv|SDiv|URem|SRem|Shl|LShr|AShr|And|Or|Xor
+and icmp = Eq|Ne|Ugt|Uge|Ult|Ule|Sgt|Sge|Slt|Sle
 
-type fbinop = FAdd|FSub|FMul|FDiv|FRem
+and fcmp = False|Oeq|Ogt|Oge|Olt|Ole|One|Ord|Uno|Ueq|Ugt|Uge|Ult|Ule|Une|True
 
-type conversion_type = Trunc|Zext|Sext|Fptrunc|Fpext|Uitofp|Sitofp|Fptoui
+and ibinop = Add|Sub|Mul|UDiv|SDiv|URem|SRem|Shl|LShr|AShr|And|Or|Xor
+
+and fbinop = FAdd|FSub|FMul|FDiv|FRem
+
+and conversion_type = Trunc|Zext|Sext|Fptrunc|Fpext|Uitofp|Sitofp|Fptoui
                        |Fptosi|Inttoptr|Ptrtoint|Bitcast
 
-type tvalue = typ * value
+and tvalue = typ * value
 
  and expr =
   | EXPR_IBinop of ibinop * typ * value * value
@@ -185,7 +199,7 @@ and terminator_unit =
   | TERM_UNIT_Resume of tvalue
   | TERM_UNIT_Unreachable
 
-type module_ = toplevelentry list
+and module_ = toplevelentry list
 
 and toplevelentry =
   | TLE_Target of string
@@ -194,6 +208,7 @@ and toplevelentry =
   | TLE_Definition of definition
   | TLE_Type_decl of (ident * typ)
   | TLE_Global of global
+  | TLE_Metadata of metadata_ident * metadata_value
 
 and global = {
      g_ident: ident;

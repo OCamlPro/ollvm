@@ -197,8 +197,10 @@
   (* misc *)
   | "x" -> KW_X
 
-  (*catch_all*)
+  (* catch_all *)
   | s -> failwith ("Unknown or unsupported keyword: " ^ s)
+
+  type ident_type = Named | NamedString | Unnamed
 
 }
 
@@ -237,14 +239,24 @@ rule token = parse
   | (label_char)+ as l ':' { LABEL l }
 
   (* identifier *)
-  | '@' { GLOBAL (ident_body lexbuf) }
-  | '%' { LOCAL  (ident_body lexbuf) }
+  | '@' { let (f, i) = ident_body lexbuf in GLOBAL (f, i) }
+  | '%' { let (f, i) = ident_body lexbuf in LOCAL (f, i) }
+
+  (* FIXME: support metadata strings and struct. Parsed as identifier here. *)
+  | "!{" { BANGLCURLY }
+  | '!'  { let (format, id) = ident_body lexbuf in
+           match format with
+           | LLVM.ID_FORMAT_Named
+           | LLVM.ID_FORMAT_Unnamed -> METADATA_ID (format, id)
+           | LLVM.ID_FORMAT_NamedString -> METADATA_STRING (id)
+         }
 
   (* constants *)
-  | ('-'? digit+ ) as d { INTEGER (int_of_string d) }
-  | ('-'? digit* '.' digit+ ) as d { FLOAT (float_of_string d) }
-  | ('-'? digit ('.' digit+)? 'e' ('+'|'-') digit+ ) as d { FLOAT (float_of_string d) }
-  | '"' { STRING (string (Buffer.create 10) (Lexing.lexeme_start_p lexbuf) lexbuf) }
+  | '-'? digit+ as d            { INTEGER (int_of_string d) }
+  | '-'? digit* '.' digit+ as d { FLOAT (float_of_string d) }
+  | '-'? digit ('.' digit+)? 'e' ('+'|'-') digit+ as d
+                                { FLOAT (float_of_string d) }
+  | '"'                         { STRING (string (Buffer.create 10) lexbuf) }
 
   (* types *)
   | 'i' (digit+ as i) { I (int_of_string i) }
@@ -258,13 +270,12 @@ and comment = parse
   | eof { EOF }
   | _ { comment lexbuf }
 
-and string b p = parse
-  | '"' { Buffer.contents b }
-  | eol { raise (Lex_error_unterminated_string p) }
-  | eof { raise (Lex_error_unterminated_string p) }
-  | _ as c { Buffer.add_char b c; string b p lexbuf }
+and string buf = parse
+  | '"'    { Buffer.contents buf }
+  | _ as c { Buffer.add_char buf c; string buf lexbuf }
 
 and ident_body = parse
-  | (ident_fst ident_nxt*) as i { i }
-  | digit+ as i { i }
-  | '"' { string (Buffer.create 10) (Lexing.lexeme_start_p lexbuf) lexbuf }
+  | ident_fst ident_nxt* as i { (LLVM.ID_FORMAT_Named, i) }
+  | digit+ as i               { (LLVM.ID_FORMAT_Unnamed, i) }
+  | '"'                       { (LLVM.ID_FORMAT_NamedString,
+                                 string (Buffer.create 10) lexbuf) }
