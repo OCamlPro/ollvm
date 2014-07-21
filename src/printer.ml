@@ -241,7 +241,7 @@ let pprint =
   and value : LLVM.value -> string = function
     | VALUE_Ident i           -> ident i
     | VALUE_Integer i         -> (string_of_int i)
-    | VALUE_Float f           -> (string_of_float f)
+    | VALUE_Float f           -> sprintf "%f" f
     | VALUE_Bool b            -> (string_of_bool b)
     | VALUE_Null              -> "null"
     | VALUE_Undef             -> "undef"
