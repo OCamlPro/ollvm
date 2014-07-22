@@ -177,7 +177,6 @@ and value =
   | VALUE_Array of tvalue list
   | VALUE_Vector of tvalue list
   | VALUE_Zero_initializer
-  | VALUE_Expr of expr
 
 and terminator =
   | TERM_Invoke of (tident * tvalue list * tident * tident)

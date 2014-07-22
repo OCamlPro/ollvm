@@ -248,7 +248,6 @@ let pprint =
     | VALUE_Bool b            -> (string_of_bool b)
     | VALUE_Null              -> "null"
     | VALUE_Undef             -> "undef"
-    | VALUE_Expr e            -> expr e
     | VALUE_Struct tvl
     | VALUE_Packed_struct tvl
     | VALUE_Array tvl

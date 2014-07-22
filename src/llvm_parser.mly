@@ -418,7 +418,6 @@ const:
   | f=FLOAT                                           { VALUE_Float f          }
   | KW_TRUE                                           { VALUE_Bool true        }
   | KW_FALSE                                          { VALUE_Bool false       }
-  | i=ident                                           { VALUE_Ident i          }
   | KW_NULL                                           { VALUE_Null             }
   | KW_UNDEF                                          { VALUE_Undef            }
   | KW_ZEROINITIALIZER                                { VALUE_Zero_initializer }
@@ -428,8 +427,8 @@ const:
   | LT l=separated_list(COMMA, tconst) GT             { VALUE_Vector l         }
 
 value:
-  | c=const { c            }
-  | e=expr  { VALUE_Expr e }
+  | c=const { c             }
+  | i=ident { VALUE_Ident i }
 
 ident:
   | l=GLOBAL { ID_Global (fst l, snd l) }
