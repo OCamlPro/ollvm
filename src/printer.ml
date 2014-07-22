@@ -197,9 +197,14 @@ let pprint =
     | EXPR_Call (ti, tvl) ->
        sprintf "call %s(%s)" (tident ti) (list ", " tvalue tvl)
 
-    | EXPR_Alloca (n, t) ->
-       sprintf "alloca %s, %s %i" (typ t) (typ t) (n)
-
+    | EXPR_Alloca (t, n, a) ->
+       sprintf "alloca %s%s" (typ t)
+               begin
+                 (match n with None -> ""
+                             | Some n -> ", " ^ tvalue n)
+                 ^ (match a with None -> ""
+                               | Some a -> ", align " ^ string_of_int a)
+               end
     | EXPR_Load (tv) ->
        "load" ^ tvalue tv
 

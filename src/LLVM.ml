@@ -150,7 +150,7 @@ and tident = typ * ident
   | EXPR_ExtractValue of tvalue * int list
   | EXPR_InsertValue of tvalue * tvalue * int list
   | EXPR_Call of tident * tvalue list
-  | EXPR_Alloca of int * typ
+  | EXPR_Alloca of typ * tvalue option * int option (* typ, nb el, align *)
   | EXPR_Load of tvalue
   | EXPR_Phi of typ * (value * ident) list
   | EXPR_Select of tvalue * tvalue * tvalue (* if * then * else *)

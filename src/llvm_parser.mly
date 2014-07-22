@@ -290,7 +290,6 @@ ibinop:
 fbinop:
   KW_FADD{FAdd}|KW_FSUB{FSub}|KW_FMUL{FMul}|KW_FDIV{FDiv}|KW_FREM{FRem}
 
-
 expr:
   | op=ibinop t=typ o1=value COMMA o2=value
     { EXPR_IBinop (op, t, o1, o2) }
@@ -316,9 +315,9 @@ expr:
     list(fn_attr)
     { EXPR_Call (f, a) }
 
-  | KW_ALLOCA t=typ n=alloc_attr?
-    { let n=match n with None -> 1 | Some x -> x in
-      EXPR_Alloca (n, t) }
+  | KW_ALLOCA t=typ opt=preceded(COMMA, alloca_opt)?
+    { let (n, a) = match opt with Some x -> x | None -> (None, None) in
+      EXPR_Alloca (t, n, a) }
 
   | KW_LOAD KW_VOLATILE? tv=tvalue preceded(COMMA, align)?
     { EXPR_Load tv }
@@ -347,6 +346,10 @@ expr:
   | KW_SHUFFLEVECTOR  { failwith "EXPR_ShuffleVector"  }
   | KW_VAARG  { failwith"INSTR_VAArg"  }
   | KW_LANDINGPAD    { failwith"INSTR_LandingPad"    }
+
+alloca_opt:
+  | a=align                             { (None, Some a) }
+  | nb=tvalue a=preceded(COMMA, align)? { (Some nb, a) }
 
 expr_unit:
 
