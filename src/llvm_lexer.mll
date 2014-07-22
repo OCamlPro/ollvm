@@ -161,6 +161,8 @@
   | "extractvalue"   -> KW_EXTRACTVALUE
   | "insertvalue"    -> KW_INSERTVALUE
   | "landingpad"     -> KW_LANDINGPAD
+
+  (* icmp *)
   | "nuw"            -> KW_NUW
   | "nsw"            -> KW_NSW
   | "exact"          -> KW_EXACT
@@ -174,6 +176,19 @@
   | "sge"            -> KW_SGE
   | "slt"            -> KW_SLT
   | "sle"            -> KW_SLE
+
+  (* fcmp. true and false are already handled later.
+   * some are already handled in icmp *)
+  | "oeq"            -> KW_OEQ
+  | "ogt"            -> KW_OGT
+  | "oge"            -> KW_OGE
+  | "olt"            -> KW_OLT
+  | "ole"            -> KW_OLE
+  | "one"            -> KW_ONE
+  | "ord"            -> KW_ORD
+  | "uno"            -> KW_UNO
+  | "ueq"            -> KW_UEQ
+  | "une"            -> KW_UNE
 
   (*types*)
   | "void"      -> KW_VOID

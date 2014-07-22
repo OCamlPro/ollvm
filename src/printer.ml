@@ -261,7 +261,7 @@ let pprint =
   and value : LLVM.value -> string = function
     | VALUE_Ident i           -> ident i
     | VALUE_Integer i         -> (string_of_int i)
-    | VALUE_Float f           -> (string_of_float f)
+    | VALUE_Float f           -> sprintf "%f" f
     | VALUE_Bool b            -> (string_of_bool b)
     | VALUE_Null              -> "null"
     | VALUE_Undef             -> "undef"
@@ -277,9 +277,9 @@ let pprint =
   and terminator_unit : LLVM.terminator_unit -> string = function
     | TERM_UNIT_Ret (t, v)       -> "ret " ^ tvalue (t, v)
     | TERM_UNIT_Ret_void         -> "ret void"
-    | TERM_UNIT_Br (v, i1, i2)   ->
-       sprintf "br i1 %s, %s, %s" (value v) (ident i1) (ident i2)
-    | TERM_UNIT_Br_1 i           -> "br " ^ ident i
+    | TERM_UNIT_Br (c, i1, i2)   ->
+       sprintf "br i1 %s, %s, %s" (tvalue c) (ident i1) (ident i2)
+    | TERM_UNIT_Br_1 (t, i)       -> "br " ^ typ t ^ " " ^ ident i
     | TERM_UNIT_Switch (t, v1, v2, tvil) ->
        sprintf "switch %s %s, %s [%s]"
                (typ t) (value v1) (value v2)
@@ -310,8 +310,9 @@ let pprint =
       g_typ = t;
       g_constant = b;
       g_value = vo;
-    } -> "global" ^ ident i ^ typ t ^ (string_of_bool b)
-         ^ (match vo with None -> "" | Some v -> value v)
+    } -> sprintf "%s = %s %s %s"
+                 (ident i) (if b then "constant" else "global") (typ t)
+                 (match vo with None -> "" | Some v -> value v)
 
   and declaration : LLVM.declaration -> string = fun {
       dc_ret_typ = t;

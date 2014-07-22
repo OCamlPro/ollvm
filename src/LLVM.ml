@@ -192,8 +192,8 @@ and terminator =
 and terminator_unit =
   | TERM_UNIT_Ret of tvalue
   | TERM_UNIT_Ret_void
-  | TERM_UNIT_Br of (value * ident * ident) (*types are constant *)
-  | TERM_UNIT_Br_1 of ident
+  | TERM_UNIT_Br of (tvalue * ident * ident) (*types are constant *)
+  | TERM_UNIT_Br_1 of typ * ident
   | TERM_UNIT_Switch of (typ * value * value * (typ * value * ident) list)
   | TERM_UNIT_IndirectBr
   | TERM_UNIT_Resume of tvalue

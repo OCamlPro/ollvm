@@ -55,7 +55,9 @@
 %token KW_UNWIND KW_TO
 %token KW_NUW KW_NSW
 %token KW_EXACT
-%token KW_EQ KW_NE KW_UGT KW_UGE KW_ULT KW_ULE KW_SGT KW_SGE KW_SLT KW_SLE
+%token KW_EQ KW_NE KW_SGT KW_SGE KW_SLT KW_SLE
+%token KW_UGT KW_UGE KW_ULT KW_ULE
+%token KW_OEQ KW_OGT KW_OGE KW_OLT KW_OLE KW_ONE KW_ORD KW_UNO KW_UEQ KW_UNE
 %token KW_TAIL
 %token KW_VOLATILE
 
@@ -246,18 +248,23 @@ fn_attr_gen:
 
 align: KW_ALIGN p=INTEGER { p }
 
-binop_nuw_nsw_opt: (* may appear with `nuw`/`nsw` keywords *)
+ibinop_nuw_nsw_opt: (* may appear with `nuw`/`nsw` keywords *)
   |KW_ADD{Add}|KW_SUB{Sub}|KW_MUL{Mul}|KW_SHL{Shl}
 
-binop_exact_opt: (* may appear with `exact` keyword *)
+ibinop_exact_opt: (* may appear with `exact` keyword *)
   |KW_UDIV{UDiv}|KW_SDIV{SDiv}|KW_LSHR{LShr}|KW_ASHR{AShr}
 
-binop_no_opt: (* can not appear with any keyword *)
+ibinop_no_opt: (* can not appear with any keyword *)
   |KW_UREM{URem}|KW_SREM{SRem}|KW_AND{And}|KW_OR{Or}|KW_XOR{Xor}
 
 icmp:
   |KW_EQ{Eq}|KW_NE{Ne}|KW_UGT{Ugt}|KW_UGE{Uge} |KW_ULT{Ult}|KW_ULE{Ule}
   |KW_SGT{Sgt}|KW_SGE{Sge}|KW_SLT{Slt}|KW_SLE{Sle}
+
+fcmp:
+  KW_FALSE{False}|KW_OEQ{Oeq}|KW_OGT{Ogt}|KW_OGE{Oge}|KW_OLT{Olt}|KW_OLE{Ole}
+  |KW_ONE{One}|KW_ORD{Ord}|KW_UNO{Uno}|KW_UEQ{Ueq}|KW_UGT{Ugt}|KW_UGE{Uge}
+  |KW_ULT{Ult}|KW_ULE{Ule}|KW_UNE{Une}|KW_TRUE{True}
 
 conversion:
   |KW_TRUNC{Trunc}|KW_ZEXT{Zext}|KW_SEXT{Sext}|KW_FPTRUNC{Fptrunc}
@@ -265,17 +272,27 @@ conversion:
   |KW_FPTOSI{Fptosi}|KW_INTTOPTR{Inttoptr}|KW_PTRTOINT{Ptrtoint}
   |KW_BITCAST{Bitcast}
 
-binop:
-  | op=binop_nuw_nsw_opt KW_NUW? KW_NSW? { op }
-  | op=binop_exact_opt KW_EXACT? { op }
-  | op=binop_no_opt { op }
+ibinop:
+  | op=ibinop_nuw_nsw_opt KW_NUW? KW_NSW? { op }
+  | op=ibinop_exact_opt KW_EXACT? { op }
+  | op=ibinop_no_opt { op }
+
+fbinop:
+  KW_FADD{FAdd}|KW_FSUB{FSub}|KW_FMUL{FMul}|KW_FDIV{FDiv}|KW_FREM{FRem}
+
 
 expr:
-  | op=binop t=typ o1=value COMMA o2=value
+  | op=ibinop t=typ o1=value COMMA o2=value
     { EXPR_IBinop (op, t, o1, o2) }
 
   | KW_ICMP op=icmp t=typ o1=value COMMA o2=value
     { EXPR_ICmp (op, t, o1, o2) }
+
+  | op=fbinop (* fast math flags *) t=typ o1=value COMMA o2=value
+    { EXPR_FBinop (op, t, o1, o2) }
+
+  | KW_FCMP op=fcmp t=typ o1=value COMMA o2=value
+    { EXPR_FCmp (op, t, o1, o2) }
 
   | c=conversion t1=typ v=value KW_TO t2=typ
     { EXPR_Conversion (c, t1, v, t2) }
@@ -341,12 +358,12 @@ terminator_unit:
   | KW_RET KW_VOID
     { TERM_UNIT_Ret_void }
 
-  | KW_BR t=typ o=value COMMA
+  | KW_BR c=tvalue COMMA
     KW_LABEL o1=ident COMMA KW_LABEL o2=ident
-    { TERM_UNIT_Br (o, o1, o2) }
+    { TERM_UNIT_Br (c, o1, o2) }
 
-  | KW_BR KW_LABEL o=ident
-    { TERM_UNIT_Br_1 o }
+  | KW_BR t=typ i=ident
+    { TERM_UNIT_Br_1 (t, i) }
 
   | KW_SWITCH t=typ v=value COMMA
     KW_LABEL def=value LSQUARE EOL? table=list(switch_table_entry) RSQUARE
