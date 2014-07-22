@@ -115,7 +115,6 @@ and typ =
   | TYPE_Label
   | TYPE_Metadata
   | TYPE_X86_mmx
-  | TYPE_Ident of ident
   | TYPE_Array of (int * typ)
   | TYPE_Function of (typ * typ list)
   | TYPE_Struct of typ list
@@ -186,7 +185,7 @@ and terminator_unit =
   | TERM_UNIT_Ret_void
   | TERM_UNIT_Br of (tvalue * tident * tident) (*types are constant *)
   | TERM_UNIT_Br_1 of tident
-  | TERM_UNIT_Switch of (tvalue * value * (typ * value * ident) list)
+  | TERM_UNIT_Switch of (tvalue * tvalue * (tvalue * tident) list)
   | TERM_UNIT_IndirectBr
   | TERM_UNIT_Resume of tvalue
   | TERM_UNIT_Unreachable

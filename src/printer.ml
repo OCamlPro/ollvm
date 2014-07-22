@@ -101,7 +101,6 @@ let pprint =
     | TYPE_Ppc_fp128        -> assert false
     | TYPE_Metadata         -> "metadata"
     | TYPE_X86_mmx          -> assert false
-    | TYPE_Ident i          -> assert false (* i : ident *)
     | TYPE_Array (i, t)     -> sprintf "[%d x %s]" i (typ t)
     | TYPE_Function (t, tl) -> assert false (* (t, tl) : (typ * typ list) *)
     | TYPE_Struct tl        -> "{ " ^ (list ", " typ tl) ^ " }"
@@ -264,10 +263,10 @@ let pprint =
     | TERM_UNIT_Br (c, i1, i2)   ->
        sprintf "br i1 %s, %s, %s" (tvalue c) (tident i1) (tident i2)
     | TERM_UNIT_Br_1 (t, i)       -> "br " ^ typ t ^ " " ^ ident i
-    | TERM_UNIT_Switch (c, def, tvil) ->
+    | TERM_UNIT_Switch (c, def, cases) ->
        sprintf "switch %s, %s [%s]"
-               (tvalue c) (value def)
-               (list ", " (fun (t, v, i) -> tvalue (t, v) ^ ", " ^ ident i) tvil)
+               (tvalue c) (tvalue def)
+               (list ", " (fun (v, i) -> tvalue v ^ ", " ^ tident i) cases)
     | TERM_UNIT_Resume (t, v) -> "resume " ^ tvalue (t, v)
     | TERM_UNIT_Unreachable -> "unreachable"
     | TERM_UNIT_IndirectBr     -> assert false

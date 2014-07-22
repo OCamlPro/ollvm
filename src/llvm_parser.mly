@@ -97,7 +97,7 @@ metadata_node:
     { }
 
 metadata_value:
-  | tvalue
+  | tconst
   | KW_NULL
   | KW_METADATA METADATA_STRING
   | KW_METADATA METADATA_ID
@@ -105,9 +105,7 @@ metadata_value:
     { }
 
 instr_metadata:
-  |
-  | COMMA METADATA_ID instr_metadata
-  | COMMA METADATA_ID METADATA_ID instr_metadata
+  | METADATA_ID METADATA_ID
   {  }
 
 global_decl:
@@ -147,7 +145,7 @@ definition:
         df_instrs=(df_entry_block, df_other_blocks);} }
 
 unnamed_block:
-  | b=terminated(instr, pair(instr_metadata, EOL+))*
+  | b=terminated(instr, EOL+)*
     { b }
 
 named_block:
@@ -203,7 +201,6 @@ typ:
   | KW_METADATA                                       { TYPE_Metadata         }
   | KW_X86_MMX                                        { TYPE_X86_mmx          }
   | t=typ STAR                                        { TYPE_Pointer t        }
-  | i=ident                                           { TYPE_Ident i          }
   | LSQUARE n=INTEGER KW_X t=typ RSQUARE              { TYPE_Array (n, t)     }
   | t=typ LPAREN ts=separated_list(COMMA, typ) RPAREN { TYPE_Function (t, ts) }
   | LCURLY ts=separated_list(COMMA, typ) RCURLY       { TYPE_Struct ts        }
@@ -378,7 +375,7 @@ terminator_unit:
     { TERM_UNIT_Br_1 b }
 
   | KW_SWITCH c=tvalue COMMA
-    KW_LABEL def=value LSQUARE EOL? table=list(switch_table_entry) RSQUARE
+    def=tvalue LSQUARE EOL? table=list(switch_table_entry) RSQUARE
     { TERM_UNIT_Switch (c, def, table) }
 
   | KW_INDIRECTBR
@@ -411,7 +408,7 @@ phi_table_entry:
   | LSQUARE v=value COMMA l=ident RSQUARE { (v, l) }
 
 switch_table_entry:
-  | t=typ o=value COMMA KW_LABEL l=ident EOL? { (t, o, l) }
+  | v=tvalue COMMA i=tident EOL? { (v, i) }
 
 const:
   | i=INTEGER                                         { VALUE_Integer i        }
