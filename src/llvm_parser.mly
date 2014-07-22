@@ -337,12 +337,12 @@ terminator_unit:
   | KW_RET KW_VOID
     { TERM_UNIT_Ret_void }
 
-  | KW_BR t=typ o=value COMMA
+  | KW_BR c=tvalue COMMA
     KW_LABEL o1=ident COMMA KW_LABEL o2=ident
-    { TERM_UNIT_Br (o, o1, o2) }
+    { TERM_UNIT_Br (c, o1, o2) }
 
-  | KW_BR KW_LABEL o=ident
-    { TERM_UNIT_Br_1 o }
+  | KW_BR t=typ i=ident
+    { TERM_UNIT_Br_1 (t, i) }
 
   | KW_SWITCH t=typ v=value COMMA
     KW_LABEL def=value LSQUARE EOL? table=list(switch_table_entry) RSQUARE
