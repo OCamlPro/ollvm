@@ -123,15 +123,6 @@ and typ =
   | TYPE_Opaque
   | TYPE_Vector of (int * typ)
 
-and metadata_ident = string
-
-and metadata_value =
-  | METADATA_VALUE_Ident of metadata_ident
-  | METADATA_VALUE_String of string
-  | METADATA_VALUE_Struct of (typ * metadata_value) list
-  | METADATA_VALUE_Value of value
-  | METADATA_VALUE_Alias of metadata_ident * metadata_ident
-
 and icmp = Eq|Ne|Ugt|Uge|Ult|Ule|Sgt|Sge|Slt|Sle
 
 and fcmp = False|Oeq|Ogt|Oge|Olt|Ole|One|Ord|Uno|Ueq|Ugt|Uge|Ult|Ule|Une|True
@@ -210,7 +201,7 @@ and toplevelentry =
   | TLE_Definition of definition
   | TLE_Type_decl of (ident * typ)
   | TLE_Global of global
-  | TLE_Metadata of metadata_ident * metadata_value
+  | TLE_Metadata
 
 and global = {
      g_ident: ident;

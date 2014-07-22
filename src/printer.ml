@@ -78,20 +78,6 @@ let pprint =
     | FNATTR_Sspstrong -> "sspstrong"
     | FNATTR_Uwtable -> "uwtable"
 
-  and metadata_ident : LLVM.metadata_ident -> string =
-    fun m -> "!" ^ m
-
-  and metadata_value : LLVM.metadata_value -> string = function
-    | METADATA_VALUE_Ident i -> metadata_ident i
-    | METADATA_VALUE_String s -> "!\"" ^ s ^ "\""
-    | METADATA_VALUE_Struct ml ->
-       "!{"
-       ^ list ", " (fun (t, v) -> typ t ^ " " ^ metadata_value v) ml
-       ^ "}"
-    | METADATA_VALUE_Value v -> value v
-    | METADATA_VALUE_Alias (id1, id2) ->
-       metadata_ident id1 ^ " " ^ metadata_ident id2
-
   and ident : LLVM.ident -> string = function
     | ID_Global (f, i) -> "@" ^ ident_format f i
     | ID_Local (f, i)  -> "%" ^ ident_format f i
@@ -302,7 +288,7 @@ let pprint =
     | TLE_Definition d -> definition d
     | TLE_Type_decl (i, t) -> ident i ^ typ t
     | TLE_Global g -> global g
-    | TLE_Metadata (id, m) -> metadata_ident id ^ " = " ^ metadata_value m
+    | TLE_Metadata -> "!\"???\""
 
   and global : LLVM.global -> string = fun {
       g_ident = i;

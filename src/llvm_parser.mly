@@ -81,19 +81,34 @@ toplevelentry:
   | i=LOCAL EQ KW_TYPE t=typ            { TLE_Type_decl
                                             (ID_Local (fst i, snd i), t) }
   | g=global_decl                       { TLE_Global g                   }
-  | id=METADATA_ID EQ KW_METADATA? m=metadata
-                                        { TLE_Metadata (snd id, m)       }
+  | METADATA_ID EQ tle_metadata
+                                        { TLE_Metadata                   }
 (* metadata are not implemented yet, but are at least (partially) parsed *)
-metadata:
-  | METADATA_ID               (* ident *)
-  | METADATA_ID METADATA_ID (* alias *)
-  | METADATA_STRING
-  | BANGLCURLY separated_list(COMMA, metadata_field) RCURLY (* EOL? *)
-    { METADATA_VALUE_String "" }
+tle_metadata:
+  | nammed_metadata
+  | KW_METADATA metadata_node
+    { }
 
-metadata_field:
+nammed_metadata:
+  | BANGLCURLY separated_list(COMMA, METADATA_ID) RCURLY {}
+
+metadata_node:
+  | BANGLCURLY separated_list(COMMA, metadata_value) RCURLY
+    { }
+
+metadata_value:
   | tvalue
-  | KW_METADATA? metadata {}
+  | KW_NULL
+  | KW_METADATA METADATA_STRING
+  | KW_METADATA METADATA_ID
+  | KW_METADATA metadata_node
+    { }
+
+instr_metadata:
+  |
+  | COMMA METADATA_ID instr_metadata
+  | COMMA METADATA_ID METADATA_ID instr_metadata
+  {  }
 
 global_decl:
   | ident=GLOBAL EQ
@@ -116,8 +131,6 @@ global_is_constant:
 
 addrspace: KW_ADDRSPACE LPAREN n=INTEGER RPAREN { n }
 
-comma_section: COMMA KW_SECTION s=STRING { s }
-
 definition:
   | KW_DEFINE linkage? visibility? cconv?
     df_ret_typ=ret_type name=GLOBAL
@@ -134,8 +147,8 @@ definition:
         df_instrs=(df_entry_block, df_other_blocks);} }
 
 unnamed_block:
-  | b=terminated(pair(instr, preceded(COMMA, metadata)*), EOL+)*
-    { List.map fst b }
+  | b=terminated(instr, pair(instr_metadata, EOL+))*
+    { b }
 
 named_block:
   | i=LABEL EOL+ b=unnamed_block { (i, b) }
