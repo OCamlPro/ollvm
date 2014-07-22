@@ -174,6 +174,10 @@ let pprint =
     | Ptrtoint
     | Bitcast -> "conversion_type"
 
+and align = function
+  | None -> ""
+  | Some a -> ", align " ^ string_of_int a
+
   and expr : LLVM.expr -> string = function
 
     | EXPR_IBinop (op, t, v1, v2) ->
@@ -198,15 +202,12 @@ let pprint =
        sprintf "call %s(%s)" (tident ti) (list ", " tvalue tvl)
 
     | EXPR_Alloca (t, n, a) ->
-       sprintf "alloca %s%s" (typ t)
-               begin
-                 (match n with None -> ""
-                             | Some n -> ", " ^ tvalue n)
-                 ^ (match a with None -> ""
-                               | Some a -> ", align " ^ string_of_int a)
-               end
-    | EXPR_Load (tv) ->
-       "load" ^ tvalue tv
+       "alloca " ^ (typ t)
+       ^ (match n with None -> "" | Some n -> ", " ^ tvalue n)
+       ^ align a
+
+    | EXPR_Load (tv, a) ->
+       "load " ^ tvalue tv ^ align a
 
     | EXPR_Phi (t, vil) ->
        sprintf "phi %s [%s]"
@@ -239,8 +240,8 @@ let pprint =
 
   and expr_unit = function
     | EXPR_UNIT_IGNORED e -> expr e
-    | EXPR_UNIT_Store (v, (tptr, ptr)) ->
-       sprintf "store %s, %s %s" (tvalue v) (typ tptr) (ident ptr)
+    | EXPR_UNIT_Store (v, ptr, a) ->
+       sprintf "store %s, %s%s" (tvalue v) (tident ptr) (align a)
     | EXPR_UNIT_AtomicCmpXchg
     | EXPR_UNIT_AtomicRMW
     | EXPR_UNIT_Fence -> assert false

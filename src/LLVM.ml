@@ -151,7 +151,7 @@ and tident = typ * ident
   | EXPR_InsertValue of tvalue * tvalue * int list
   | EXPR_Call of tident * tvalue list
   | EXPR_Alloca of typ * tvalue option * int option (* typ, nb el, align *)
-  | EXPR_Load of tvalue
+  | EXPR_Load of tvalue * int option
   | EXPR_Phi of typ * (value * ident) list
   | EXPR_Select of tvalue * tvalue * tvalue (* if * then * else *)
   | EXPR_VAArg
@@ -159,7 +159,7 @@ and tident = typ * ident
 
 and expr_unit =
   | EXPR_UNIT_IGNORED of expr
-  | EXPR_UNIT_Store of tvalue * tident
+  | EXPR_UNIT_Store of tvalue * tident * int option
   | EXPR_UNIT_Fence
   | EXPR_UNIT_AtomicCmpXchg
   | EXPR_UNIT_AtomicRMW

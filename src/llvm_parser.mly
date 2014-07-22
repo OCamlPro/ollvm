@@ -319,8 +319,8 @@ expr:
     { let (n, a) = match opt with Some x -> x | None -> (None, None) in
       EXPR_Alloca (t, n, a) }
 
-  | KW_LOAD KW_VOLATILE? tv=tvalue preceded(COMMA, align)?
-    { EXPR_Load tv }
+  | KW_LOAD KW_VOLATILE? tv=tvalue a=preceded(COMMA, align)?
+    { EXPR_Load (tv, a) }
 
   | KW_PHI t=typ table=separated_nonempty_list(COMMA, phi_table_entry)
     { EXPR_Phi (t, table) }
@@ -355,9 +355,9 @@ expr_unit:
 
   | e=expr { EXPR_UNIT_IGNORED e }
 
-  | KW_STORE KW_VOLATILE? all=tvalue COMMA tptr=typ ptr=ident
-    preceded(COMMA, align)?
-    { EXPR_UNIT_Store (all, (tptr, ptr)) }
+  | KW_STORE KW_VOLATILE? all=tvalue COMMA ptr=tident
+    a=preceded(COMMA, align)?
+    { EXPR_UNIT_Store (all, ptr, a) }
 
   | KW_ATOMICCMPXCHG { failwith"INSTR_AtomicCmpXchg" }
   | KW_ATOMICRMW     { failwith"INSTR_AtomicRMW"     }
