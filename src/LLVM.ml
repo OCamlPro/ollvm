@@ -145,6 +145,8 @@ and conversion_type = Trunc|Zext|Sext|Fptrunc|Fpext|Uitofp|Sitofp|Fptoui
 
 and tvalue = typ * value
 
+and tident = typ * ident
+
  and expr =
   | EXPR_IBinop of ibinop * typ * value * value
   | EXPR_ICmp of icmp * typ * value * value
@@ -157,7 +159,7 @@ and tvalue = typ * value
   | EXPR_ShuffleVector
   | EXPR_ExtractValue of tvalue * int list
   | EXPR_InsertValue of tvalue * tvalue * int list
-  | EXPR_Call of typ * ident * tvalue list
+  | EXPR_Call of tident * tvalue list
   | EXPR_Alloca of int * typ
   | EXPR_Load of tvalue
   | EXPR_Phi of typ * (value * ident) list
@@ -167,7 +169,7 @@ and tvalue = typ * value
 
 and expr_unit =
   | EXPR_UNIT_IGNORED of expr
-  | EXPR_UNIT_Store of tvalue * (typ * ident)
+  | EXPR_UNIT_Store of tvalue * tident
   | EXPR_UNIT_Fence
   | EXPR_UNIT_AtomicCmpXchg
   | EXPR_UNIT_AtomicRMW
@@ -187,14 +189,14 @@ and value =
   | VALUE_Expr of expr
 
 and terminator =
-  | TERM_Invoke of (typ * ident * tvalue list * ident * ident)
+  | TERM_Invoke of (tident * tvalue list * tident * tident)
 
 and terminator_unit =
   | TERM_UNIT_Ret of tvalue
   | TERM_UNIT_Ret_void
-  | TERM_UNIT_Br of (tvalue * ident * ident) (*types are constant *)
-  | TERM_UNIT_Br_1 of typ * ident
-  | TERM_UNIT_Switch of (typ * value * value * (typ * value * ident) list)
+  | TERM_UNIT_Br of (tvalue * tident * tident) (*types are constant *)
+  | TERM_UNIT_Br_1 of tident
+  | TERM_UNIT_Switch of (tvalue * value * (typ * value * ident) list)
   | TERM_UNIT_IndirectBr
   | TERM_UNIT_Resume of tvalue
   | TERM_UNIT_Unreachable
@@ -226,7 +228,7 @@ and declaration = {
 and definition = {
   df_ret_typ: typ;
      df_name: ident;
-     df_args: (typ * ident) list;
+     df_args: tident list;
     df_attrs: fn_attr list;
    df_instrs: unnamed_block * named_block list;
 }

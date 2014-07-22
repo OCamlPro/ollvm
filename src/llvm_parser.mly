@@ -301,10 +301,10 @@ expr:
     idx=preceded(COMMA, tvalue)*
     { EXPR_GetElementPtr (ptr, idx) }
 
-  | KW_TAIL? KW_CALL cconv? list(typ_attr) t=typ
-    n=ident a=delimited(LPAREN, separated_list(COMMA, call_arg), RPAREN)
+  | KW_TAIL? KW_CALL cconv? list(typ_attr) f=tident
+    a=delimited(LPAREN, separated_list(COMMA, call_arg), RPAREN)
     list(fn_attr)
-    { EXPR_Call (t, n, a) }
+    { EXPR_Call (f, a) }
 
   | KW_ALLOCA t=typ n=alloc_attr?
     { let n=match n with None -> 1 | Some x -> x in
@@ -358,32 +358,30 @@ terminator_unit:
   | KW_RET KW_VOID
     { TERM_UNIT_Ret_void }
 
-  | KW_BR c=tvalue COMMA
-    KW_LABEL o1=ident COMMA KW_LABEL o2=ident
+  | KW_BR c=tvalue COMMA o1=tident COMMA o2=tident
     { TERM_UNIT_Br (c, o1, o2) }
 
-  | KW_BR t=typ i=ident
-    { TERM_UNIT_Br_1 (t, i) }
+  | KW_BR b=tident
+    { TERM_UNIT_Br_1 b }
 
-  | KW_SWITCH t=typ v=value COMMA
+  | KW_SWITCH c=tvalue COMMA
     KW_LABEL def=value LSQUARE EOL? table=list(switch_table_entry) RSQUARE
-    { TERM_UNIT_Switch (t, v, def, table) }
+    { TERM_UNIT_Switch (c, def, table) }
 
   | KW_INDIRECTBR
     { failwith "TERM_UNIT_IndirectBr" }
 
-  | KW_RESUME t=typ o=value
-    { TERM_UNIT_Resume (t, o) }
+  | KW_RESUME tv=tvalue
+    { TERM_UNIT_Resume tv }
 
   | KW_UNREACHABLE
     { TERM_UNIT_Unreachable }
 
 terminator:
-  | KW_INVOKE cconv? t=ret_type i=ident
+  | KW_INVOKE cconv? ret=tident
     LPAREN a=separated_list(COMMA, call_arg) RPAREN
-    list(fn_attr) KW_TO KW_LABEL l1=ident
-    KW_UNWIND KW_LABEL l2=ident
-    { TERM_Invoke (t, i, a, l1, l2)  }
+    list(fn_attr) KW_TO l1=tident KW_UNWIND l2=tident
+    { TERM_Invoke (ret, a, l1, l2)  }
 
 instr:
   | i=ident EQ e=expr       { INSTR_Expr_Assign (i, e) }
@@ -426,3 +424,4 @@ ident:
 
 tvalue: t=typ v=value { (t, v) }
 tconst: t=typ c=const { (t, c) }
+tident: t=typ i=ident { (t, i) }
