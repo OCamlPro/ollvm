@@ -4,8 +4,6 @@
    Unnamed arguments are numered starting from 0. (i.e. %0, %1, ...)
    (e.g. define void @autogen_SD0(i8*, i32*, i64*, i32, i64, i8))
 
-- Fix parser conflicts
-
 - Fix/complete metadata
    Parsing is incomplete:
    - metadata as function argument.
