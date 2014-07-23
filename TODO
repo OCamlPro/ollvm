@@ -13,11 +13,9 @@
 
 - Implement `align` keyword
    Some things may be specified with `, align [X]`:
-   - Global variables
    - functions
 
 - Implement `section` keyword
-   - Global variables
    - functions
 
 - Implement `volatile` keyword

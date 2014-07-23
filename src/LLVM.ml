@@ -205,6 +205,8 @@ and global = {
      g_ident: ident;
        g_typ: typ;
   g_constant: bool;
+   g_section: string option;
+     g_align: int option;
      g_value: value option;
 }
 

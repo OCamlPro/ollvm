@@ -178,6 +178,10 @@ and align = function
   | None -> ""
   | Some a -> ", align " ^ string_of_int a
 
+and section = function
+  | None -> ""
+  | Some s -> ", section " ^ s
+
   and expr : LLVM.expr -> string = function
 
     | EXPR_IBinop (op, t, v1, v2) ->
@@ -298,10 +302,14 @@ and align = function
       g_ident = i;
       g_typ = t;
       g_constant = b;
+      g_section = s;
+      g_align = a;
       g_value = vo;
-    } -> sprintf "%s = %s %s %s"
+    } -> sprintf "%s = %s %s %s%s%s"
                  (ident i) (if b then "constant" else "global") (typ t)
                  (match vo with None -> "" | Some v -> value v)
+                 (section s)
+                 (align a)
 
   and declaration : LLVM.declaration -> string = fun {
       dc_ret_typ = t;

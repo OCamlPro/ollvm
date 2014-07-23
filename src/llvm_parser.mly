@@ -112,16 +112,18 @@ global_decl:
   | ident=GLOBAL EQ
       linkage? visibility? KW_THREAD_LOCAL? addrspace? KW_UNNAMED_ADDR?
       g_constant=global_is_constant g_typ=typ g_value=const?
-      preceded(COMMA, global_attr)?
-      { { g_ident=ID_Global (fst ident, snd ident);
+      opt=preceded(COMMA, global_attr)?
+      { let opt = match opt with Some o -> o | None -> (None, None) in
+        { g_ident=ID_Global (fst ident, snd ident);
           g_typ;
           g_constant;
+          g_section = fst opt;
+          g_align = snd opt;
           g_value; } }
 
 global_attr:
-  | KW_SECTION STRING              { }
-  | KW_SECTION STRING COMMA align  { }
-  | align                          { }
+  | KW_SECTION s=STRING a=preceded(COMMA, align)?        { (Some s, a) }
+  | a=align s=preceded(pair(COMMA, KW_SECTION), STRING)? { (s, Some a) }
 
 global_is_constant:
   | KW_GLOBAL { false }
