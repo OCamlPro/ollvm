@@ -402,11 +402,6 @@ instr:
   | i=ident EQ t=terminator { INSTR_Terminator (i, t)  }
   | t=terminator_unit       { INSTR_Terminator_Unit t  }
 
-alloc_attr:
-  | COMMA typ n=INTEGER             { n }
-  | COMMA align                     { 1 }
-  | COMMA typ n=INTEGER COMMA align { n }
-
 phi_table_entry:
   | LSQUARE v=value COMMA l=ident RSQUARE { (v, l) }
 
