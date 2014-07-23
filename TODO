@@ -26,3 +26,5 @@
    - atomicrmw
 
 - Implement fast math flags for floatinf point binop.
+
+- Implement attribute groups (#1 notation)
