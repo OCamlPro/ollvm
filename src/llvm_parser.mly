@@ -21,12 +21,9 @@
 
 %{
 
-  open LLVM (* in productions *)
+  open LLVM
 
 %}
-
-(*TODO: floats *)
-(*TODO: don't throw things away *)
 
 %token<LLVM.ident_format * string> GLOBAL LOCAL
 %token LPAREN RPAREN LCURLY RCURLY LTLCURLY RCURLYGT LSQUARE RSQUARE LT GT EQ COMMA EOF EOL STAR

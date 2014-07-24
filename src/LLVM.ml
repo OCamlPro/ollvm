@@ -19,11 +19,6 @@
   * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.           *
   * }}}                                                                      *)
 
-(** This module is for LLVM. It only exports types that can represent an LLVM
-    module. Note that it is incomplete, it is just enough to parse and use files
-    produced by clang or ghc. It might or might not be completed in the future.
-    It might or might not be set in a proper library in the future. *)
-
 type linkage =
   | LINKAGE_Private
   | LINKAGE_Linker_private
@@ -151,7 +146,7 @@ and tident = typ * ident
   | EXPR_InsertValue of tvalue * tvalue * int list
   | EXPR_Call of tident * tvalue list
   | EXPR_Alloca of typ * tvalue option * int option (* typ, nb el, align *)
-  | EXPR_Load of tvalue * int option
+  | EXPR_Load of tvalue * int option (* FIXME: use tident instead of tident *)
   | EXPR_Phi of typ * (value * ident) list
   | EXPR_Select of tvalue * tvalue * tvalue (* if * then * else *)
   | EXPR_VAArg
@@ -225,7 +220,7 @@ and definition = {
 }
 
 and instr =
-  | INSTR_Expr_Assign of (ident * expr)
+  | INSTR_Expr_Assign of (ident * expr) (* do we need parenthesis? *)
   | INSTR_Expr_Unit of expr_unit
   | INSTR_Terminator of (ident * terminator)
   | INSTR_Terminator_Unit of terminator_unit
