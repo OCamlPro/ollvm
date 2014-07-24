@@ -88,7 +88,7 @@ and ident_format : LLVM.ident_format -> string -> string =
 
 and typ : LLVM.typ -> string = function
   | TYPE_I i              -> "i" ^ string_of_int i
-  | TYPE_Pointer t        -> "*" ^ typ t
+  | TYPE_Pointer t        -> typ t ^ "*"
   | TYPE_Void             -> "void"
   | TYPE_Half             -> "half"
   | TYPE_Float            -> "float"
