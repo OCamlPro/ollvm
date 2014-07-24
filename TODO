@@ -7,7 +7,6 @@
 - Fix/complete metadata
    Parsing is incomplete:
    - metadata as function argument.
-   - `null` value (with no type) in metadata node.
    - metadata at the end of a value list of variable length.
    Parsing looses information (everything becomes `metadata !""`)
 
