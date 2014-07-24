@@ -13,5 +13,5 @@ let _ =
     lexbuf
     |> Llvm_parser.module_ Llvm_lexer.token
     |> Printer.module_
-    |> print_string
+    |> print_endline
   with Llvm_parser.Error -> parsing_err lexbuf

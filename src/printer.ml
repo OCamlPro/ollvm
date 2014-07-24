@@ -294,7 +294,7 @@ and toplevelentry : LLVM.toplevelentry -> string = function
   | TLE_Definition d -> definition d
   | TLE_Type_decl (i, t) -> ident i ^ typ t
   | TLE_Global g -> global g
-  | TLE_Metadata -> "!\"???\""
+  | TLE_Metadata -> "; metadata were lost during parsing"
 
 and global : LLVM.global -> string = fun {
     g_ident = i;
