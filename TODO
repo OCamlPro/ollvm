@@ -10,13 +10,6 @@
    - metadata at the end of a value list of variable length.
    Parsing looses information (everything becomes `metadata !""`)
 
-- Implement `align` keyword
-   Some things may be specified with `, align [X]`:
-   - functions
-
-- Implement `section` keyword
-   - functions
-
 - Implement `volatile` keyword
    - load / store instructions
    - cmpxchg

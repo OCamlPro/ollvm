@@ -21,7 +21,55 @@
 
 %{
 
-  open LLVM
+open LLVM
+
+(* att type is a workaround to simplify parsing of optionnal keywords in
+ * global / function declaration / definition.
+ * It is far from what would be ideal since it will allow to parse silly
+ * LLVM IR (keywords at the bad place, or function attributes in global
+ * variable declaration, ...).
+ * Would work sa expected with valid LLVM IR. *)
+
+type att =
+  | OPT_fn_attr of fn_attr list
+  | OPT_align of int
+  | OPT_section of string
+  | OPT_linkage of linkage
+  | OPT_visibility of visibility
+  | OPT_thread_local
+  | OPT_addrspace of int
+  | OPT_unnamed_addr
+  | OPT_cconv of cconv
+
+let rec get_opt f  = function
+  | []       -> None
+  | hd :: tl -> match f hd with None -> get_opt f tl | x -> x
+
+let get_fn_attrs l =
+  match get_opt (function OPT_fn_attr a -> Some a | _ -> None) l with
+  | None  -> []
+  | Some l -> l
+
+let get_section =
+  get_opt (function OPT_section s -> Some s | _ -> None)
+
+let get_align =
+  get_opt (function OPT_align a -> Some a | _ -> None)
+
+let get_linkage =
+  get_opt (function OPT_linkage l -> Some l | _ -> None)
+
+let get_visibility =
+  get_opt (function OPT_visibility v -> Some v | _ -> None)
+
+let get_addrspace =
+  get_opt (function OPT_addrspace i -> Some i | _ -> None)
+
+let is_thread_local l =
+  None <> get_opt (function OPT_thread_local -> Some () | _ -> None) l
+
+let is_unnamed_addr l =
+  None <> get_opt (function OPT_unnamed_addr -> Some () | _ -> None) l
 
 %}
 
@@ -107,41 +155,61 @@ instr_metadata:
 
 global_decl:
   | ident=GLOBAL EQ
-      linkage? visibility? KW_THREAD_LOCAL? addrspace? KW_UNNAMED_ADDR?
-      g_constant=global_is_constant g_typ=typ g_value=const?
-      opt=preceded(COMMA, global_attr)?
-      { let opt = match opt with Some o -> o | None -> (None, None) in
+      pre_attr=global_attr*
+      g_constant=global_is_constant
+      g_typ=typ
+      g_value=const?
+      opt=preceded(COMMA, separated_list(COMMA, global_attr))?
+      { let opt = match opt with Some o -> o | None -> [] in
         { g_ident=ID_Global (fst ident, snd ident);
           g_typ;
           g_constant;
-          g_section = fst opt;
-          g_align = snd opt;
+          g_section = get_section opt;
+          g_align = get_align opt;
           g_value; } }
 
 global_attr:
-  | KW_SECTION s=STRING a=preceded(COMMA, align)?        { (Some s, a) }
-  | a=align s=preceded(pair(COMMA, KW_SECTION), STRING)? { (s, Some a) }
+  | a=align                              { OPT_align a      }
+  | s=section                            { OPT_section s    }
+  | l=linkage                            { OPT_linkage l    }
+  | v=visibility                         { OPT_visibility v }
+  | c=cconv                              { OPT_cconv c      }
+  | KW_THREAD_LOCAL                      { OPT_thread_local }
+  | KW_ADDRSPACE LPAREN n=INTEGER RPAREN { OPT_addrspace n  }
+  | KW_UNNAMED_ADDR                      { OPT_unnamed_addr }
+  | a=fn_attr+                           { OPT_fn_attr a    }
 
 global_is_constant:
   | KW_GLOBAL { false }
   | KW_CONSTANT { true }
 
-addrspace: KW_ADDRSPACE LPAREN n=INTEGER RPAREN { n }
+declaration:
+  | KW_DECLARE
+    pre_attrs=global_attr
+    dc_ret_typ=preceded(typ_attr*, typ)
+    name=GLOBAL
+    LPAREN dc_args=separated_list(COMMA, dc_arg) RPAREN
+    post_attrs=global_attr*
+    { {dc_ret_typ; dc_name=ID_Global (fst name, snd name); dc_args;} }
 
 definition:
-  | KW_DEFINE linkage? visibility? cconv?
-    df_ret_typ=ret_type name=GLOBAL
+  | KW_DEFINE
+    pre_attrs=global_attr*
+    df_ret_typ=preceded(typ_attr*, typ)
+    name=GLOBAL
     LPAREN df_args=separated_list(COMMA, df_arg) RPAREN
-    df_attrs=list(fn_attr) EOL*
+    attrs=global_attr* EOL*
     LCURLY EOL*
     df_entry_block=unnamed_block
     df_other_blocks=named_block*
     RCURLY
-    { { df_ret_typ;
-        df_name=ID_Global (fst name, snd name);
-        df_args;
-        df_attrs;
-        df_instrs=(df_entry_block, df_other_blocks);} }
+      { { df_ret_typ;
+          df_name=ID_Global (fst name, snd name);
+          df_args;
+          df_attrs = get_fn_attrs attrs;
+          df_section = get_section attrs;
+          df_align = get_align attrs;
+          df_instrs=(df_entry_block, df_other_blocks);} }
 
 unnamed_block:
   | b=terminated(instr, EOL+)*
@@ -149,13 +217,6 @@ unnamed_block:
 
 named_block:
   | i=LABEL EOL+ b=unnamed_block { (i, b) }
-
-declaration:
-  | KW_DECLARE linkage? visibility? cconv? KW_UNNAMED_ADDR?
-    dc_ret_typ=ret_type name=GLOBAL
-    LPAREN dc_args=separated_list(COMMA, dc_arg) RPAREN
-    list(fn_attr_gen)
-    { {dc_ret_typ; dc_name=ID_Global (fst name, snd name); dc_args;} }
 
 linkage:
   | KW_PRIVATE                      { LINKAGE_Private                      }
@@ -183,9 +244,6 @@ visibility:
 cconv:
   |KW_CCC{CC_Ccc}|KW_FASTCC{CC_Fastcc}|KW_COLDCC{CC_Coldcc}
   |KW_CC n=INTEGER{CC_Cc n}
-
-ret_type:
-  | list(typ_attr) t=typ { t }
 
 typ:
   | n=I                                               { TYPE_I n              }
@@ -251,11 +309,9 @@ fn_attr:
   | KW_SSPSTRONG                          { FNATTR_Sspstrong       }
   | KW_UWTABLE                            { FNATTR_Uwtable         }
 
-fn_attr_gen:
-  | f=fn_attr                                           { Some f }
-  | KW_ALIGN INTEGER | KW_GC STRING | KW_SECTION STRING { None   }
-
 align: KW_ALIGN p=INTEGER { p }
+
+section: KW_SECTION s=STRING { s }
 
 ibinop_nuw_nsw_opt: (* may appear with `nuw`/`nsw` keywords *)
   |KW_ADD{Add}|KW_SUB{Sub}|KW_MUL{Mul}|KW_SHL{Shl}

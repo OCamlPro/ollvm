@@ -216,6 +216,8 @@ and definition = {
      df_name: ident;
      df_args: tident list;
     df_attrs: fn_attr list;
+  df_section: string option;
+    df_align: int option;
    df_instrs: unnamed_block * named_block list;
 }
 
