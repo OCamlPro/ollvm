@@ -87,6 +87,9 @@ and fn_attr =
   | FNATTR_Sspreq
   | FNATTR_Sspstrong
   | FNATTR_Uwtable
+  | FNATTR_String of string (* "no-see" *)
+  | FNATTR_Key_value of string * string (* "unsafe-fp-math"="false" *)
+  | FNATTR_Attr_grp of int
 
 and ident_format =
   | ID_FORMAT_Named
@@ -195,6 +198,7 @@ and toplevelentry =
   | TLE_Type_decl of (ident * typ)
   | TLE_Global of global
   | TLE_Metadata
+  | TLE_Attribute_group
 
 and global = {
      g_ident: ident;

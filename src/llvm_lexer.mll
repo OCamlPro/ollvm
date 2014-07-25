@@ -202,6 +202,8 @@
   | "metadata"  -> KW_METADATA
   | "x86_mmx"   -> KW_X86_MMX
 
+  | "attributes" -> KW_ATTRIBUTES
+
   (*constants*)
   | "true"  -> KW_TRUE
   | "false" -> KW_FALSE
@@ -265,6 +267,8 @@ rule token = parse
            | LLVM.ID_FORMAT_Unnamed -> METADATA_ID (format, id)
            | LLVM.ID_FORMAT_NamedString -> METADATA_STRING (id)
          }
+
+  | '#' (digit+ as i) { ATTR_GRP_ID (int_of_string i) }
 
   (* constants *)
   | '-'? digit+ as d            { INTEGER (int_of_string d) }

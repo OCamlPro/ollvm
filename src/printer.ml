@@ -75,6 +75,9 @@ and fn_attr : LLVM.fn_attr -> string = function
   | FNATTR_Sspreq -> "sspreq"
   | FNATTR_Sspstrong -> "sspstrong"
   | FNATTR_Uwtable -> "uwtable"
+  | FNATTR_String s -> "\"" ^ s ^ "\""
+  | FNATTR_Key_value (k, v) -> "\"" ^ k ^ "\"=\"" ^ v ^ "\""
+  | FNATTR_Attr_grp i -> "#" ^ string_of_int i
 
 and ident : LLVM.ident -> string = function
   | ID_Global (f, i) -> "@" ^ ident_format f i
@@ -295,6 +298,7 @@ and toplevelentry : LLVM.toplevelentry -> string = function
   | TLE_Type_decl (i, t) -> ident i ^ typ t
   | TLE_Global g -> global g
   | TLE_Metadata -> "; metadata were lost during parsing"
+  | TLE_Attribute_group -> "; attribute group were lost during parsing"
 
 and global : LLVM.global -> string = fun {
     g_ident = i;
