@@ -198,7 +198,7 @@ and toplevelentry =
   | TLE_Type_decl of (ident * typ)
   | TLE_Global of global
   | TLE_Metadata
-  | TLE_Attribute_group
+  | TLE_Attribute_group of int * fn_attr list
 
 and global = {
      g_ident: ident;

@@ -129,8 +129,8 @@ toplevelentry:
                                             (ID_Local (fst i, snd i), t) }
   | g=global_decl                       { TLE_Global g                   }
   | METADATA_ID EQ tle_metadata         { TLE_Metadata                   }
-  | KW_ATTRIBUTES ATTR_GRP_ID EQ LCURLY global_attr* RCURLY
-                                        { TLE_Attribute_group            }
+  | KW_ATTRIBUTES i=ATTR_GRP_ID EQ LCURLY a=fn_attr* RCURLY
+                                        { TLE_Attribute_group (i, a)     }
 
 (* metadata are not implemented yet, but are at least (partially) parsed *)
 tle_metadata:

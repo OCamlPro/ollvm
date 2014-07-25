@@ -298,7 +298,8 @@ and toplevelentry : LLVM.toplevelentry -> string = function
   | TLE_Type_decl (i, t) -> ident i ^ typ t
   | TLE_Global g -> global g
   | TLE_Metadata -> "; metadata were lost during parsing"
-  | TLE_Attribute_group -> "; attribute group were lost during parsing"
+  | TLE_Attribute_group (i, a) ->
+    sprintf "#%d = { %s }" i (list " " fn_attr a)
 
 and global : LLVM.global -> string = fun {
     g_ident = i;
