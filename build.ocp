@@ -1,4 +1,4 @@
-begin program "llvm"
+begin library "llvmocp"
 
   dirname = ["src"]
 
@@ -7,7 +7,6 @@ begin program "llvm"
     "llvm_lexer.mll";
     "llvm_parser.mly";
     "printer.ml";
-    "main.ml"
   ]
 
   ocamlyacc = [ "menhir" "--explain" ]
