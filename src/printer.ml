@@ -272,7 +272,7 @@ and terminator_unit : LLVM.terminator_unit -> string = function
   | TERM_UNIT_Ret (t, v)       -> "ret " ^ tvalue (t, v)
   | TERM_UNIT_Ret_void         -> "ret void"
   | TERM_UNIT_Br (c, i1, i2)   ->
-     sprintf "br i1 %s, %s, %s" (tvalue c) (tident i1) (tident i2)
+     sprintf "br %s, %s, %s" (tvalue c) (tident i1) (tident i2)
   | TERM_UNIT_Br_1 (t, i)       -> "br " ^ typ t ^ " " ^ ident i
   | TERM_UNIT_Switch (c, def, cases) ->
      sprintf "switch %s, %s [%s]"
