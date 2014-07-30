@@ -183,73 +183,98 @@ and section = function
   | None -> ""
   | Some s -> ", section " ^ s
 
-and expr : LLVM.expr -> string = function
+and instr : LLVM.instr -> string = function
 
-  | EXPR_IBinop (op, t, v1, v2) ->
+  | INSTR_IBinop (op, t, v1, v2) ->
      sprintf "%s %s %s, %s" (ibinop op) (typ t) (value v1) (value v2)
 
-  | EXPR_ICmp (c, t, v1, v2) ->
+  | INSTR_ICmp (c, t, v1, v2) ->
      sprintf "icmp %s %s %s, %s" (icmp c) (typ t) (value v1) (value v2)
 
-  | EXPR_FBinop (op, t, v1, v2) ->
+  | INSTR_FBinop (op, t, v1, v2) ->
      sprintf "%s %s %s, %s" (fbinop op) (typ t) (value v1) (value v2)
 
-  | EXPR_FCmp (c, t, v1, v2) ->
+  | INSTR_FCmp (c, t, v1, v2) ->
      sprintf "fcmp %s %s %s, %s" (fcmp c) (typ t) (value v1) (value v2)
 
-  | EXPR_Conversion (c, t1, v, t2) ->
+  | INSTR_Conversion (c, t1, v, t2) ->
      sprintf "%s %s %s, %s" (conversion_type c) (typ t1) (value v) (typ t2)
 
-  | EXPR_GetElementPtr (tv, tvl) ->
+  | INSTR_GetElementPtr (tv, tvl) ->
      sprintf "getelementptr %s, %s" (tvalue tv) (list ", " tvalue tvl)
 
-  | EXPR_Call (ti, tvl) ->
+  | INSTR_Call (ti, tvl) ->
      sprintf "call %s(%s)" (tident ti) (list ", " tvalue tvl)
 
-  | EXPR_Alloca (t, n, a) ->
+  | INSTR_Alloca (t, n, a) ->
      "alloca " ^ (typ t)
      ^ (match n with None -> "" | Some n -> ", " ^ tvalue n)
      ^ align a
 
-  | EXPR_Load (tv, a) ->
+  | INSTR_Load (tv, a) ->
      "load " ^ tvalue tv ^ align a
 
-  | EXPR_Phi (t, vil) ->
+  | INSTR_Phi (t, vil) ->
      sprintf "phi %s [%s]"
              (typ t) (list "], [" (fun (v, i) -> value v ^ ", " ^ ident i) vil)
 
-  | EXPR_Select (if_, then_, else_) ->
+  | INSTR_Select (if_, then_, else_) ->
      sprintf "select %s, %s, %s"
              (tvalue if_) (tvalue then_) (tvalue else_)
 
-  | EXPR_VAArg -> "vaarg"
+  | INSTR_VAArg -> "vaarg"
 
-  | EXPR_ExtractElement (vec, idx) ->
+  | INSTR_ExtractElement (vec, idx) ->
      sprintf "extractelement %s, %s" (tvalue vec) (tvalue idx)
 
-  | EXPR_InsertElement (vec, new_val, idx) ->
+  | INSTR_InsertElement (vec, new_val, idx) ->
      sprintf "insertelement %s, %s, %s"
              (tvalue vec) (tvalue new_val) (tvalue idx)
 
-  | EXPR_ExtractValue (agg, idx) ->
+  | INSTR_ExtractValue (agg, idx) ->
      sprintf "extractvalue %s, %s"
              (tvalue agg) (list ", " string_of_int idx)
 
-  | EXPR_InsertValue (agg, new_val, idx) ->
+  | INSTR_InsertValue (agg, new_val, idx) ->
      sprintf "insertvalue %s, %s, %s"
              (tvalue agg) (tvalue new_val) (list ", " string_of_int idx)
 
-  | EXPR_LandingPad
-  | EXPR_ShuffleVector
+  | INSTR_LandingPad
+  | INSTR_ShuffleVector
     -> assert false
 
-and expr_unit = function
-  | EXPR_UNIT_IGNORED e -> expr e
-  | EXPR_UNIT_Store (v, ptr, a) ->
+  | INSTR_Store (v, ptr, a) ->
      sprintf "store %s, %s%s" (tvalue v) (tident ptr) (align a)
-  | EXPR_UNIT_AtomicCmpXchg
-  | EXPR_UNIT_AtomicRMW
-  | EXPR_UNIT_Fence -> assert false
+
+  | INSTR_AtomicCmpXchg
+  | INSTR_AtomicRMW
+  | INSTR_Fence -> assert false
+
+  | INSTR_Ret (t, v)       -> "ret " ^ tvalue (t, v)
+
+  | INSTR_Ret_void         -> "ret void"
+
+  | INSTR_Br (c, i1, i2)   ->
+     sprintf "br %s, %s, %s" (tvalue c) (tident i1) (tident i2)
+
+  | INSTR_Br_1 (t, i)       -> "br " ^ typ t ^ " " ^ ident i
+
+  | INSTR_Switch (c, def, cases) ->
+     sprintf "switch %s, %s [%s]"
+             (tvalue c) (tvalue def)
+             (list ", " (fun (v, i) -> tvalue v ^ ", " ^ tident i) cases)
+
+  | INSTR_Resume (t, v) -> "resume " ^ tvalue (t, v)
+
+  | INSTR_Unreachable -> "unreachable"
+
+  | INSTR_IndirectBr     -> assert false
+
+  | INSTR_Invoke (ti, tvl, i2, i3) ->
+     sprintf "invoke %s(%s) to %s unwind %s"
+             (tident ti) (list ", " tvalue tvl) (tident i2) (tident i3)
+
+  | INSTR_Assign (id, inst) -> ident id ^ " = " ^ instr inst
 
 and value : LLVM.value -> string = function
   | VALUE_Ident i           -> ident i
@@ -267,25 +292,6 @@ and value : LLVM.value -> string = function
 and tvalue  = fun (t, v) -> typ t ^ " " ^ value v
 
 and tident  = fun (t, v) -> typ t ^ " " ^ ident v
-
-and terminator_unit : LLVM.terminator_unit -> string = function
-  | TERM_UNIT_Ret (t, v)       -> "ret " ^ tvalue (t, v)
-  | TERM_UNIT_Ret_void         -> "ret void"
-  | TERM_UNIT_Br (c, i1, i2)   ->
-     sprintf "br %s, %s, %s" (tvalue c) (tident i1) (tident i2)
-  | TERM_UNIT_Br_1 (t, i)       -> "br " ^ typ t ^ " " ^ ident i
-  | TERM_UNIT_Switch (c, def, cases) ->
-     sprintf "switch %s, %s [%s]"
-             (tvalue c) (tvalue def)
-             (list ", " (fun (v, i) -> tvalue v ^ ", " ^ tident i) cases)
-  | TERM_UNIT_Resume (t, v) -> "resume " ^ tvalue (t, v)
-  | TERM_UNIT_Unreachable -> "unreachable"
-  | TERM_UNIT_IndirectBr     -> assert false
-
-and terminator = function
-  | TERM_Invoke (ti, tvl, i2, i3) ->
-     sprintf "invoke %s(%s) to %s unwind %s"
-             (tident ti) (list ", " tvalue tvl) (tident i2) (tident i3)
 
 and module_ : LLVM.module_-> string =
   fun m -> list "\n" toplevelentry m
@@ -339,9 +345,3 @@ and unnamed_block : LLVM.unnamed_block -> string = fun b -> list "\n" instr b
 
 and named_block : LLVM.named_block -> string = fun (i, b) ->
   i ^ ":\n" ^ (unnamed_block b)
-
-and instr : LLVM.instr -> string = function
-  | INSTR_Expr_Assign (i, e) -> ident i ^ " = " ^ expr e
-  | INSTR_Expr_Unit e -> expr_unit e
-  | INSTR_Terminator (i, t) -> ident i ^ " = " ^ terminator t
-  | INSTR_Terminator_Unit t -> terminator_unit t
