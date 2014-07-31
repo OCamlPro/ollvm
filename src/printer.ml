@@ -195,7 +195,7 @@ and expr : LLVM.expr -> string = function
      sprintf "%s %s %s, %s" (fbinop op) (typ t) (value v1) (value v2)
 
   | EXPR_FCmp (c, t, v1, v2) ->
-     sprintf "icmp %s %s %s, %s" (fcmp c) (typ t) (value v1) (value v2)
+     sprintf "fcmp %s %s %s, %s" (fcmp c) (typ t) (value v1) (value v2)
 
   | EXPR_Conversion (c, t1, v, t2) ->
      sprintf "%s %s %s, %s" (conversion_type c) (typ t1) (value v) (typ t2)
