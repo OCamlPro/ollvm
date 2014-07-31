@@ -4,8 +4,8 @@ begin library "llvmocp"
 
   files = [
     "LLVM.ml";
-    "llvm_lexer.mll";
-    "llvm_parser.mly";
+    "lexer.mll";
+    "parser.mly";
     "printer.ml";
     "llvmocp.ml"
   ]

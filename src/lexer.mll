@@ -19,7 +19,7 @@
   * }}}                                                                      *)
 
 {
-  open Llvm_parser
+  open Parser
 
   exception Lex_error_unterminated_string of Lexing.position
 
