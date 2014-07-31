@@ -352,117 +352,106 @@ ibinop:
 fbinop:
   KW_FADD{FAdd}|KW_FSUB{FSub}|KW_FMUL{FMul}|KW_FDIV{FDiv}|KW_FREM{FRem}
 
-expr:
+instr:
   | op=ibinop t=typ o1=value COMMA o2=value
-    { EXPR_IBinop (op, t, o1, o2) }
+    { INSTR_IBinop (op, t, o1, o2) }
 
   | KW_ICMP op=icmp t=typ o1=value COMMA o2=value
-    { EXPR_ICmp (op, t, o1, o2) }
+    { INSTR_ICmp (op, t, o1, o2) }
 
   | op=fbinop (* fast math flags *) t=typ o1=value COMMA o2=value
-    { EXPR_FBinop (op, t, o1, o2) }
+    { INSTR_FBinop (op, t, o1, o2) }
 
   | KW_FCMP op=fcmp t=typ o1=value COMMA o2=value
-    { EXPR_FCmp (op, t, o1, o2) }
+    { INSTR_FCmp (op, t, o1, o2) }
 
   | c=conversion t1=typ v=value KW_TO t2=typ
-    { EXPR_Conversion (c, t1, v, t2) }
+    { INSTR_Conversion (c, t1, v, t2) }
 
   | KW_GETELEMENTPTR ?KW_INBOUNDS ptr=tvalue
     idx=preceded(COMMA, tvalue)*
-    { EXPR_GetElementPtr (ptr, idx) }
+    { INSTR_GetElementPtr (ptr, idx) }
 
   | KW_TAIL? KW_CALL cconv? list(typ_attr) f=tident
     a=delimited(LPAREN, separated_list(COMMA, call_arg), RPAREN)
     list(fn_attr)
-    { EXPR_Call (f, a) }
+    { INSTR_Call (f, a) }
 
   | KW_ALLOCA t=typ opt=preceded(COMMA, alloca_opt)?
     { let (n, a) = match opt with Some x -> x | None -> (None, None) in
-      EXPR_Alloca (t, n, a) }
+      INSTR_Alloca (t, n, a) }
 
   | KW_LOAD KW_VOLATILE? tv=tvalue a=preceded(COMMA, align)?
-    { EXPR_Load (tv, a) }
+    { INSTR_Load (tv, a) }
 
   | KW_PHI t=typ table=separated_nonempty_list(COMMA, phi_table_entry)
-    { EXPR_Phi (t, table) }
+    { INSTR_Phi (t, table) }
 
   | KW_SELECT if_=tvalue COMMA then_=tvalue COMMA else_= tvalue
-    { EXPR_Select (if_, then_, else_) }
+    { INSTR_Select (if_, then_, else_) }
 
   | KW_EXTRACTELEMENT vec=tvalue COMMA idx=tvalue
-    { EXPR_ExtractElement (vec, idx) }
+    { INSTR_ExtractElement (vec, idx) }
 
   | KW_INSERTELEMENT vec=tvalue
     COMMA new_el=tvalue COMMA idx=tvalue
-    { EXPR_InsertElement (vec, new_el, idx)  }
+    { INSTR_InsertElement (vec, new_el, idx)  }
 
   | KW_EXTRACTVALUE tv=tvalue COMMA
     idx=separated_nonempty_list (COMMA, INTEGER)
-    { EXPR_ExtractValue (tv, idx) }
+    { INSTR_ExtractValue (tv, idx) }
 
   | KW_INSERTVALUE agg=tvalue COMMA new_val=tvalue COMMA
     idx=separated_nonempty_list (COMMA, INTEGER)
-    { EXPR_InsertValue (agg, new_val, idx) }
+    { INSTR_InsertValue (agg, new_val, idx) }
 
-  | KW_SHUFFLEVECTOR  { failwith "EXPR_ShuffleVector"  }
+  | KW_SHUFFLEVECTOR  { failwith "INSTR_ShuffleVector"  }
   | KW_VAARG  { failwith"INSTR_VAArg"  }
   | KW_LANDINGPAD    { failwith"INSTR_LandingPad"    }
 
-alloca_opt:
-  | a=align                             { (None, Some a) }
-  | nb=tvalue a=preceded(COMMA, align)? { (Some nb, a) }
-
-expr_unit:
-
-  | e=expr { EXPR_UNIT_IGNORED e }
-
   | KW_STORE KW_VOLATILE? all=tvalue COMMA ptr=tident
     a=preceded(COMMA, align)?
-    { EXPR_UNIT_Store (all, ptr, a) }
+    { INSTR_Store (all, ptr, a) }
 
   | KW_ATOMICCMPXCHG { failwith"INSTR_AtomicCmpXchg" }
   | KW_ATOMICRMW     { failwith"INSTR_AtomicRMW"     }
   | KW_FENCE         { failwith"INSTR_Fence"         }
 
-terminator_unit:
-
   | KW_RET t=typ o=value
-    { TERM_UNIT_Ret (t, o) }
+    { INSTR_Ret (t, o) }
 
   | KW_RET KW_VOID
-    { TERM_UNIT_Ret_void }
+    { INSTR_Ret_void }
 
   | KW_BR c=tvalue COMMA o1=tident COMMA o2=tident
-    { TERM_UNIT_Br (c, o1, o2) }
+    { INSTR_Br (c, o1, o2) }
 
   | KW_BR b=tident
-    { TERM_UNIT_Br_1 b }
+    { INSTR_Br_1 b }
 
   | KW_SWITCH c=tvalue COMMA
     def=tvalue LSQUARE EOL? table=list(switch_table_entry) RSQUARE
-    { TERM_UNIT_Switch (c, def, table) }
+    { INSTR_Switch (c, def, table) }
 
   | KW_INDIRECTBR
-    { failwith "TERM_UNIT_IndirectBr" }
+    { failwith "INSTR_IndirectBr" }
 
   | KW_RESUME tv=tvalue
-    { TERM_UNIT_Resume tv }
+    { INSTR_Resume tv }
 
   | KW_UNREACHABLE
-    { TERM_UNIT_Unreachable }
+    { INSTR_Unreachable }
 
-terminator:
   | KW_INVOKE cconv? ret=tident
     LPAREN a=separated_list(COMMA, call_arg) RPAREN
     list(fn_attr) KW_TO l1=tident KW_UNWIND l2=tident
-    { TERM_Invoke (ret, a, l1, l2)  }
+    { INSTR_Invoke (ret, a, l1, l2)  }
 
-instr:
-  | i=ident EQ e=expr       { INSTR_Expr_Assign (i, e) }
-  | e=expr_unit             { INSTR_Expr_Unit e        }
-  | i=ident EQ t=terminator { INSTR_Terminator (i, t)  }
-  | t=terminator_unit       { INSTR_Terminator_Unit t  }
+  | i=ident inst=instr { INSTR_Assign (i, inst) }
+
+alloca_opt:
+  | a=align                             { (None, Some a) }
+  | nb=tvalue a=preceded(COMMA, align)? { (Some nb, a) }
 
 phi_table_entry:
   | LSQUARE v=value COMMA l=ident RSQUARE { (v, l) }

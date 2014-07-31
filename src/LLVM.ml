@@ -135,33 +135,6 @@ and tvalue = typ * value
 
 and tident = typ * ident
 
- and expr =
-  | EXPR_IBinop of ibinop * typ * value * value
-  | EXPR_ICmp of icmp * typ * value * value
-  | EXPR_FBinop of fbinop * typ * value * value
-  | EXPR_FCmp of fcmp * typ * value * value
-  | EXPR_Conversion of conversion_type * typ * value * typ
-  | EXPR_GetElementPtr of tvalue * tvalue list
-  | EXPR_ExtractElement of tvalue * tvalue
-  | EXPR_InsertElement of tvalue * tvalue * tvalue
-  | EXPR_ShuffleVector
-  | EXPR_ExtractValue of tvalue * int list
-  | EXPR_InsertValue of tvalue * tvalue * int list
-  | EXPR_Call of tident * tvalue list
-  | EXPR_Alloca of typ * tvalue option * int option (* typ, nb el, align *)
-  | EXPR_Load of tvalue * int option (* FIXME: use tident instead of tident *)
-  | EXPR_Phi of typ * (value * ident) list
-  | EXPR_Select of tvalue * tvalue * tvalue (* if * then * else *)
-  | EXPR_VAArg
-  | EXPR_LandingPad
-
-and expr_unit =
-  | EXPR_UNIT_IGNORED of expr
-  | EXPR_UNIT_Store of tvalue * tident * int option
-  | EXPR_UNIT_Fence
-  | EXPR_UNIT_AtomicCmpXchg
-  | EXPR_UNIT_AtomicRMW
-
 and value =
   | VALUE_Ident of ident
   | VALUE_Integer of int
@@ -175,18 +148,44 @@ and value =
   | VALUE_Vector of tvalue list
   | VALUE_Zero_initializer
 
-and terminator =
-  | TERM_Invoke of (tident * tvalue list * tident * tident)
+ and instr =
+  | INSTR_IBinop of ibinop * typ * value * value
+  | INSTR_ICmp of icmp * typ * value * value
+  | INSTR_FBinop of fbinop * typ * value * value
+  | INSTR_FCmp of fcmp * typ * value * value
+  | INSTR_Conversion of conversion_type * typ * value * typ
+  | INSTR_GetElementPtr of tvalue * tvalue list
+  | INSTR_ExtractElement of tvalue * tvalue
+  | INSTR_InsertElement of tvalue * tvalue * tvalue
+  | INSTR_ShuffleVector
+  | INSTR_ExtractValue of tvalue * int list
+  | INSTR_InsertValue of tvalue * tvalue * int list
+  | INSTR_Call of tident * tvalue list
+  | INSTR_Alloca of typ * tvalue option * int option (* typ, nb el, align *)
+  | INSTR_Load of tvalue * int option (* FIXME: use tident instead of tident *)
+  | INSTR_Phi of typ * (value * ident) list
+  | INSTR_Select of tvalue * tvalue * tvalue (* if * then * else *)
+  | INSTR_VAArg
+  | INSTR_LandingPad
+  | INSTR_Store of tvalue * tident * int option
+  | INSTR_Fence
+  | INSTR_AtomicCmpXchg
+  | INSTR_AtomicRMW
 
-and terminator_unit =
-  | TERM_UNIT_Ret of tvalue
-  | TERM_UNIT_Ret_void
-  | TERM_UNIT_Br of (tvalue * tident * tident) (*types are constant *)
-  | TERM_UNIT_Br_1 of tident
-  | TERM_UNIT_Switch of (tvalue * tvalue * (tvalue * tident) list)
-  | TERM_UNIT_IndirectBr
-  | TERM_UNIT_Resume of tvalue
-  | TERM_UNIT_Unreachable
+  (* Terminators *)
+  | INSTR_Invoke of tident * tvalue list * tident * tident
+  | INSTR_Ret of tvalue
+  | INSTR_Ret_void
+  | INSTR_Br of tvalue * tident * tident (*types are constant *)
+  | INSTR_Br_1 of tident
+  | INSTR_Switch of tvalue * tvalue * (tvalue * tident) list
+  | INSTR_IndirectBr
+  | INSTR_Resume of tvalue
+  | INSTR_Unreachable
+
+  (* Special `assign` instruction:
+   * not a real LLVM instruction, allow to bind an identifier to an instruction *)
+  | INSTR_Assign of ident * instr
 
 and module_ = toplevelentry list
 
@@ -224,12 +223,6 @@ and definition = {
     df_align: int option;
    df_instrs: unnamed_block * named_block list;
 }
-
-and instr =
-  | INSTR_Expr_Assign of (ident * expr) (* do we need parenthesis? *)
-  | INSTR_Expr_Unit of expr_unit
-  | INSTR_Terminator of (ident * terminator)
-  | INSTR_Terminator_Unit of terminator_unit
 
 and unnamed_block = instr list
 
