@@ -283,11 +283,11 @@ and value : LLVM.value -> string = function
   | VALUE_Bool b            -> (string_of_bool b)
   | VALUE_Null              -> "null"
   | VALUE_Undef             -> "undef"
-  | VALUE_Struct tvl
-  | VALUE_Packed_struct tvl
-  | VALUE_Array tvl
-  | VALUE_Vector tvl        -> assert false
-  | VALUE_Zero_initializer  -> assert false
+  | VALUE_Array tvl         -> "[ " ^ list ", " tvalue tvl ^ " ]"
+  | VALUE_Vector tvl        -> "< " ^ list ", " tvalue tvl ^ " >"
+  | VALUE_Struct tvl        -> "{ " ^ list ", " tvalue tvl ^ " }"
+  | VALUE_Packed_struct tvl -> "<{ " ^ list ", " tvalue tvl ^ " }>"
+  | VALUE_Zero_initializer  -> "zeroinitializer"
 
 and tvalue  = fun (t, v) -> typ t ^ " " ^ value v
 
