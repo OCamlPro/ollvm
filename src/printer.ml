@@ -261,7 +261,7 @@ and instr : LLVM.instr -> string = function
 
   | INSTR_Switch (c, def, cases) ->
      sprintf "switch %s, %s [%s]"
-             (tvalue c) (tvalue def)
+             (tvalue c) (tident def)
              (list ", " (fun (v, i) -> tvalue v ^ ", " ^ tident i) cases)
 
   | INSTR_Resume (t, v) -> "resume " ^ tvalue (t, v)

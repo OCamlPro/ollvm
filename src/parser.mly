@@ -430,7 +430,7 @@ instr:
     { INSTR_Br_1 b }
 
   | KW_SWITCH c=tvalue COMMA
-    def=tvalue LSQUARE EOL? table=list(switch_table_entry) RSQUARE
+    def=tident LSQUARE EOL? table=list(switch_table_entry) RSQUARE
     { INSTR_Switch (c, def, table) }
 
   | KW_INDIRECTBR

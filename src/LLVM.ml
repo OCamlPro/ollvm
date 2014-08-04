@@ -178,7 +178,7 @@ and value =
   | INSTR_Ret_void
   | INSTR_Br of tvalue * tident * tident (*types are constant *)
   | INSTR_Br_1 of tident
-  | INSTR_Switch of tvalue * tvalue * (tvalue * tident) list
+  | INSTR_Switch of tvalue * tident * (tvalue * tident) list
   | INSTR_IndirectBr
   | INSTR_Resume of tvalue
   | INSTR_Unreachable
