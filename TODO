@@ -15,6 +15,9 @@
    - cmpxchg
    - atomicrmw
 
+- Implement `atomic` keyword
+   cmpxchg, atomicrmw, fence, atomic load and atomic store
+
 - Implement fast math flags for floatinf point binop.
 
 - Implement attribute groups (#1 notation)
