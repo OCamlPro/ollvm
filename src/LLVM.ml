@@ -157,12 +157,12 @@ and value =
   | INSTR_GetElementPtr of tvalue * tvalue list
   | INSTR_ExtractElement of tvalue * tvalue
   | INSTR_InsertElement of tvalue * tvalue * tvalue
-  | INSTR_ShuffleVector
+  | INSTR_ShuffleVector of tvalue * tvalue * tvalue
   | INSTR_ExtractValue of tvalue * int list
   | INSTR_InsertValue of tvalue * tvalue * int list
   | INSTR_Call of tident * tvalue list
   | INSTR_Alloca of typ * tvalue option * int option (* typ, nb el, align *)
-  | INSTR_Load of tvalue * int option (* FIXME: use tident instead of tident *)
+  | INSTR_Load of tvalue * int option (* FIXME: use tident instead of value *)
   | INSTR_Phi of typ * (value * ident) list
   | INSTR_Select of tvalue * tvalue * tvalue (* if * then * else *)
   | INSTR_VAArg

@@ -239,9 +239,10 @@ and instr : LLVM.instr -> string = function
      sprintf "insertvalue %s, %s, %s"
              (tvalue agg) (tvalue new_val) (list ", " string_of_int idx)
 
-  | INSTR_LandingPad
-  | INSTR_ShuffleVector
-    -> assert false
+  | INSTR_ShuffleVector (v1, v2, mask) ->
+     sprintf "shufflevector %s, %s, %s" (tvalue v1) (tvalue v2) (tvalue mask)
+
+  | INSTR_LandingPad -> assert false
 
   | INSTR_Store (v, ptr, a) ->
      sprintf "store %s, %s%s" (tvalue v) (tident ptr) (align a)

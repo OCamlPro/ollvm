@@ -405,7 +405,9 @@ instr:
     idx=separated_nonempty_list (COMMA, INTEGER)
     { INSTR_InsertValue (agg, new_val, idx) }
 
-  | KW_SHUFFLEVECTOR  { failwith "INSTR_ShuffleVector"  }
+  | KW_SHUFFLEVECTOR v1=tvalue COMMA v2=tvalue COMMA mask=tvalue
+    { INSTR_ShuffleVector (v1, v2, mask)  }
+
   | KW_VAARG  { failwith"INSTR_VAArg"  }
   | KW_LANDINGPAD    { failwith"INSTR_LandingPad"    }
 
