@@ -162,18 +162,18 @@ and fbinop = function
   | FRem -> "frem"
 
 and conversion_type : LLVM.conversion_type -> string = function
-  | Trunc
-  | Zext
-  | Sext
-  | Fptrunc
-  | Fpext
-  | Uitofp
-  | Sitofp
-  | Fptoui
-  | Fptosi
-  | Inttoptr
-  | Ptrtoint
-  | Bitcast -> "conversion_type"
+  | Trunc    -> "trunc"
+  | Zext     -> "zext"
+  | Sext     -> "sext"
+  | Fptrunc  -> "fptrunc"
+  | Fpext    -> "fpext"
+  | Uitofp   -> "uitofp"
+  | Sitofp   -> "sitofp"
+  | Fptoui   -> "fptoui"
+  | Fptosi   -> "fptosi"
+  | Inttoptr -> "inttoptr"
+  | Ptrtoint -> "ptrtoint"
+  | Bitcast  -> "bitcast"
 
 and align = function
   | None -> ""
@@ -198,7 +198,7 @@ and instr : LLVM.instr -> string = function
      sprintf "fcmp %s %s %s, %s" (fcmp c) (typ t) (value v1) (value v2)
 
   | INSTR_Conversion (c, t1, v, t2) ->
-     sprintf "%s %s %s, %s" (conversion_type c) (typ t1) (value v) (typ t2)
+     sprintf "%s %s %s to %s" (conversion_type c) (typ t1) (value v) (typ t2)
 
   | INSTR_GetElementPtr (tv, tvl) ->
      sprintf "getelementptr %s, %s" (tvalue tv) (list ", " tvalue tvl)
