@@ -189,7 +189,7 @@ global_is_constant:
 
 declaration:
   | KW_DECLARE
-    pre_attrs=global_attr
+    pre_attrs=global_attr*
     dc_ret_typ=preceded(typ_attr*, typ)
     name=GLOBAL
     LPAREN dc_args=separated_list(COMMA, dc_arg) RPAREN
@@ -449,7 +449,7 @@ instr:
     list(fn_attr) KW_TO l1=tident KW_UNWIND l2=tident
     { INSTR_Invoke (ret, a, l1, l2)  }
 
-  | i=ident inst=instr { INSTR_Assign (i, inst) }
+  | i=ident EQ inst=instr { INSTR_Assign (i, inst) }
 
 alloca_opt:
   | a=align                             { (None, Some a) }
