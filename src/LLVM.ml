@@ -221,9 +221,7 @@ and definition = {
     df_attrs: fn_attr list;
   df_section: string option;
     df_align: int option;
-   df_instrs: unnamed_block * named_block list;
+   df_instrs: block list;
 }
 
-and unnamed_block = instr list
-
-and named_block = string * unnamed_block
+and block = string * instr list

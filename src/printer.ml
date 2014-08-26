@@ -333,16 +333,12 @@ and definition : LLVM.definition -> string = fun {
     df_name = i;
     df_args = til;
     df_attrs = al;
-    df_instrs = (entry_block, other_blocks);
-  } -> sprintf "define %s %s(%s) %s {\n%s\n%s\n}"
+    df_instrs = blocks;
+  } -> sprintf "define %s %s(%s) %s {\n%s\n}"
                (typ t)
                (ident i)
                (list ", " tident til)
                (list " " fn_attr al)
-               (unnamed_block entry_block)
-               (list "\n" named_block other_blocks)
+               (list "\n" block blocks)
 
-and unnamed_block : LLVM.unnamed_block -> string = fun b -> list "\n" instr b
-
-and named_block : LLVM.named_block -> string = fun (i, b) ->
-  i ^ ":\n" ^ (unnamed_block b)
+and block : LLVM.block -> string = fun (i, b) -> i ^ ":\n" ^ (list "\n" instr b)

@@ -204,8 +204,7 @@ definition:
     LPAREN df_args=separated_list(COMMA, df_arg) RPAREN
     attrs=global_attr* EOL*
     LCURLY EOL*
-    df_entry_block=unnamed_block
-    df_other_blocks=named_block*
+    df_blocks=df_blocks
     RCURLY
       { { df_ret_typ;
           df_name=ID_Global (fst name, snd name);
@@ -213,14 +212,13 @@ definition:
           df_attrs = get_fn_attrs attrs;
           df_section = get_section attrs;
           df_align = get_align attrs;
-          df_instrs=(df_entry_block, df_other_blocks);} }
+          df_instrs=df_blocks;} }
 
-unnamed_block:
-  | b=terminated(instr, EOL+)*
-    { b }
-
-named_block:
-  | i=LABEL EOL+ b=unnamed_block { (i, b) }
+df_blocks:
+  | hd_lbl=terminated(LABEL, EOL+)? hd=terminated(instr, EOL+)+
+    tl=pair(terminated(LABEL, EOL+), terminated(instr, EOL+)+)*
+  { let hb_lbl=match hd_lbl with Some x -> x | _ -> "" in
+    (hb_lbl, hd) :: tl}
 
 linkage:
   | KW_PRIVATE                      { LINKAGE_Private                      }
