@@ -11,5 +11,5 @@ let parse lexbuf =
         (Lexing.lexeme lexbuf)
     in failwith msg
   in
-  try Parser.module_ Lexer.token lexbuf
+  try Parser.toplevelentries Lexer.token lexbuf
   with Parser.Error -> parsing_err lexbuf

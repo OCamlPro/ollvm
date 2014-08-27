@@ -294,7 +294,7 @@ and tvalue  = fun (t, v) -> typ t ^ " " ^ value v
 
 and tident  = fun (t, v) -> typ t ^ " " ^ ident v
 
-and module_ : LLVM.module_-> string =
+and toplevelentries : LLVM.toplevelentries-> string =
   fun m -> list "\n" toplevelentry m
 
 and toplevelentry : LLVM.toplevelentry -> string = function

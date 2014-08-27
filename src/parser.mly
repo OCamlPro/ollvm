@@ -112,12 +112,12 @@ let is_unnamed_addr l =
 %token KW_ATTRIBUTES
 %token<int> ATTR_GRP_ID
 
-%start<LLVM.module_> module_
+%start<LLVM.toplevelentries> toplevelentries
 
 %%
 
 (* NB: Will produce parsing error with file not ending with a EOL *)
-module_:
+toplevelentries:
   | EOL* m=terminated(toplevelentry, EOL+)* EOF { m }
 
 toplevelentry:

@@ -187,8 +187,6 @@ and value =
    * not a real LLVM instruction, allow to bind an identifier to an instruction *)
   | INSTR_Assign of ident * instr
 
-and module_ = toplevelentry list
-
 and toplevelentry =
   | TLE_Target of string
   | TLE_Datalayout of string
@@ -198,6 +196,8 @@ and toplevelentry =
   | TLE_Global of global
   | TLE_Metadata
   | TLE_Attribute_group of int * fn_attr list
+
+and toplevelentries = toplevelentry list
 
 and global = {
      g_ident: ident;
