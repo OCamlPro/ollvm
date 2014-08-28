@@ -225,3 +225,12 @@ and definition = {
 }
 
 and block = string * instr list
+
+and modul = {
+        m_name: string;
+      m_target: toplevelentry;
+  m_datalayout: toplevelentry;
+     m_globals: (string, global) Hashtbl.t;
+     m_headers: (string, declaration) Hashtbl.t;
+   m_functions: (string, definition) Hashtbl.t;
+}
