@@ -329,15 +329,16 @@ and declaration : LLVM.declaration -> string = fun {
                (typ t) (ident i) (list ", " typ tl)
 
 and definition : LLVM.definition -> string = fun {
-    df_ret_typ = t;
-    df_name = i;
-    df_args = til;
+    df_prototype = { dc_ret_typ = t;
+                     dc_name = i;
+                     dc_args = argt};
+    df_args = argn;
     df_attrs = al;
     df_instrs = blocks;
   } -> sprintf "define %s %s(%s) %s {\n%s\n}"
                (typ t)
                (ident i)
-               (list ", " tident til)
+               (list ", " tident (List.combine argt argn))
                (list " " fn_attr al)
                (list "\n" block blocks)
 

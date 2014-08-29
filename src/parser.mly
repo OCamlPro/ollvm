@@ -206,13 +206,14 @@ definition:
     LCURLY EOL*
     df_blocks=df_blocks
     RCURLY
-      { { df_ret_typ;
-          df_name=ID_Global (fst name, snd name);
-          df_args;
-          df_attrs = get_fn_attrs attrs;
-          df_section = get_section attrs;
-          df_align = get_align attrs;
-          df_instrs=df_blocks;} }
+    { { df_prototype = { dc_ret_typ=df_ret_typ;
+                         dc_name=ID_Global (fst name, snd name);
+                         dc_args=List.map fst df_args; };
+        df_args=List.map snd df_args;
+        df_attrs = get_fn_attrs attrs;
+        df_section = get_section attrs;
+        df_align = get_align attrs;
+        df_instrs=df_blocks;} }
 
 df_blocks:
   | hd_lbl=terminated(LABEL, EOL+)? hd=terminated(instr, EOL+)+

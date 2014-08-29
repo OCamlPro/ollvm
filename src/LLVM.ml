@@ -215,13 +215,12 @@ and declaration = {
 }
 
 and definition = {
-  df_ret_typ: typ;
-     df_name: ident;
-     df_args: tident list;
-    df_attrs: fn_attr list;
-  df_section: string option;
-    df_align: int option;
-   df_instrs: block list;
+  df_prototype: declaration;
+       df_args: ident list;
+      df_attrs: fn_attr list;
+    df_section: string option;
+      df_align: int option;
+     df_instrs: block list;
 }
 
 and block = string * instr list
