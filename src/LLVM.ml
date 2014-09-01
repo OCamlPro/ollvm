@@ -120,6 +120,14 @@ and typ =
   | TYPE_Opaque
   | TYPE_Vector of (int * typ)
 
+and metadata =
+  | METADATA_Const of tvalue
+  | METADATA_Null
+  | METADATA_Id of string
+  | METADATA_String of string
+  | METADATA_Named of string list
+  | METADATA_Node of metadata list
+
 and icmp = Eq|Ne|Ugt|Uge|Ult|Ule|Sgt|Sge|Slt|Sle
 
 and fcmp = False|Oeq|Ogt|Oge|Olt|Ole|One|Ord|Uno|Ueq|Ugt|Uge|Ult|Ule|Une|True
@@ -135,6 +143,7 @@ and tvalue = typ * value
 
 and tident = typ * ident
 
+(** FIXME: should be splitted into const/value? *)
 and value =
   | VALUE_Ident of ident
   | VALUE_Integer of int
@@ -194,7 +203,7 @@ and toplevelentry =
   | TLE_Definition of definition
   | TLE_Type_decl of (ident * typ)
   | TLE_Global of global
-  | TLE_Metadata
+  | TLE_Metadata of string * metadata
   | TLE_Attribute_group of int * fn_attr list
 
 and toplevelentries = toplevelentry list

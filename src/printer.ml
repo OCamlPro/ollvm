@@ -304,9 +304,17 @@ and toplevelentry : LLVM.toplevelentry -> string = function
   | TLE_Definition d -> definition d
   | TLE_Type_decl (i, t) -> ident i ^ typ t
   | TLE_Global g -> global g
-  | TLE_Metadata -> "; metadata were lost during parsing"
+  | TLE_Metadata (i, m) -> sprintf "!%s = %s" i (metadata m)
   | TLE_Attribute_group (i, a) ->
     sprintf "#%d = { %s }" i (list " " fn_attr a)
+
+and metadata : LLVM.metadata -> string = function
+  | METADATA_Const v -> tvalue v
+  | METADATA_Null -> "null"
+  | METADATA_Id i -> "!" ^ i
+  | METADATA_String s -> "!\"" ^ s ^ "\""
+  | METADATA_Node m -> list ", " metadata m
+  | METADATA_Named m -> list ", " (fun i -> "!" ^ i) m
 
 and global : LLVM.global -> string = fun {
     g_ident = i;

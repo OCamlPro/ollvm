@@ -264,7 +264,7 @@ rule token = parse
   | '!'  { let (format, id) = ident_body lexbuf in
            match format with
            | LLVM.ID_FORMAT_Named
-           | LLVM.ID_FORMAT_Unnamed -> METADATA_ID (format, id)
+           | LLVM.ID_FORMAT_Unnamed -> METADATA_ID id
            | LLVM.ID_FORMAT_NamedString -> METADATA_STRING (id)
          }
 

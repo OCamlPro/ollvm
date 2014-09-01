@@ -106,7 +106,7 @@ let is_unnamed_addr l =
 %token KW_TAIL
 %token KW_VOLATILE
 
-%token<LLVM.ident_format * string> METADATA_ID
+%token<string> METADATA_ID
 %token<string> METADATA_STRING
 %token BANGLCURLY
 %token KW_ATTRIBUTES
@@ -128,30 +128,27 @@ toplevelentry:
   | i=LOCAL EQ KW_TYPE t=typ            { TLE_Type_decl
                                             (ID_Local (fst i, snd i), t) }
   | g=global_decl                       { TLE_Global g                   }
-  | METADATA_ID EQ tle_metadata         { TLE_Metadata                   }
+  | i=METADATA_ID EQ m=tle_metadata     { TLE_Metadata (i, m)            }
   | KW_ATTRIBUTES i=ATTR_GRP_ID EQ LCURLY a=fn_attr* RCURLY
                                         { TLE_Attribute_group (i, a)     }
 
 (* metadata are not implemented yet, but are at least (partially) parsed *)
 tle_metadata:
-  | nammed_metadata
-  | KW_METADATA metadata_node
-    { }
-
-nammed_metadata:
-  | BANGLCURLY separated_list(COMMA, METADATA_ID) RCURLY {}
+  | BANGLCURLY m=separated_list(COMMA, METADATA_ID) RCURLY
+   { METADATA_Named m }
+  | KW_METADATA m=metadata_node
+    { m }
 
 metadata_node:
-  | BANGLCURLY separated_list(COMMA, metadata_value) RCURLY
-    { }
+  | BANGLCURLY m=separated_list(COMMA, metadata_value) RCURLY
+    { METADATA_Node m }
 
 metadata_value:
-  | tconst
-  | KW_NULL
-  | KW_METADATA METADATA_STRING
-  | KW_METADATA METADATA_ID
-  | KW_METADATA metadata_node
-    { }
+  | tconst                      { METADATA_Const $1  }
+  | KW_NULL                     { METADATA_Null      } (* null with no type *)
+  | KW_METADATA METADATA_STRING { METADATA_String $2 }
+  | KW_METADATA METADATA_ID     { METADATA_Id $2     }
+  | KW_METADATA metadata_node   { $2                 }
 
 instr_metadata:
   | METADATA_ID METADATA_ID
