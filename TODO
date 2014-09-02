@@ -21,3 +21,9 @@
 - Implement fast math flags for floatinf point binop.
 
 - Implement attribute groups (#1 notation)
+
+- Implement a bitcode writer
+  Bitcode would be more efficient for input/output between programs.
+
+- Integer arithmetic
+  Implement NSW / NUW / EXACT flags.
