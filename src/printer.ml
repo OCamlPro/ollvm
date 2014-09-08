@@ -8,33 +8,32 @@ let list : string -> ('a -> string) -> 'a list -> string =
 let sprintf = Printf.sprintf
 
 let rec linkage : LLVM.linkage -> string = function
-  | LINKAGE_Private -> "linkage"
-  | LINKAGE_Linker_private -> "linkage"
-  | LINKAGE_Linker_private_weak -> "linkage"
-  | LINKAGE_Linker_private_weak_def_auto -> "linkage"
-  | LINKAGE_Internal -> "linkage"
-  | LINKAGE_Available_externally -> "linkage"
-  | LINKAGE_Linkonce -> "linkage"
-  | LINKAGE_Weak -> "linkage"
-  | LINKAGE_Common -> "linkage"
-  | LINKAGE_Appending -> "linkage"
-  | LINKAGE_Extern_weak -> "linkage"
-  | LINKAGE_Linkonce_odr -> "linkage"
-  | LINKAGE_Weak_odr -> "linkage"
-  | LINKAGE_External -> "linkage"
-  | LINKAGE_Dllimport -> "linkage"
-  | LINKAGE_Dllexport -> "linkage"
+  | LINKAGE_Private                      -> "private"
+  | LINKAGE_Internal                     -> "internal"
+  | LINKAGE_Available_externally         -> "available_externally"
+  | LINKAGE_Linkonce                     -> "linkonce"
+  | LINKAGE_Weak                         -> "weak"
+  | LINKAGE_Common                       -> "common"
+  | LINKAGE_Appending                    -> "appending"
+  | LINKAGE_Extern_weak                  -> "extern_weak"
+  | LINKAGE_Linkonce_odr                 -> "linkonce_ord"
+  | LINKAGE_Weak_odr                     -> "weak_odr"
+  | LINKAGE_External                     -> "external"
+
+ and dll_storage : LLVM.dll_storage -> string = function
+  | DLLSTORAGE_Dllimport -> "dllimport"
+  | DLLSTORAGE_Dllexport -> "dllexport"
 
 and visibility : LLVM.visibility -> string = function
-  | VISIBILITY_Default -> "visibility"
-  | VISIBILITY_Hidden -> "visibility"
-  | VISIBILITY_Protected -> "visibility"
+  | VISIBILITY_Default   -> "default"
+  | VISIBILITY_Hidden    -> "hidden"
+  | VISIBILITY_Protected -> "protected"
 
 and cconv : LLVM.cconv -> string = function
-  | CC_Ccc -> "cconv"
-  | CC_Fastcc -> "cconv"
-  | CC_Coldcc -> "cconv"
-  | CC_Cc i -> "cconv"
+  | CC_Ccc    -> "ccc"
+  | CC_Fastcc -> "fastcc"
+  | CC_Coldcc -> "coldcc"
+  | CC_Cc i   -> "cc " ^ string_of_int i
 
 and param_attr : LLVM.param_attr -> string = function
   | PARAMATTR_Zeroext           -> "zeroext"

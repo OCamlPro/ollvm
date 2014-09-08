@@ -30,9 +30,6 @@
   | "define"                       -> KW_DEFINE
   | "declare"                      -> KW_DECLARE
   | "private"                      -> KW_PRIVATE
-  | "linker_private"               -> KW_LINKER_PRIVATE
-  | "linker_private_weak"          -> KW_LINKER_PRIVATE_WEAK
-  | "linker_private_weak_def_auto" -> KW_LINKER_PRIVATE_WEAK_DEF_AUTO
   | "internal"                     -> KW_INTERNAL
   | "available_externally"         -> KW_AVAILABLE_EXTERNALLY
   | "linkonce"                     -> KW_LINKONCE

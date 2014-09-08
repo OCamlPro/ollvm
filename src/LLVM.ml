@@ -21,9 +21,6 @@
 
 type linkage =
   | LINKAGE_Private
-  | LINKAGE_Linker_private
-  | LINKAGE_Linker_private_weak
-  | LINKAGE_Linker_private_weak_def_auto
   | LINKAGE_Internal
   | LINKAGE_Available_externally
   | LINKAGE_Linkonce
@@ -34,8 +31,10 @@ type linkage =
   | LINKAGE_Linkonce_odr
   | LINKAGE_Weak_odr
   | LINKAGE_External
-  | LINKAGE_Dllimport
-  | LINKAGE_Dllexport
+
+ and dll_storage =
+  | DLLSTORAGE_Dllimport
+  | DLLSTORAGE_Dllexport
 
 and visibility =
   | VISIBILITY_Default

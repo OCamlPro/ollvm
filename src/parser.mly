@@ -84,7 +84,7 @@ let is_unnamed_addr l =
 %token<string> LABEL
 
 %token KW_DEFINE KW_DECLARE KW_TARGET KW_DATALAYOUT KW_TRIPLE
-%token KW_PRIVATE KW_LINKER_PRIVATE KW_LINKER_PRIVATE_WEAK KW_LINKER_PRIVATE_WEAK_DEF_AUTO KW_INTERNAL KW_AVAILABLE_EXTERNALLY KW_LINKONCE KW_WEAK KW_COMMON KW_APPENDING KW_EXTERN_WEAK KW_LINKONCE_ODR KW_WEAK_ODR KW_EXTERNAL KW_DLLIMPORT KW_DLLEXPORT
+%token KW_PRIVATE KW_INTERNAL KW_AVAILABLE_EXTERNALLY KW_LINKONCE KW_WEAK KW_COMMON KW_APPENDING KW_EXTERN_WEAK KW_LINKONCE_ODR KW_WEAK_ODR KW_EXTERNAL KW_DLLIMPORT KW_DLLEXPORT
 %token KW_DEFAULT KW_HIDDEN KW_PROTECTED
 %token KW_CCC KW_FASTCC KW_COLDCC KW_CC
 %token KW_UNNAMED_ADDR
@@ -224,9 +224,6 @@ df_blocks:
 
 linkage:
   | KW_PRIVATE                      { LINKAGE_Private                      }
-  | KW_LINKER_PRIVATE               { LINKAGE_Linker_private               }
-  | KW_LINKER_PRIVATE_WEAK          { LINKAGE_Linker_private_weak          }
-  | KW_LINKER_PRIVATE_WEAK_DEF_AUTO { LINKAGE_Linker_private_weak_def_auto }
   | KW_INTERNAL                     { LINKAGE_Internal                     }
   | KW_AVAILABLE_EXTERNALLY         { LINKAGE_Available_externally         }
   | KW_LINKONCE                     { LINKAGE_Linkonce                     }
@@ -237,8 +234,10 @@ linkage:
   | KW_LINKONCE_ODR                 { LINKAGE_Linkonce_odr                 }
   | KW_WEAK_ODR                     { LINKAGE_Weak_odr                     }
   | KW_EXTERNAL                     { LINKAGE_External                     }
-  | KW_DLLIMPORT                    { LINKAGE_Dllimport                    }
-  | KW_DLLEXPORT                    { LINKAGE_Dllexport                    }
+
+dll:
+  | KW_DLLIMPORT { DLLSTORAGE_Dllimport }
+  | KW_DLLEXPORT { DLLSTORAGE_Dllexport }
 
 visibility:
   | KW_DEFAULT   { VISIBILITY_Default   }
