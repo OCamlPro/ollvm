@@ -280,7 +280,8 @@ param_attr:
   | KW_NEST                      { PARAMATTR_Nest              }
   | KW_RETURNED                  { PARAMATTR_Returned          }
   | KW_NONNULL                   { PARAMATTR_Nonnull           }
-  | KW_DEREFERENCEABLE n=INTEGER { PARAMATTR_Dereferenceable n }
+  | KW_DEREFERENCEABLE LPAREN n=INTEGER RPAREN
+                                 { PARAMATTR_Dereferenceable n }
 
 dc_arg: t=typ p=param_attr*  { (t, p) }
 df_arg: t=typ i=ident        { ((t, []), i) }
