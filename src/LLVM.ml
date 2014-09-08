@@ -48,15 +48,20 @@ and cconv =
   | CC_Coldcc
   | CC_Cc of int
 
-and typ_attr =
-  | TYPEATTR_Zeroext
-  | TYPEATTR_Signext
-  | TYPEATTR_Inreg
-  | TYPEATTR_Byval
-  | TYPEATTR_Sret
-  | TYPEATTR_Noalias
-  | TYPEATTR_Nocapture
-  | TYPEATTR_Nest
+and param_attr =
+  | PARAMATTR_Zeroext
+  | PARAMATTR_Signext
+  | PARAMATTR_Inreg
+  | PARAMATTR_Byval
+  | PARAMATTR_Inalloca
+  | PARAMATTR_Sret
+  | PARAMATTR_Align of int
+  | PARAMATTR_Noalias
+  | PARAMATTR_Nocapture
+  | PARAMATTR_Nest
+  | PARAMATTR_Returned
+  | PARAMATTR_Nonnull
+  | PARAMATTR_Dereferenceable of int
 
 and fn_attr =
   | FNATTR_Alignstack of int
@@ -218,9 +223,9 @@ and global = {
 }
 
 and declaration = {
-  dc_ret_typ: typ;
-     dc_name: ident;
-     dc_args: typ list;
+      dc_ret_typ: typ;
+         dc_name: ident;
+         dc_args: (typ * param_attr list) list;
 }
 
 and definition = {

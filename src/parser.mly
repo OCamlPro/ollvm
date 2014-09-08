@@ -91,7 +91,7 @@ let is_unnamed_addr l =
 %token KW_TYPE KW_X KW_OPAQUE
 %token KW_GLOBAL KW_ADDRSPACE KW_CONSTANT KW_SECTION KW_THREAD_LOCAL
 %token KW_ZEROEXT KW_SIGNEXT KW_INREG KW_BYVAL KW_SRET KW_NOALIAS KW_NOCAPTURE KW_NEST
-%token KW_ALIGNSTACK KW_ALWAYSINLINE KW_BUILTIN KW_COLD KW_INLINEHINT KW_JUMPTABLE KW_MINSIZE KW_NAKED KW_NOBUILTIN KW_NODUPLICATE KW_NOIMPLICITFLOAT KW_NOINLINE KW_NONLAZYBIND KW_NOREDZONE KW_NORETURN KW_NOUNWIND KW_OPTNONE KW_OPTSIZE KW_READNONE KW_READONLY KW_RETURNS_TWICE KW_SANITIZE_ADDRESS KW_SANITIZE_MEMORY KW_SANITIZE_THREAD KW_SSP KW_SSPREQ KW_SSPSTRONG KW_UWTABLE
+%token KW_ALIGNSTACK KW_ALWAYSINLINE KW_BUILTIN KW_COLD KW_INLINEHINT KW_JUMPTABLE KW_MINSIZE KW_NAKED KW_NOBUILTIN KW_NODUPLICATE KW_NOIMPLICITFLOAT KW_NOINLINE KW_NONLAZYBIND KW_NOREDZONE KW_NORETURN KW_NOUNWIND KW_OPTNONE KW_OPTSIZE KW_READNONE KW_READONLY KW_RETURNS_TWICE KW_SANITIZE_ADDRESS KW_SANITIZE_MEMORY KW_SANITIZE_THREAD KW_SSP KW_SSPREQ KW_SSPSTRONG KW_UWTABLE KW_DEREFERENCEABLE KW_INALLOCA KW_RETURNED KW_NONNULL
 %token KW_ALIGN
 %token KW_GC
 %token KW_ADD KW_FADD KW_SUB KW_FSUB KW_MUL KW_FMUL KW_UDIV KW_SDIV KW_FDIV KW_UREM KW_SREM KW_FREM KW_SHL KW_LSHR KW_ASHR KW_AND KW_OR KW_XOR KW_ICMP KW_FCMP KW_PHI KW_CALL KW_TRUNC KW_ZEXT KW_SEXT KW_FPTRUNC KW_FPEXT KW_UITOFP KW_SITOFP KW_FPTOUI KW_FPTOSI KW_INTTOPTR KW_PTRTOINT KW_BITCAST KW_SELECT KW_VAARG KW_RET KW_BR KW_SWITCH KW_INDIRECTBR KW_INVOKE KW_RESUME KW_UNREACHABLE KW_ALLOCA KW_LOAD KW_STORE KW_ATOMICCMPXCHG KW_ATOMICRMW KW_FENCE KW_GETELEMENTPTR KW_INBOUNDS KW_EXTRACTELEMENT KW_INSERTELEMENT KW_SHUFFLEVECTOR KW_EXTRACTVALUE KW_INSERTVALUE KW_LANDINGPAD
@@ -187,19 +187,21 @@ global_is_constant:
 declaration:
   | KW_DECLARE
     pre_attrs=global_attr*
-    dc_ret_typ=preceded(typ_attr*, typ)
+    dc_ret_typ=preceded(param_attr*, typ)
     name=GLOBAL
     LPAREN dc_args=separated_list(COMMA, dc_arg) RPAREN
     post_attrs=global_attr*
-    { {dc_ret_typ; dc_name=ID_Global (fst name, snd name); dc_args;} }
+    { {dc_ret_typ;
+       dc_name=ID_Global (fst name, snd name);
+       dc_args;} }
 
 definition:
   | KW_DEFINE
     pre_attrs=global_attr*
-    df_ret_typ=preceded(typ_attr*, typ)
+    df_ret_typ=preceded(param_attr*, typ)
     name=GLOBAL
     LPAREN df_args=separated_list(COMMA, df_arg) RPAREN
-    attrs=global_attr* EOL*
+    post_attrs=global_attr* EOL*
     LCURLY EOL*
     df_blocks=df_blocks
     RCURLY
@@ -207,9 +209,9 @@ definition:
                          dc_name=ID_Global (fst name, snd name);
                          dc_args=List.map fst df_args; };
         df_args=List.map snd df_args;
-        df_attrs = get_fn_attrs attrs;
-        df_section = get_section attrs;
-        df_align = get_align attrs;
+        df_attrs = get_fn_attrs post_attrs;
+        df_section = get_section post_attrs;
+        df_align = get_align post_attrs;
         df_instrs=df_blocks;} }
 
 df_blocks:
@@ -265,19 +267,24 @@ typ:
   | KW_OPAQUE                                         { TYPE_Opaque           }
   | LT n=INTEGER KW_X t=typ GT                        { TYPE_Vector (n, t)    }
 
-typ_attr:
-  | KW_ZEROEXT   { TYPEATTR_Zeroext   }
-  | KW_SIGNEXT   { TYPEATTR_Signext   }
-  | KW_INREG     { TYPEATTR_Inreg     }
-  | KW_BYVAL     { TYPEATTR_Byval     }
-  | KW_SRET      { TYPEATTR_Sret      }
-  | KW_NOALIAS   { TYPEATTR_Noalias   }
-  | KW_NOCAPTURE { TYPEATTR_Nocapture }
-  | KW_NEST      { TYPEATTR_Nest      }
+param_attr:
+  | KW_ZEROEXT                   { PARAMATTR_Zeroext           }
+  | KW_SIGNEXT                   { PARAMATTR_Signext           }
+  | KW_INREG                     { PARAMATTR_Inreg             }
+  | KW_BYVAL                     { PARAMATTR_Byval             }
+  | KW_INALLOCA                  { PARAMATTR_Inalloca          }
+  | KW_SRET                      { PARAMATTR_Sret              }
+  | KW_ALIGN n=INTEGER           { PARAMATTR_Align n           }
+  | KW_NOALIAS                   { PARAMATTR_Noalias           }
+  | KW_NOCAPTURE                 { PARAMATTR_Nocapture         }
+  | KW_NEST                      { PARAMATTR_Nest              }
+  | KW_RETURNED                  { PARAMATTR_Returned          }
+  | KW_NONNULL                   { PARAMATTR_Nonnull           }
+  | KW_DEREFERENCEABLE n=INTEGER { PARAMATTR_Dereferenceable n }
 
-dc_arg: t=typ typ_attr*      { t      }
-df_arg: t=dc_arg i=ident     { (t, i) }
-call_arg: t=dc_arg i=value   { (t, i) }
+dc_arg: t=typ p=param_attr*  { (t, p) }
+df_arg: t=typ i=ident        { ((t, []), i) }
+call_arg: t=typ i=value      { (t, i) }
 
 fn_attr:
   | KW_ALIGNSTACK LPAREN p=INTEGER RPAREN { FNATTR_Alignstack p     }
@@ -368,7 +375,7 @@ instr:
     idx=preceded(COMMA, tvalue)*
     { INSTR_GetElementPtr (ptr, idx) }
 
-  | KW_TAIL? KW_CALL cconv? list(typ_attr) f=tident
+  | KW_TAIL? KW_CALL cconv? list(param_attr) f=tident
     a=delimited(LPAREN, separated_list(COMMA, call_arg), RPAREN)
     list(fn_attr)
     { INSTR_Call (f, a) }

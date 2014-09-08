@@ -68,6 +68,10 @@
   | "noalias"                      -> KW_NOALIAS
   | "nocapture"                    -> KW_NOCAPTURE
   | "nest"                         -> KW_NEST
+  | "dereferenceable"              -> KW_DEREFERENCEABLE
+  | "inalloca"                     -> KW_INALLOCA
+  | "returned"                     -> KW_RETURNED
+  | "nonnull"                      -> KW_NONNULL
   | "alignstack"                   -> KW_ALIGNSTACK
   | "alwaysinline"                 -> KW_ALWAYSINLINE
   | "builtin"                      -> KW_BUILTIN

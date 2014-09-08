@@ -36,15 +36,20 @@ and cconv : LLVM.cconv -> string = function
   | CC_Coldcc -> "cconv"
   | CC_Cc i -> "cconv"
 
-and typ_attr : LLVM.typ_attr -> string = function
-  | TYPEATTR_Zeroext -> "typ_attr"
-  | TYPEATTR_Signext -> "typ_attr"
-  | TYPEATTR_Inreg -> "typ_attr"
-  | TYPEATTR_Byval -> "typ_attr"
-  | TYPEATTR_Sret -> "typ_attr"
-  | TYPEATTR_Noalias -> "typ_attr"
-  | TYPEATTR_Nocapture -> "typ_attr"
-  | TYPEATTR_Nest -> "typ_attr"
+and param_attr : LLVM.param_attr -> string = function
+  | PARAMATTR_Zeroext           -> "zeroext"
+  | PARAMATTR_Signext           -> "signext"
+  | PARAMATTR_Inreg             -> "inreg"
+  | PARAMATTR_Byval             -> "byval"
+  | PARAMATTR_Inalloca          -> "inalloca"
+  | PARAMATTR_Sret              -> "sret"
+  | PARAMATTR_Align n           -> "align " ^ string_of_int n
+  | PARAMATTR_Noalias           -> "noalias"
+  | PARAMATTR_Nocapture         -> "nocapture"
+  | PARAMATTR_Nest              -> "nest"
+  | PARAMATTR_Returned          -> "returned"
+  | PARAMATTR_Nonnull           -> "nonnull"
+  | PARAMATTR_Dereferenceable n -> "dereferenceable(" ^ string_of_int n ^ ")"
 
 and fn_attr : LLVM.fn_attr -> string = function
   | FNATTR_Alignstack i -> sprintf "alignstack(%d)" i
@@ -312,9 +317,9 @@ and metadata : LLVM.metadata -> string = function
   | METADATA_Const v -> tvalue v
   | METADATA_Null -> "null"
   | METADATA_Id i -> "!" ^ i
-  | METADATA_String s -> "!\"" ^ s ^ "\""
-  | METADATA_Node m -> list ", " metadata m
-  | METADATA_Named m -> list ", " (fun i -> "!" ^ i) m
+  | METADATA_String s -> "metadata !\"" ^ s ^ "\""
+  | METADATA_Node m -> "metadata !{" ^ list ", " metadata m ^ "}"
+  | METADATA_Named m -> "!{ " ^ list ", " (fun i -> "!" ^ i) m ^ " }"
 
 and global : LLVM.global -> string = fun {
     g_ident = i;
@@ -333,21 +338,30 @@ and declaration : LLVM.declaration -> string = fun {
     dc_ret_typ = t;
     dc_name = i;
     dc_args = tl;
-  } -> sprintf "declare %s %s(%s)"
-               (typ t) (ident i) (list ", " typ tl)
+  } -> let typ_attr = fun (t, attrs) -> typ t ^ list " " param_attr attrs in
+       sprintf "declare %s %s(%s)"
+               (typ t)
+               (ident i)
+               (list ", " typ_attr tl)
 
 and definition : LLVM.definition -> string = fun {
     df_prototype = { dc_ret_typ = t;
                      dc_name = i;
-                     dc_args = argt};
+                     dc_args = argt;};
     df_args = argn;
     df_attrs = al;
     df_instrs = blocks;
-  } -> sprintf "define %s %s(%s) %s {\n%s\n}"
+  } -> let typ_attr_id = fun ((t, attrs), id) ->
+         sprintf "%s %s %s" (typ t) (list " " param_attr attrs) (ident id) in
+       sprintf "define %s %s(%s) %s {\n%s\n}"
                (typ t)
                (ident i)
-               (list ", " tident (List.combine argt argn))
+               (list ", " typ_attr_id (List.combine argt argn))
                (list " " fn_attr al)
                (list "\n" block blocks)
 
-and block : LLVM.block -> string = fun (i, b) -> i ^ ":\n" ^ (list "\n" instr b)
+and block : LLVM.block -> string = fun (i, b) ->
+  (match i with "" -> ""
+              | i -> i ^ ":")
+  ^ "\n"
+  ^ (list "\n" instr b)
