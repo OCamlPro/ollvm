@@ -335,17 +335,18 @@ and global : LLVM.global -> string = fun {
                (align a)
 
 and declaration : LLVM.declaration -> string = fun {
-    dc_ret_typ = t;
+    dc_ret_typ = (t, ret_attrs);
     dc_name = i;
     dc_args = tl;
   } -> let typ_attr = fun (t, attrs) -> typ t ^ list " " param_attr attrs in
-       sprintf "declare %s %s(%s)"
+       sprintf "declare %s %s %s(%s)"
+               (list " " param_attr ret_attrs)
                (typ t)
                (ident i)
                (list ", " typ_attr tl)
 
 and definition : LLVM.definition -> string = fun {
-    df_prototype = { dc_ret_typ = t;
+    df_prototype = { dc_ret_typ = (t, ret_attrs);
                      dc_name = i;
                      dc_args = argt;};
     df_args = argn;
@@ -353,7 +354,8 @@ and definition : LLVM.definition -> string = fun {
     df_instrs = blocks;
   } -> let typ_attr_id = fun ((t, attrs), id) ->
          sprintf "%s %s %s" (typ t) (list " " param_attr attrs) (ident id) in
-       sprintf "define %s %s(%s) %s {\n%s\n}"
+       sprintf "define %s %s %s(%s) %s {\n%s\n}"
+               (list " " param_attr ret_attrs)
                (typ t)
                (ident i)
                (list ", " typ_attr_id (List.combine argt argn))

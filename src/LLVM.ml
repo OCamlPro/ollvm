@@ -223,7 +223,7 @@ and global = {
 }
 
 and declaration = {
-      dc_ret_typ: typ;
+      dc_ret_typ: typ * param_attr list;
          dc_name: ident;
          dc_args: (typ * param_attr list) list;
 }

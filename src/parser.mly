@@ -187,25 +187,27 @@ global_is_constant:
 declaration:
   | KW_DECLARE
     pre_attrs=global_attr*
-    dc_ret_typ=preceded(param_attr*, typ)
+    dc_ret_attrs=param_attr*
+    dc_ret_typ=typ
     name=GLOBAL
     LPAREN dc_args=separated_list(COMMA, dc_arg) RPAREN
     post_attrs=global_attr*
-    { {dc_ret_typ;
+    { {dc_ret_typ=(dc_ret_typ, dc_ret_attrs);
        dc_name=ID_Global (fst name, snd name);
        dc_args;} }
 
 definition:
   | KW_DEFINE
     pre_attrs=global_attr*
-    df_ret_typ=preceded(param_attr*, typ)
+    df_ret_attrs=param_attr*
+    df_ret_typ=typ
     name=GLOBAL
     LPAREN df_args=separated_list(COMMA, df_arg) RPAREN
     post_attrs=global_attr* EOL*
     LCURLY EOL*
     df_blocks=df_blocks
     RCURLY
-    { { df_prototype = { dc_ret_typ=df_ret_typ;
+    { { df_prototype = { dc_ret_typ=(df_ret_typ,df_ret_attrs);
                          dc_name=ID_Global (fst name, snd name);
                          dc_args=List.map fst df_args; };
         df_args=List.map snd df_args;
