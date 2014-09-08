@@ -28,7 +28,7 @@ open LLVM
  * It is far from what would be ideal since it will allow to parse silly
  * LLVM IR (keywords at the bad place, or function attributes in global
  * variable declaration, ...).
- * Would work sa expected with valid LLVM IR. *)
+ * It will work as expected with valid LLVM IR. *)
 
 type att =
   | OPT_fn_attr of fn_attr list
@@ -40,6 +40,7 @@ type att =
   | OPT_addrspace of int
   | OPT_unnamed_addr
   | OPT_cconv of cconv
+  | OPT_dll_storage of dll_storage
 
 let rec get_opt f  = function
   | []       -> None
@@ -64,6 +65,12 @@ let get_visibility =
 
 let get_addrspace =
   get_opt (function OPT_addrspace i -> Some i | _ -> None)
+
+let get_dll_storage =
+  get_opt (function OPT_dll_storage i -> Some i | _ -> None)
+
+let get_cconv =
+  get_opt (function OPT_cconv i -> Some i | _ -> None)
 
 let is_thread_local l =
   None <> get_opt (function OPT_thread_local -> Some () | _ -> None) l
@@ -211,10 +218,16 @@ definition:
                          dc_name=ID_Global (fst name, snd name);
                          dc_args=List.map fst df_args; };
         df_args=List.map snd df_args;
+        df_instrs=df_blocks;
+
+        df_linkage = get_linkage pre_attrs;
+        df_visibility = get_visibility pre_attrs;
+        df_dll_storage = get_dll_storage pre_attrs;
+        df_cconv = get_cconv pre_attrs;
         df_attrs = get_fn_attrs post_attrs;
         df_section = get_section post_attrs;
         df_align = get_align post_attrs;
-        df_instrs=df_blocks;} }
+        } }
 
 df_blocks:
   | hd_lbl=terminated(LABEL, EOL+)? hd=terminated(instr, EOL+)+

@@ -7,6 +7,8 @@ let list : string -> ('a -> string) -> 'a list -> string =
 
 let sprintf = Printf.sprintf
 
+let optional x f = match x with None -> "" | Some x -> f x ^ " "
+
 let rec linkage : LLVM.linkage -> string = function
   | LINKAGE_Private                      -> "private"
   | LINKAGE_Internal                     -> "internal"
@@ -344,22 +346,25 @@ and declaration : LLVM.declaration -> string = fun {
                (ident i)
                (list ", " typ_attr tl)
 
-and definition : LLVM.definition -> string = fun {
-    df_prototype = { dc_ret_typ = (t, ret_attrs);
-                     dc_name = i;
-                     dc_args = argt;};
-    df_args = argn;
-    df_attrs = al;
-    df_instrs = blocks;
-  } -> let typ_attr_id = fun ((t, attrs), id) ->
-         sprintf "%s %s %s" (typ t) (list " " param_attr attrs) (ident id) in
-       sprintf "define %s %s %s(%s) %s {\n%s\n}"
-               (list " " param_attr ret_attrs)
-               (typ t)
-               (ident i)
-               (list ", " typ_attr_id (List.combine argt argn))
-               (list " " fn_attr al)
-               (list "\n" block blocks)
+and definition : LLVM.definition -> string =
+  fun ({ df_prototype = { dc_ret_typ = (t, ret_attrs);
+                          dc_name = i;
+                          dc_args = argt;};
+       } as df) ->
+  let typ_attr_id = fun ((t, attrs), id) ->
+    sprintf "%s %s %s" (typ t) (list " " param_attr attrs) (ident id) in
+  "define"
+  ^ optional df.df_linkage linkage
+  ^ optional df.df_visibility visibility
+  ^ optional df.df_dll_storage dll_storage
+  ^ optional df.df_cconv cconv
+  ^ sprintf "%s %s %s(%s) %s {\n%s\n}"
+            (list " " param_attr ret_attrs)
+            (typ t)
+            (ident i)
+            (list ", " typ_attr_id (List.combine argt df.df_args))
+            (list " " fn_attr df.df_attrs)
+            (list "\n" block df.df_instrs)
 
 and block : LLVM.block -> string = fun (i, b) ->
   (match i with "" -> ""

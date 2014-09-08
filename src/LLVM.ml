@@ -229,11 +229,16 @@ and declaration = {
 
 and definition = {
   df_prototype: declaration;
-       df_args: ident list;
-      df_attrs: fn_attr list;
-    df_section: string option;
-      df_align: int option;
-     df_instrs: block list;
+  df_args: ident list;
+  df_instrs: block list;
+
+  df_linkage: linkage option;
+  df_visibility: visibility option;
+  df_dll_storage: dll_storage option;
+  df_cconv: cconv option;
+  df_attrs: fn_attr list;
+  df_section: string option;
+  df_align: int option;
 }
 
 and block = string * instr list
