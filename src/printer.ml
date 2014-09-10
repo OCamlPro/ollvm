@@ -196,6 +196,8 @@ and section = function
   | None -> ""
   | Some s -> ", section " ^ s
 
+and volatile = function true -> "volatile " | false -> ""
+
 and instr : LLVM.instr -> string = function
 
   | INSTR_IBinop (op, t, v1, v2) ->
@@ -225,8 +227,8 @@ and instr : LLVM.instr -> string = function
      ^ (match n with None -> "" | Some n -> ", " ^ tvalue n)
      ^ align a
 
-  | INSTR_Load (tv, a) ->
-     "load " ^ tvalue tv ^ align a
+  | INSTR_Load (vol, tv,a) ->
+     "load " ^ volatile vol ^ tvalue tv ^ align a
 
   | INSTR_Phi (t, vil) ->
      sprintf "phi %s [%s]"
@@ -258,8 +260,8 @@ and instr : LLVM.instr -> string = function
 
   | INSTR_LandingPad -> assert false
 
-  | INSTR_Store (v, ptr, a) ->
-     sprintf "store %s, %s%s" (tvalue v) (tident ptr) (align a)
+  | INSTR_Store (vol, v, ptr, a) ->
+     sprintf "store %s%s, %s%s" (volatile vol) (tvalue v) (tident ptr) (align a)
 
   | INSTR_AtomicCmpXchg
   | INSTR_AtomicRMW

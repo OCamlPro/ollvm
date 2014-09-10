@@ -440,8 +440,8 @@ instr:
     { let (n, a) = match opt with Some x -> x | None -> (None, None) in
       INSTR_Alloca (t, n, a) }
 
-  | KW_LOAD KW_VOLATILE? tv=tvalue a=preceded(COMMA, align)?
-    { INSTR_Load (tv, a) }
+  | KW_LOAD vol=is_volatile tv=tvalue a=preceded(COMMA, align)?
+    { INSTR_Load (vol, tv, a) }
 
   | KW_PHI t=typ table=separated_nonempty_list(COMMA, phi_table_entry)
     { INSTR_Phi (t, table) }
@@ -470,9 +470,9 @@ instr:
   | KW_VAARG  { failwith"INSTR_VAArg"  }
   | KW_LANDINGPAD    { failwith"INSTR_LandingPad"    }
 
-  | KW_STORE KW_VOLATILE? all=tvalue COMMA ptr=tident
+  | KW_STORE vol=is_volatile all=tvalue COMMA ptr=tident
     a=preceded(COMMA, align)?
-    { INSTR_Store (all, ptr, a) }
+    { INSTR_Store (vol, all, ptr, a) }
 
   | KW_ATOMICCMPXCHG { failwith"INSTR_AtomicCmpXchg" }
   | KW_ATOMICRMW     { failwith"INSTR_AtomicRMW"     }
@@ -509,6 +509,8 @@ instr:
     { INSTR_Invoke (ret, a, l1, l2)  }
 
   | i=ident EQ inst=instr { INSTR_Assign (i, inst) }
+
+is_volatile: KW_VOLATILE{true}|{false}
 
 alloca_opt:
   | a=align                             { (None, Some a) }

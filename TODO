@@ -10,10 +10,7 @@
    - metadata at the end of a value list of variable length.
    Parsing looses information (everything becomes `metadata !""`)
 
-- Implement `volatile` keyword
-   - load / store instructions
-   - cmpxchg
-   - atomicrmw
+- Implement cmpxchg and atomicrmw
 
 - Implement `atomic` keyword
    cmpxchg, atomicrmw, fence, atomic load and atomic store

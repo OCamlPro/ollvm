@@ -177,12 +177,12 @@ and value =
   | INSTR_InsertValue of tvalue * tvalue * int list
   | INSTR_Call of tident * tvalue list
   | INSTR_Alloca of typ * tvalue option * int option (* typ, nb el, align *)
-  | INSTR_Load of tvalue * int option (* FIXME: use tident instead of value *)
+  | INSTR_Load of bool(*=volatile*) * tvalue * int option (* FIXME: use tident instead of value *)
   | INSTR_Phi of typ * (value * ident) list
   | INSTR_Select of tvalue * tvalue * tvalue (* if * then * else *)
   | INSTR_VAArg
   | INSTR_LandingPad
-  | INSTR_Store of tvalue * tident * int option
+  | INSTR_Store of bool(*=volatile*) * tvalue * tident * int option
   | INSTR_Fence
   | INSTR_AtomicCmpXchg
   | INSTR_AtomicRMW
