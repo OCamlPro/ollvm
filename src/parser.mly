@@ -222,12 +222,12 @@ declaration:
 
 definition:
   | KW_DEFINE
-    pre_attrs=df_attr*
+    pre_attrs=df_pre_attr*
     df_ret_attrs=param_attr*
     df_ret_typ=typ
     name=GLOBAL
     LPAREN df_args=separated_list(COMMA, df_arg) RPAREN
-    post_attrs=df_attr* EOL*
+    post_attrs=df_post_attr* EOL*
     LCURLY EOL*
     df_blocks=df_blocks
     RCURLY
@@ -252,11 +252,13 @@ df_blocks:
   { let hb_lbl=match hd_lbl with Some x -> x | _ -> "" in
     (hb_lbl, hd) :: tl}
 
-df_attr:
+df_pre_attr:
   | a=linkage                            { OPT_linkage a     }
   | a=visibility                         { OPT_visibility a  }
   | a=dll_storage                        { OPT_dll_storage a }
   | a=cconv                              { OPT_cconv a       }
+
+df_post_attr:
   | KW_ADDRSPACE LPAREN n=INTEGER RPAREN { OPT_addrspace n   }
   | KW_UNNAMED_ADDR                      { OPT_unnamed_addr  }
   | a=fn_attr+                           { OPT_fn_attr a     }
