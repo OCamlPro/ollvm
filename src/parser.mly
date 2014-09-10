@@ -331,9 +331,9 @@ param_attr:
   | KW_DEREFERENCEABLE LPAREN n=INTEGER RPAREN
                                  { PARAMATTR_Dereferenceable n }
 
-dc_arg: t=typ p=param_attr*  { (t, p) }
-df_arg: t=typ i=ident        { ((t, []), i) } (* FIXME *)
-call_arg: t=typ i=value      { (t, i) }
+dc_arg: t=typ p=param_attr*         { (t, p)      }
+df_arg: t=typ p=param_attr* i=ident { ((t, p), i) }
+call_arg: t=typ i=value             { (t, i)      }
 
 fn_attr:
   | KW_ALIGNSTACK LPAREN p=INTEGER RPAREN { FNATTR_Alignstack p     }
