@@ -377,10 +377,16 @@ align: KW_ALIGN p=INTEGER { p }
 section: KW_SECTION s=STRING { s }
 
 ibinop_nuw_nsw_opt: (* may appear with `nuw`/`nsw` keywords *)
-  |KW_ADD{Add}|KW_SUB{Sub}|KW_MUL{Mul}|KW_SHL{Shl}
+  | KW_ADD { fun nuw nsw -> Add (nuw, nsw) }
+  | KW_SUB { fun nuw nsw -> Sub (nuw, nsw) }
+  | KW_MUL { fun nuw nsw -> Mul (nuw, nsw) }
+  | KW_SHL { fun nuw nsw -> Shl (nuw, nsw) }
 
 ibinop_exact_opt: (* may appear with `exact` keyword *)
-  |KW_UDIV{UDiv}|KW_SDIV{SDiv}|KW_LSHR{LShr}|KW_ASHR{AShr}
+  | KW_UDIV { fun exact -> UDiv exact }
+  | KW_SDIV { fun exact -> SDiv exact }
+  | KW_LSHR { fun exact -> LShr exact }
+  | KW_ASHR { fun exact -> AShr exact }
 
 ibinop_no_opt: (* can not appear with any keyword *)
   |KW_UREM{URem}|KW_SREM{SRem}|KW_AND{And}|KW_OR{Or}|KW_XOR{Xor}
@@ -401,8 +407,9 @@ conversion:
   |KW_BITCAST{Bitcast}
 
 ibinop:
-  | op=ibinop_nuw_nsw_opt KW_NUW? KW_NSW? { op }
-  | op=ibinop_exact_opt KW_EXACT? { op }
+  | op=ibinop_nuw_nsw_opt nuw=KW_NUW? nsw=KW_NSW?
+    { op (nuw <> None) (nsw <> None) }
+  | op=ibinop_exact_opt exact=KW_EXACT? { op (exact <> None) }
   | op=ibinop_no_opt { op }
 
 fbinop:
@@ -440,8 +447,8 @@ instr:
     { let (n, a) = match opt with Some x -> x | None -> (None, None) in
       INSTR_Alloca (t, n, a) }
 
-  | KW_LOAD vol=is_volatile tv=tvalue a=preceded(COMMA, align)?
-    { INSTR_Load (vol, tv, a) }
+  | KW_LOAD vol=KW_VOLATILE? tv=tvalue a=preceded(COMMA, align)?
+    { INSTR_Load (vol<>None, tv, a) }
 
   | KW_PHI t=typ table=separated_nonempty_list(COMMA, phi_table_entry)
     { INSTR_Phi (t, table) }
@@ -470,9 +477,9 @@ instr:
   | KW_VAARG  { failwith"INSTR_VAArg"  }
   | KW_LANDINGPAD    { failwith"INSTR_LandingPad"    }
 
-  | KW_STORE vol=is_volatile all=tvalue COMMA ptr=tident
+  | KW_STORE vol=KW_VOLATILE? all=tvalue COMMA ptr=tident
     a=preceded(COMMA, align)?
-    { INSTR_Store (vol, all, ptr, a) }
+    { INSTR_Store (vol<>None, all, ptr, a) }
 
   | KW_ATOMICCMPXCHG { failwith"INSTR_AtomicCmpXchg" }
   | KW_ATOMICRMW     { failwith"INSTR_AtomicRMW"     }
@@ -509,8 +516,6 @@ instr:
     { INSTR_Invoke (ret, a, l1, l2)  }
 
   | i=ident EQ inst=instr { INSTR_Assign (i, inst) }
-
-is_volatile: KW_VOLATILE{true}|{false}
 
 alloca_opt:
   | a=align                             { (None, Some a) }

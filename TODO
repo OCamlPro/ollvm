@@ -19,6 +19,3 @@
 
 - Implement a bitcode writer
   Bitcode would be more efficient for input/output between programs.
-
-- Integer arithmetic
-  Implement NSW / NUW / EXACT flags.

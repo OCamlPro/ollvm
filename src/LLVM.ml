@@ -136,7 +136,16 @@ and icmp = Eq|Ne|Ugt|Uge|Ult|Ule|Sgt|Sge|Slt|Sle
 
 and fcmp = False|Oeq|Ogt|Oge|Olt|Ole|One|Ord|Uno|Ueq|Ugt|Uge|Ult|Ule|Une|True
 
-and ibinop = Add|Sub|Mul|UDiv|SDiv|URem|SRem|Shl|LShr|AShr|And|Or|Xor
+
+and ibinop = Add of bool * bool (* nuw * nsw *)
+           | Sub of bool * bool
+           | Mul of bool * bool
+           | Shl of bool * bool
+           | UDiv of bool       (* exact *)
+           | SDiv of bool
+           | LShr of bool
+           | AShr of bool
+           | URem | SRem | And | Or | Xor
 
 and fbinop = FAdd|FSub|FMul|FDiv|FRem
 

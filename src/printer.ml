@@ -145,20 +145,26 @@ and fcmp : LLVM.fcmp -> string = function
   | Une -> "une"
   | True -> "true"
 
+and nuw = function true -> " nuw" | false -> ""
+
+and nsw = function true -> " nsw" | false -> ""
+
+and exact = function true -> " exact" | false -> ""
+
 and ibinop : LLVM.ibinop -> string = function
-  | Add  -> "add"
-  | Sub  -> "sub"
-  | Mul  -> "mul"
-  | UDiv -> "udiv"
-  | SDiv -> "sdiv"
-  | URem -> "urem"
-  | SRem -> "srem"
-  | Shl  -> "shl"
-  | LShr -> "lshr"
-  | AShr -> "ashr"
-  | And  -> "and"
-  | Or   -> "or"
-  | Xor  -> "xor"
+  | Add (nu, ns) -> "add" ^ nuw nu ^ nsw ns
+  | Sub (nu, ns) -> "sub" ^ nuw nu ^ nsw ns
+  | Mul (nu, ns) -> "mul" ^ nuw nu ^ nsw ns
+  | UDiv e       -> "udiv" ^ exact e
+  | SDiv e       -> "sdiv" ^ exact e
+  | URem         -> "urem"
+  | SRem         -> "srem"
+  | Shl (nu, ns) -> "shl" ^ nuw nu ^ nsw ns
+  | LShr e       -> "lshr" ^ exact e
+  | AShr e       -> "ashr" ^ exact e
+  | And          -> "and"
+  | Or           -> "or"
+  | Xor          -> "xor"
 
 and fbinop = function
   | FAdd -> "fadd"
