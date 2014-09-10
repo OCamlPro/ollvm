@@ -262,6 +262,11 @@ df_post_attr:
   | KW_ADDRSPACE LPAREN n=INTEGER RPAREN { OPT_addrspace n   }
   | KW_UNNAMED_ADDR                      { OPT_unnamed_addr  }
   | a=fn_attr+                           { OPT_fn_attr a     }
+  (* parser conflict with fn_attr+ looking for a df_post_attr list,
+   * because if function attribute a2 follows function attribute a1,
+   * it can be seen as [...;[a1];[a2];...] or [...;[a1;a2];...].
+   * Shifting to [a1;a2] is the good solution and it is how menhir
+   * will handle this conflict. *)
   | s=section                            { OPT_section s     }
                                          (* TODO: condat *)
   | a=align                              { OPT_align a       }
