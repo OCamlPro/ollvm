@@ -286,10 +286,6 @@ linkage:
   | KW_WEAK_ODR                     { LINKAGE_Weak_odr                     }
   | KW_EXTERNAL                     { LINKAGE_External                     }
 
-dll:
-  | KW_DLLIMPORT { DLLSTORAGE_Dllimport }
-  | KW_DLLEXPORT { DLLSTORAGE_Dllexport }
-
 visibility:
   | KW_DEFAULT   { VISIBILITY_Default   }
   | KW_HIDDEN    { VISIBILITY_Hidden    }
