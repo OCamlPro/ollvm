@@ -167,6 +167,13 @@ and fbinop = function
   | FDiv -> "fdiv"
   | FRem -> "frem"
 
+and fast_math = function
+  | Nnan -> "nnan"
+  | Ninf -> "ninf"
+  | Nsz  -> "nsz"
+  | Arcp -> "arcp"
+  | Fast -> "fast"
+
 and conversion_type : LLVM.conversion_type -> string = function
   | Trunc    -> "trunc"
   | Zext     -> "zext"
@@ -197,8 +204,9 @@ and instr : LLVM.instr -> string = function
   | INSTR_ICmp (c, t, v1, v2) ->
      sprintf "icmp %s %s %s, %s" (icmp c) (typ t) (value v1) (value v2)
 
-  | INSTR_FBinop (op, t, v1, v2) ->
-     sprintf "%s %s %s, %s" (fbinop op) (typ t) (value v1) (value v2)
+  | INSTR_FBinop (op, f, t, v1, v2) ->
+     sprintf "%s %s %s %s, %s"
+             (fbinop op) (list " " fast_math f) (typ t) (value v1) (value v2)
 
   | INSTR_FCmp (c, t, v1, v2) ->
      sprintf "fcmp %s %s %s, %s" (fcmp c) (typ t) (value v1) (value v2)

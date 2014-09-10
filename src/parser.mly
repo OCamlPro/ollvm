@@ -106,6 +106,7 @@ let is_externally_initialized l =
 %token KW_ALIGN
 %token KW_GC
 %token KW_ADD KW_FADD KW_SUB KW_FSUB KW_MUL KW_FMUL KW_UDIV KW_SDIV KW_FDIV KW_UREM KW_SREM KW_FREM KW_SHL KW_LSHR KW_ASHR KW_AND KW_OR KW_XOR KW_ICMP KW_FCMP KW_PHI KW_CALL KW_TRUNC KW_ZEXT KW_SEXT KW_FPTRUNC KW_FPEXT KW_UITOFP KW_SITOFP KW_FPTOUI KW_FPTOSI KW_INTTOPTR KW_PTRTOINT KW_BITCAST KW_SELECT KW_VAARG KW_RET KW_BR KW_SWITCH KW_INDIRECTBR KW_INVOKE KW_RESUME KW_UNREACHABLE KW_ALLOCA KW_LOAD KW_STORE KW_ATOMICCMPXCHG KW_ATOMICRMW KW_FENCE KW_GETELEMENTPTR KW_INBOUNDS KW_EXTRACTELEMENT KW_INSERTELEMENT KW_SHUFFLEVECTOR KW_EXTRACTVALUE KW_INSERTVALUE KW_LANDINGPAD
+%token KW_NNAN KW_NINF KW_NSZ KW_ARCP KW_FAST
 %token<int> I
 %token KW_VOID KW_HALF KW_FLOAT KW_DOUBLE KW_X86_FP80 KW_FP128 KW_PPC_FP128 KW_LABEL KW_METADATA KW_X86_MMX
 %token KW_UNWIND KW_TO
@@ -407,6 +408,9 @@ ibinop:
 fbinop:
   KW_FADD{FAdd}|KW_FSUB{FSub}|KW_FMUL{FMul}|KW_FDIV{FDiv}|KW_FREM{FRem}
 
+fast_math:
+  KW_NNAN{Nnan}|KW_NINF{Ninf}|KW_NSZ{Nsz}|KW_ARCP{Arcp}|KW_FAST{Fast}
+
 instr:
   | op=ibinop t=typ o1=value COMMA o2=value
     { INSTR_IBinop (op, t, o1, o2) }
@@ -414,8 +418,8 @@ instr:
   | KW_ICMP op=icmp t=typ o1=value COMMA o2=value
     { INSTR_ICmp (op, t, o1, o2) }
 
-  | op=fbinop (* fast math flags *) t=typ o1=value COMMA o2=value
-    { INSTR_FBinop (op, t, o1, o2) }
+  | op=fbinop f=fast_math* t=typ o1=value COMMA o2=value
+    { INSTR_FBinop (op, f, t, o1, o2) }
 
   | KW_FCMP op=fcmp t=typ o1=value COMMA o2=value
     { INSTR_FCmp (op, t, o1, o2) }

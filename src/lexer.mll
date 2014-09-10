@@ -195,6 +195,13 @@
   | "ueq"            -> KW_UEQ
   | "une"            -> KW_UNE
 
+  (* fast math flags *)
+  | "nnan"           -> KW_NNAN
+  | "ninf"           -> KW_NINF
+  | "nsz"            -> KW_NSZ
+  | "arcp"           -> KW_ARCP
+  | "fast"           -> KW_FAST
+
   (*types*)
   | "void"      -> KW_VOID
   | "half"      -> KW_HALF

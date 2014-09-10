@@ -140,6 +140,8 @@ and ibinop = Add|Sub|Mul|UDiv|SDiv|URem|SRem|Shl|LShr|AShr|And|Or|Xor
 
 and fbinop = FAdd|FSub|FMul|FDiv|FRem
 
+and fast_math = Nnan | Ninf | Nsz | Arcp | Fast
+
 and conversion_type = Trunc|Zext|Sext|Fptrunc|Fpext|Uitofp|Sitofp|Fptoui
                        |Fptosi|Inttoptr|Ptrtoint|Bitcast
 
@@ -164,7 +166,7 @@ and value =
  and instr =
   | INSTR_IBinop of ibinop * typ * value * value
   | INSTR_ICmp of icmp * typ * value * value
-  | INSTR_FBinop of fbinop * typ * value * value
+  | INSTR_FBinop of fbinop * fast_math list * typ * value * value
   | INSTR_FCmp of fcmp * typ * value * value
   | INSTR_Conversion of conversion_type * typ * value * typ
   | INSTR_GetElementPtr of tvalue * tvalue list
