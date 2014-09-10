@@ -262,6 +262,7 @@ and definition = {
   df_attrs: fn_attr list;
   df_section: string option;
   df_align: int option;
+  df_gc: string option;
 }
 
 and block = string * instr list

@@ -379,7 +379,12 @@ and definition : LLVM.definition -> string =
             (typ t)
             (ident i)
             (list ", " typ_attr_id (List.combine argt df.df_args))
-            (list " " fn_attr df.df_attrs)
+            begin
+              (list " " fn_attr df.df_attrs)
+              ^ optional df.df_section  (fun x -> " section \"" ^ x ^ "\"")
+              ^ optional df.df_align (fun x -> " align " ^ string_of_int x)
+              ^ optional df.df_gc (fun gc -> " gc \"" ^ gc ^ "\"")
+            end
             (list "\n" block df.df_instrs)
 
 and block : LLVM.block -> string = fun (i, b) ->

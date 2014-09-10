@@ -42,6 +42,7 @@ type att =
   | OPT_cconv of cconv
   | OPT_dll_storage of dll_storage
   | OPT_externally_initialized
+  | OPT_gc of string
 
 let rec get_opt f  = function
   | []       -> None
@@ -75,6 +76,9 @@ let get_cconv =
 
 let get_thread_local =
   get_opt (function OPT_thread_local x -> Some x | _ -> None)
+
+let get_gc =
+  get_opt (function OPT_gc x -> Some x | _ -> None)
 
 let is_unnamed_addr l =
   None <> get_opt (function OPT_unnamed_addr -> Some () | _ -> None) l
@@ -245,6 +249,7 @@ definition:
         df_attrs = get_fn_attrs post_attrs;
         df_section = get_section post_attrs;
         df_align = get_align post_attrs;
+        df_gc = get_gc post_attrs;
         } }
 
 df_blocks:
@@ -269,9 +274,10 @@ df_post_attr:
    * Shifting to [a1;a2] is the good solution and it is how menhir
    * will handle this conflict. *)
   | s=section                            { OPT_section s     }
-                                         (* TODO: condat *)
+                                         (* TODO: comdat *)
   | a=align                              { OPT_align a       }
-                                         (* TODO: gc *)
+  | KW_GC a=STRING                       { OPT_gc a          }
+                                         (* TODO: prefix *)
 
 linkage:
   | KW_PRIVATE                      { LINKAGE_Private                      }
