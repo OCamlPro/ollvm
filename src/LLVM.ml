@@ -213,13 +213,25 @@ and toplevelentry =
 and toplevelentries = toplevelentry list
 
 and global = {
-     g_ident: ident;
-       g_typ: typ;
+  g_ident: ident;
+  g_typ: typ;
   g_constant: bool;
-   g_section: string option;
-     g_align: int option;
-     g_value: value option;
+  g_value: value option;
+
+  g_linkage: linkage option;
+  g_visibility: visibility option;
+  g_dll_storage: dll_storage option;
+  g_thread_local: thread_local_storage option;
+  g_unnamed_addr: bool;
+  g_addrspace: int option;
+  g_externally_initialized: bool;
+  g_section: string option;
+  g_align: int option;
 }
+
+and thread_local_storage = TLS_Localdynamic
+                         | TLS_Initialexec
+                         | TLS_Localexec
 
 and declaration = {
       dc_ret_typ: typ * param_attr list;

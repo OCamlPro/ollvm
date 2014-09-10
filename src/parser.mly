@@ -36,11 +36,12 @@ type att =
   | OPT_section of string
   | OPT_linkage of linkage
   | OPT_visibility of visibility
-  | OPT_thread_local
+  | OPT_thread_local of thread_local_storage
   | OPT_addrspace of int
   | OPT_unnamed_addr
   | OPT_cconv of cconv
   | OPT_dll_storage of dll_storage
+  | OPT_externally_initialized
 
 let rec get_opt f  = function
   | []       -> None
@@ -72,11 +73,14 @@ let get_dll_storage =
 let get_cconv =
   get_opt (function OPT_cconv i -> Some i | _ -> None)
 
-let is_thread_local l =
-  None <> get_opt (function OPT_thread_local -> Some () | _ -> None) l
+let get_thread_local =
+  get_opt (function OPT_thread_local x -> Some x | _ -> None)
 
 let is_unnamed_addr l =
   None <> get_opt (function OPT_unnamed_addr -> Some () | _ -> None) l
+
+let is_externally_initialized l =
+  None <> get_opt (function OPT_externally_initialized -> Some () | _ -> None) l
 
 %}
 
@@ -96,7 +100,7 @@ let is_unnamed_addr l =
 %token KW_CCC KW_FASTCC KW_COLDCC KW_CC
 %token KW_UNNAMED_ADDR
 %token KW_TYPE KW_X KW_OPAQUE
-%token KW_GLOBAL KW_ADDRSPACE KW_CONSTANT KW_SECTION KW_THREAD_LOCAL
+%token KW_GLOBAL KW_ADDRSPACE KW_CONSTANT KW_SECTION KW_THREAD_LOCAL KW_LOCALDYNAMIC KW_INITIALEXEC KW_LOCALEXEC KW_EXTERNALLY_INITIALIZED
 %token KW_ZEROEXT KW_SIGNEXT KW_INREG KW_BYVAL KW_SRET KW_NOALIAS KW_NOCAPTURE KW_NEST
 %token KW_ALIGNSTACK KW_ALWAYSINLINE KW_BUILTIN KW_COLD KW_INLINEHINT KW_JUMPTABLE KW_MINSIZE KW_NAKED KW_NOBUILTIN KW_NODUPLICATE KW_NOIMPLICITFLOAT KW_NOINLINE KW_NONLAZYBIND KW_NOREDZONE KW_NORETURN KW_NOUNWIND KW_OPTNONE KW_OPTSIZE KW_READNONE KW_READONLY KW_RETURNS_TWICE KW_SANITIZE_ADDRESS KW_SANITIZE_MEMORY KW_SANITIZE_THREAD KW_SSP KW_SSPREQ KW_SSPSTRONG KW_UWTABLE KW_DEREFERENCEABLE KW_INALLOCA KW_RETURNED KW_NONNULL
 %token KW_ALIGN
@@ -163,7 +167,7 @@ instr_metadata:
 
 global_decl:
   | ident=GLOBAL EQ
-      pre_attr=global_attr*
+      attrs=global_attr*
       g_constant=global_is_constant
       g_typ=typ
       g_value=const?
@@ -172,28 +176,41 @@ global_decl:
         { g_ident=ID_Global (fst ident, snd ident);
           g_typ;
           g_constant;
-          g_section = get_section opt;
-          g_align = get_align opt;
-          g_value; } }
+          g_value;
 
-global_attr:
-  | a=align                              { OPT_align a      }
-  | s=section                            { OPT_section s    }
-  | l=linkage                            { OPT_linkage l    }
-  | v=visibility                         { OPT_visibility v }
-  | c=cconv                              { OPT_cconv c      }
-  | KW_THREAD_LOCAL                      { OPT_thread_local }
-  | KW_ADDRSPACE LPAREN n=INTEGER RPAREN { OPT_addrspace n  }
-  | KW_UNNAMED_ADDR                      { OPT_unnamed_addr }
-  | a=fn_attr+                           { OPT_fn_attr a    }
+          g_linkage = get_linkage attrs;
+          g_visibility = get_visibility attrs;
+          g_dll_storage = get_dll_storage attrs;
+          g_thread_local = get_thread_local attrs;
+          g_unnamed_addr = is_unnamed_addr attrs;
+          g_addrspace = get_addrspace attrs;
+          g_externally_initialized = is_externally_initialized attrs;
+          g_section = get_section opt;
+          g_align = get_align opt; } }
 
 global_is_constant:
   | KW_GLOBAL { false }
   | KW_CONSTANT { true }
 
+global_attr:
+  | a=linkage                           { OPT_linkage a              }
+  | a=visibility                        { OPT_visibility a           }
+  | a=dll_storage                       { OPT_dll_storage a          }
+  | KW_THREAD_LOCAL LPAREN t=tls RPAREN { OPT_thread_local t         }
+  | KW_UNNAMED_ADDR                     { OPT_unnamed_addr           }
+  | KW_EXTERNALLY_INITIALIZED           { OPT_externally_initialized }
+
+dll_storage:
+  | KW_DLLIMPORT { DLLSTORAGE_Dllimport }
+  | KW_DLLEXPORT { DLLSTORAGE_Dllexport }
+
+tls:
+  | KW_LOCALDYNAMIC { TLS_Localdynamic }
+  | KW_INITIALEXEC  { TLS_Initialexec  }
+  | KW_LOCALEXEC    { TLS_Localexec    }
+
 declaration:
   | KW_DECLARE
-    pre_attrs=global_attr*
     dc_ret_attrs=param_attr*
     dc_ret_typ=typ
     name=GLOBAL
@@ -205,12 +222,12 @@ declaration:
 
 definition:
   | KW_DEFINE
-    pre_attrs=global_attr*
+    pre_attrs=df_attr*
     df_ret_attrs=param_attr*
     df_ret_typ=typ
     name=GLOBAL
     LPAREN df_args=separated_list(COMMA, df_arg) RPAREN
-    post_attrs=global_attr* EOL*
+    post_attrs=df_attr* EOL*
     LCURLY EOL*
     df_blocks=df_blocks
     RCURLY
@@ -234,6 +251,19 @@ df_blocks:
     tl=pair(terminated(LABEL, EOL+), terminated(instr, EOL+)+)*
   { let hb_lbl=match hd_lbl with Some x -> x | _ -> "" in
     (hb_lbl, hd) :: tl}
+
+df_attr:
+  | a=linkage                            { OPT_linkage a     }
+  | a=visibility                         { OPT_visibility a  }
+  | a=dll_storage                        { OPT_dll_storage a }
+  | a=cconv                              { OPT_cconv a       }
+  | KW_ADDRSPACE LPAREN n=INTEGER RPAREN { OPT_addrspace n   }
+  | KW_UNNAMED_ADDR                      { OPT_unnamed_addr  }
+  | a=fn_attr+                           { OPT_fn_attr a     }
+  | s=section                            { OPT_section s     }
+                                         (* TODO: condat *)
+  | a=align                              { OPT_align a       }
+                                         (* TODO: gc *)
 
 linkage:
   | KW_PRIVATE                      { LINKAGE_Private                      }
@@ -298,7 +328,7 @@ param_attr:
                                  { PARAMATTR_Dereferenceable n }
 
 dc_arg: t=typ p=param_attr*  { (t, p) }
-df_arg: t=typ i=ident        { ((t, []), i) }
+df_arg: t=typ i=ident        { ((t, []), i) } (* FIXME *)
 call_arg: t=typ i=value      { (t, i) }
 
 fn_attr:

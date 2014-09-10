@@ -54,9 +54,13 @@
   | "opaque"                       -> KW_OPAQUE
   | "global"                       -> KW_GLOBAL
   | "addrspace"                    -> KW_ADDRSPACE
+  | "externally_initialized"       -> KW_EXTERNALLY_INITIALIZED
   | "constant"                     -> KW_CONSTANT
   | "section"                      -> KW_SECTION
   | "thread_local"                 -> KW_THREAD_LOCAL
+  | "localdynamic"                 -> KW_LOCALDYNAMIC
+  | "initialexec"                  -> KW_INITIALEXEC
+  | "localexec"                    -> KW_LOCALEXEC
   | "zeroext"                      -> KW_ZEROEXT
   | "signext"                      -> KW_SIGNEXT
   | "inreg"                        -> KW_INREG
