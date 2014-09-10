@@ -15,7 +15,5 @@
 - Implement `atomic` keyword
    cmpxchg, atomicrmw, fence, atomic load and atomic store
 
-- Implement attribute groups (#1 notation)
-
 - Implement a bitcode writer
   Bitcode would be more efficient for input/output between programs.
