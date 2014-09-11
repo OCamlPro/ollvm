@@ -3,12 +3,12 @@ begin library "ollvm"
   dirname = ["src"]
 
   files = [
-    "ast.mli";
-    "lexer.mll";
-    "parser.mly";
-    "printer.ml";
-    "ollvm.ml"
-    "ez.ml"
+    "ast.mli" ;
+    "lexer.mll" ;
+    "parser.mly" ;
+    "printer.ml" ;
+    "ez.ml" ;
+    "ollvm.ml" ;
   ]
 
   ocamlyacc = [ "menhir" "--explain" ]
