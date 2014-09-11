@@ -392,3 +392,13 @@ and block : Ast.block -> string = fun (i, b) ->
               | i -> i ^ ":")
   ^ "\n"
   ^ (list "\n" instr b)
+
+and modul : Ast.modul -> string = fun m ->
+  let to_list = fun h -> Hashtbl.fold (fun _ v acc -> v :: acc) h [] in
+  sprintf "; ModuleID = '%s'\n%s\n%s\n%s\n%s\n%s"
+          m.m_name
+          (toplevelentry m.m_target)
+          (toplevelentry m.m_datalayout)
+          (list "\n" global (to_list m.m_globals))
+          (list "\n" declaration (to_list m.m_headers))
+          (list "\n" definition (to_list m.m_functions))
