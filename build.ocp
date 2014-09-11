@@ -8,6 +8,7 @@ begin library "ollvm"
     "parser.mly";
     "printer.ml";
     "ollvm.ml"
+    "ez.ml"
   ]
 
   ocamlyacc = [ "menhir" "--explain" ]
