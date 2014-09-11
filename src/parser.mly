@@ -21,7 +21,7 @@
 
 %{
 
-open LLVM
+open Ast
 
 (* att type is a workaround to simplify parsing of optionnal keywords in
  * global / function declaration / definition.
@@ -88,7 +88,7 @@ let is_externally_initialized l =
 
 %}
 
-%token<LLVM.ident_format * string> GLOBAL LOCAL
+%token<Ast.ident_format * string> GLOBAL LOCAL
 %token LPAREN RPAREN LCURLY RCURLY LTLCURLY RCURLYGT LSQUARE RSQUARE LT GT EQ COMMA EOF EOL STAR
 
 %token<string> STRING
@@ -128,7 +128,7 @@ let is_externally_initialized l =
 %token KW_ATTRIBUTES
 %token<int> ATTR_GRP_ID
 
-%start<LLVM.toplevelentries> toplevelentries
+%start<Ast.toplevelentries> toplevelentries
 
 %%
 

@@ -275,9 +275,9 @@ rule token = parse
   | "!{" { BANGLCURLY }
   | '!'  { let (format, id) = ident_body lexbuf in
            match format with
-           | LLVM.ID_FORMAT_Named
-           | LLVM.ID_FORMAT_Unnamed -> METADATA_ID id
-           | LLVM.ID_FORMAT_NamedString -> METADATA_STRING (id)
+           | Ast.ID_FORMAT_Named
+           | Ast.ID_FORMAT_Unnamed -> METADATA_ID id
+           | Ast.ID_FORMAT_NamedString -> METADATA_STRING (id)
          }
 
   | '#' (digit+ as i) { ATTR_GRP_ID (int_of_string i) }
@@ -306,7 +306,7 @@ and string buf = parse
   | _ as c { Buffer.add_char buf c; string buf lexbuf }
 
 and ident_body = parse
-  | ident_fst ident_nxt* as i { (LLVM.ID_FORMAT_Named, i) }
-  | digit+ as i               { (LLVM.ID_FORMAT_Unnamed, i) }
-  | '"'                       { (LLVM.ID_FORMAT_NamedString,
+  | ident_fst ident_nxt* as i { (Ast.ID_FORMAT_Named, i) }
+  | digit+ as i               { (Ast.ID_FORMAT_Unnamed, i) }
+  | '"'                       { (Ast.ID_FORMAT_NamedString,
                                  string (Buffer.create 10) lexbuf) }

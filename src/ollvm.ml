@@ -1,4 +1,4 @@
-module IR = LLVM
+module Ast = Ast
 module Printer = Printer
 
 let parse lexbuf =

@@ -1,4 +1,4 @@
-open LLVM
+open Ast
 
 let quote s = "\"" ^ s ^ "\""
 
@@ -9,7 +9,7 @@ let sprintf = Printf.sprintf
 
 let optional x f = match x with None -> "" | Some x -> f x ^ " "
 
-let rec linkage : LLVM.linkage -> string = function
+let rec linkage : Ast.linkage -> string = function
   | LINKAGE_Private                      -> "private"
   | LINKAGE_Internal                     -> "internal"
   | LINKAGE_Available_externally         -> "available_externally"
@@ -22,22 +22,22 @@ let rec linkage : LLVM.linkage -> string = function
   | LINKAGE_Weak_odr                     -> "weak_odr"
   | LINKAGE_External                     -> "external"
 
- and dll_storage : LLVM.dll_storage -> string = function
+ and dll_storage : Ast.dll_storage -> string = function
   | DLLSTORAGE_Dllimport -> "dllimport"
   | DLLSTORAGE_Dllexport -> "dllexport"
 
-and visibility : LLVM.visibility -> string = function
+and visibility : Ast.visibility -> string = function
   | VISIBILITY_Default   -> "default"
   | VISIBILITY_Hidden    -> "hidden"
   | VISIBILITY_Protected -> "protected"
 
-and cconv : LLVM.cconv -> string = function
+and cconv : Ast.cconv -> string = function
   | CC_Ccc    -> "ccc"
   | CC_Fastcc -> "fastcc"
   | CC_Coldcc -> "coldcc"
   | CC_Cc i   -> "cc " ^ string_of_int i
 
-and param_attr : LLVM.param_attr -> string = function
+and param_attr : Ast.param_attr -> string = function
   | PARAMATTR_Zeroext           -> "zeroext"
   | PARAMATTR_Signext           -> "signext"
   | PARAMATTR_Inreg             -> "inreg"
@@ -52,7 +52,7 @@ and param_attr : LLVM.param_attr -> string = function
   | PARAMATTR_Nonnull           -> "nonnull"
   | PARAMATTR_Dereferenceable n -> "dereferenceable(" ^ string_of_int n ^ ")"
 
-and fn_attr : LLVM.fn_attr -> string = function
+and fn_attr : Ast.fn_attr -> string = function
   | FNATTR_Alignstack i -> sprintf "alignstack(%d)" i
   | FNATTR_Alwaysinline -> "alwaysinline"
   | FNATTR_Builtin -> "builtin"
@@ -85,17 +85,17 @@ and fn_attr : LLVM.fn_attr -> string = function
   | FNATTR_Key_value (k, v) -> "\"" ^ k ^ "\"=\"" ^ v ^ "\""
   | FNATTR_Attr_grp i -> "#" ^ string_of_int i
 
-and ident : LLVM.ident -> string = function
+and ident : Ast.ident -> string = function
   | ID_Global (f, i) -> "@" ^ ident_format f i
   | ID_Local (f, i)  -> "%" ^ ident_format f i
 
-and ident_format : LLVM.ident_format -> string -> string =
+and ident_format : Ast.ident_format -> string -> string =
   fun f i -> match f with
              | ID_FORMAT_Named
              | ID_FORMAT_Unnamed -> i
              | ID_FORMAT_NamedString -> "\"" ^ i ^ "\""
 
-and typ : LLVM.typ -> string = function
+and typ : Ast.typ -> string = function
   | TYPE_I i              -> "i" ^ string_of_int i
   | TYPE_Pointer t        -> typ t ^ "*"
   | TYPE_Void             -> "void"
@@ -115,7 +115,7 @@ and typ : LLVM.typ -> string = function
   | TYPE_Opaque           -> assert false
   | TYPE_Vector (i, t)    -> sprintf "<%d x %s>" i (typ t)
 
-and icmp : LLVM.icmp -> string = function
+and icmp : Ast.icmp -> string = function
   | Eq  -> "eq"
   | Ne  -> "neq"
   | Ugt -> "ugt"
@@ -127,7 +127,7 @@ and icmp : LLVM.icmp -> string = function
   | Slt -> "slt"
   | Sle -> "cmp"
 
-and fcmp : LLVM.fcmp -> string = function
+and fcmp : Ast.fcmp -> string = function
   | False -> "false"
   | Oeq -> "oeq"
   | Ogt -> "ogt"
@@ -151,7 +151,7 @@ and nsw = function true -> " nsw" | false -> ""
 
 and exact = function true -> " exact" | false -> ""
 
-and ibinop : LLVM.ibinop -> string = function
+and ibinop : Ast.ibinop -> string = function
   | Add (nu, ns) -> "add" ^ nuw nu ^ nsw ns
   | Sub (nu, ns) -> "sub" ^ nuw nu ^ nsw ns
   | Mul (nu, ns) -> "mul" ^ nuw nu ^ nsw ns
@@ -180,7 +180,7 @@ and fast_math = function
   | Arcp -> "arcp"
   | Fast -> "fast"
 
-and conversion_type : LLVM.conversion_type -> string = function
+and conversion_type : Ast.conversion_type -> string = function
   | Trunc    -> "trunc"
   | Zext     -> "zext"
   | Sext     -> "sext"
@@ -204,7 +204,7 @@ and section = function
 
 and volatile = function true -> "volatile " | false -> ""
 
-and instr : LLVM.instr -> string = function
+and instr : Ast.instr -> string = function
 
   | INSTR_IBinop (op, t, v1, v2) ->
      sprintf "%s %s %s, %s" (ibinop op) (typ t) (value v1) (value v2)
@@ -299,7 +299,7 @@ and instr : LLVM.instr -> string = function
 
   | INSTR_Assign (id, inst) -> ident id ^ " = " ^ instr inst
 
-and value : LLVM.value -> string = function
+and value : Ast.value -> string = function
   | VALUE_Ident i           -> ident i
   | VALUE_Integer i         -> (string_of_int i)
   | VALUE_Float f           -> sprintf "%f" f
@@ -316,10 +316,10 @@ and tvalue  = fun (t, v) -> typ t ^ " " ^ value v
 
 and tident  = fun (t, v) -> typ t ^ " " ^ ident v
 
-and toplevelentries : LLVM.toplevelentries-> string =
+and toplevelentries : Ast.toplevelentries-> string =
   fun m -> list "\n" toplevelentry m
 
-and toplevelentry : LLVM.toplevelentry -> string = function
+and toplevelentry : Ast.toplevelentry -> string = function
   | TLE_Target s -> "target triple = " ^ quote s
   | TLE_Datalayout s -> "target datalayout = " ^ quote s
   | TLE_Declaration d -> declaration d
@@ -330,7 +330,7 @@ and toplevelentry : LLVM.toplevelentry -> string = function
   | TLE_Attribute_group (i, a) ->
     sprintf "#%d = { %s }" i (list " " fn_attr a)
 
-and metadata : LLVM.metadata -> string = function
+and metadata : Ast.metadata -> string = function
   | METADATA_Const v -> tvalue v
   | METADATA_Null -> "null"
   | METADATA_Id i -> "!" ^ i
@@ -338,7 +338,7 @@ and metadata : LLVM.metadata -> string = function
   | METADATA_Node m -> "metadata !{" ^ list ", " metadata m ^ "}"
   | METADATA_Named m -> "!{ " ^ list ", " (fun i -> "!" ^ i) m ^ " }"
 
-and global : LLVM.global -> string = fun {
+and global : Ast.global -> string = fun {
     g_ident = i;
     g_typ = t;
     g_constant = b;
@@ -351,7 +351,7 @@ and global : LLVM.global -> string = fun {
                (section s)
                (align a)
 
-and declaration : LLVM.declaration -> string = fun {
+and declaration : Ast.declaration -> string = fun {
     dc_ret_typ = (t, ret_attrs);
     dc_name = i;
     dc_args = tl;
@@ -362,7 +362,7 @@ and declaration : LLVM.declaration -> string = fun {
                (ident i)
                (list ", " typ_attr tl)
 
-and definition : LLVM.definition -> string =
+and definition : Ast.definition -> string =
   fun ({ df_prototype = { dc_ret_typ = (t, ret_attrs);
                           dc_name = i;
                           dc_args = argt;};
@@ -387,7 +387,7 @@ and definition : LLVM.definition -> string =
             end
             (list "\n" block df.df_instrs)
 
-and block : LLVM.block -> string = fun (i, b) ->
+and block : Ast.block -> string = fun (i, b) ->
   (match i with "" -> ""
               | i -> i ^ ":")
   ^ "\n"
