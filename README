@@ -1,0 +1,58 @@
+= ollvm =
+
+ollvm library offers an interface to manipulate LLVM IR in pure OCaml.
+LLVM already provides binding to its C API, but it still mainly imperative
+programming with heavy use of side effects.
+
+ollvm is different in the way that you will manipulate OCaml structures
+(lists, records, variants, ...). An Ez interface is provided
+to make LLVM IR writing pleasant.
+
+You may also want to use LLVM IR, but not the whole LLVM compiler
+infrastructure. ollvm allows you to stay independent from llvm library.
+You *may* want to bind you code to official bindings with the provided
+gateway, but you *do not have to*. Make your optimization passes, use
+your own back-end if you please.
+
+=== Ez interface utilisation example ===
+
+```
+    (* module initialization *)
+    let m = {
+      m_name = "my cool jit";
+      m_target = target_triple "" "" "";
+      m_datalayout = data_layout "";
+      m_env = Env.empty;
+      m_globals = Hashtbl.create 42;
+      m_declarations = Hashtbl.create 42;
+      m_definitions = Hashtbl.create 42 } in
+
+    (**)
+    let (m, x0, x1, x2, x3, x4) = local5 m T.i1 in
+    let (m, entry_b, then_b, else_b) = local3 m T.label in
+    let (m, fact) = global m T.i32 "fact" in
+
+    let f = define fact [x4]
+              [ block entry_b [
+                  x0 <-- eq x4 (i32 0) ;
+                  br x0 then_b else_b ; ] ;
+                block then_b [
+                  ret (i32 1) ; ] ;
+                block else_b [
+                  x1 <-- sub x4 (i32 1) ;
+                  x2 <-- call fact [x1] ;
+                  x3 <-- mul x4  x2 ;
+                  ret x3 ; ] ]
+```
+
+=== Ressources ===
+
+- [[http://www.github.com/OCamlPro/ollvm << ollvm on Github]]: latest sources
+  in the official GIT repository.
+- [[http://llvm.org/ << Official LLVM website]]: more details on LLVM and
+  its itermediate representation specification.
+
+=== Install ===
+
+- Via opam: `` opam install ollvm ``
+- From source: `` autoreconf && ./configure && make && make install ``
