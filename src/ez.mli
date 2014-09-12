@@ -206,15 +206,9 @@ end
 
 module Module : sig
 
-  (* FIXME: use persistent data structures. *)
   type t = {
-    m_name: string;
-    m_target: Ast.toplevelentry;
-    m_datalayout: Ast.toplevelentry;
+    m_module: Ast.modul;
     m_env: Env.t;
-    m_globals: (string, Ast.global) Hashtbl.t;
-    m_declarations: (string, Ast.declaration) Hashtbl.t;
-    m_definitions: (string, Ast.definition) Hashtbl.t;
   }
 
   val local : t -> Type.typ -> string -> (t * Value.tvalue)

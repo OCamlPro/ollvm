@@ -258,14 +258,11 @@ end
 
 module Module = struct
 
+  (** NOTE: declaration and definitions are kept in reverse order. **)
+
   type t = {
-    m_name: string;
-    m_target: Ast.toplevelentry;
-    m_datalayout: Ast.toplevelentry;
+    m_module: Ast.modul;
     m_env: Env.t;
-    m_globals: (string, Ast.global) Hashtbl.t;
-    m_declarations: (string, Ast.declaration) Hashtbl.t;
-    m_definitions: (string, Ast.definition) Hashtbl.t;
   }
 
   let data_layout layout = Ast.TLE_Datalayout layout
@@ -283,19 +280,22 @@ module Module = struct
     (m, var)
 
   let lookup_declaration m name =
-    Hashtbl.find m.m_declarations name
+    List.assoc name m.m_module.m_declarations
 
   let lookup_definition m name =
-    Hashtbl.find m.m_definitions name
+    List.assoc name m.m_module.m_definitions
 
   let declaration m dc name =
-    Hashtbl.add m.m_declarations name dc;
-    m
+    { m with m_module = { m.m_module with
+                          m_declarations = (name, dc)
+                                           :: m.m_module.m_declarations } }
 
   let definition m df name =
-    let {Ast.df_prototype = dc; _;} = df in
-    Hashtbl.add m.m_declarations name dc;
-    Hashtbl.add m.m_definitions name df;
-    m
+    let { Ast.df_prototype = dc; _; } = df in
+    { m with m_module = { m.m_module with
+                          m_declarations = (name, dc)
+                                           :: m.m_module.m_declarations ;
+                          m_definitions = (name, df)
+                                          :: m.m_module.m_definitions } }
 
 end
