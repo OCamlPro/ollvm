@@ -34,5 +34,7 @@ if test "$OCAML_PKG_llvm" = "no"; then
   AC_MSG_ERROR([llvm ocaml bindings are required.])
 fi
 
+AC_LLVM_3_5([Core])
+
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
