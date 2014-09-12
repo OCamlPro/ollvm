@@ -1,5 +1,6 @@
 module Ast = Ast
 module Printer = Printer
+module Ez = Ez
 
 let parse lexbuf =
   let parsing_err lexbuf =
