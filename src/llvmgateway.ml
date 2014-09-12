@@ -246,7 +246,7 @@ let rec value : env -> Ast.typ -> Ast.value -> Llvm.llvalue =
   | VALUE_Float f          -> const_float (typ env ty) f
   | VALUE_Bool b           -> assert false
   | VALUE_Null             -> const_null (typ env ty)
-  | VALUE_Undef            -> assert false
+  | VALUE_Undef            -> undef (typ env ty)
   | VALUE_Struct s         ->
      const_struct env.c (Array.of_list s |> Array.map (fun (ty, v) -> value env ty v))
   | VALUE_Packed_struct s  ->
@@ -293,7 +293,10 @@ let rec instr : env -> Ast.instr -> Llvm.llvalue =
      let conv = conversion_type conv in
      conv v (typ env ty')
 
-  | INSTR_GetElementPtr (tv, tvl)       -> assert false
+  | INSTR_GetElementPtr ((t, v), tvl)       ->
+     let indices = List.map (fun (t,v) -> value env t v) tvl
+                   |> Array.of_list in
+     build_gep (value env t v) indices "" env.b
 
   | INSTR_ExtractElement ((ty, vec), (ty', idx))      ->
      let vec = value env ty vec in
@@ -363,8 +366,10 @@ let rec instr : env -> Ast.instr -> Llvm.llvalue =
   | INSTR_AtomicCmpXchg                 -> assert false
   | INSTR_AtomicRMW                     -> assert false
 
-  | INSTR_Invoke (ti1, tvl, ti2, ti3)   ->  assert false
-  (* build_invoke fn args tobb unwindbb name b*)
+  | INSTR_Invoke ((t, i1), tvl, (_, i2), (_, i3))   ->
+     let args = List.map (fun (t, v) -> value env t v) tvl
+                |> Array.of_list in
+     build_invoke (ident fn) args (label env i2) (label env i3) "" env.b
 
   | INSTR_Ret (t, v)                    ->
      build_ret (value env t v) env.b
@@ -381,8 +386,8 @@ let rec instr : env -> Ast.instr -> Llvm.llvalue =
   | INSTR_Br_1 (_, i)                   ->
      build_br (label env i) env.b
 
-  | INSTR_Switch ((tv), ti, tvtil)        -> assert false
-  (* (fun ((t, v), (_, l)) -> (value env t v, label env) ) *)
+  | INSTR_Switch ((t, v), (t', i), tvtil)        -> assert false
+  (* (fun ((t, v), (_, l)) -> (value env t v, label env) ) tvtil*)
 
   | INSTR_IndirectBr                    -> assert false
   | INSTR_Resume tv                     -> assert false
