@@ -1,6 +1,6 @@
 begin library "ollvm"
 
-  dirname = ["src"]
+  dirname = [ "src" ]
 
   files = [
     "ast.mli" ;
@@ -12,5 +12,16 @@ begin library "ollvm"
   ]
 
   ocamlyacc = [ "menhir" "--explain" ]
+
+end
+
+
+begin library "ollvm_llvmgateway"
+
+  dirname = [ "src" ]
+
+  files = [ "llvmgateway.ml" ]
+
+  requires = [ "ollvm" "llvm" ]
 
 end
