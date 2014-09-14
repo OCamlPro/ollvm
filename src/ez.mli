@@ -212,6 +212,7 @@ module Module : sig
   }
 
   val local : t -> Type.typ -> string -> (t * Value.tvalue)
+  val locals : t -> Type.typ -> int -> t * Value.tvalue list
   val global : t -> Type.typ -> string -> (t * Value.tvalue)
   val declaration : t -> Ast.declaration -> string -> t
   val definition : t -> Ast.definition -> string -> t

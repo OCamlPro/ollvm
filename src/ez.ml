@@ -274,6 +274,13 @@ module Module = struct
     let (env, var) = Env.local m.m_env t name in
     ({m with m_env = env}, var)
 
+  let locals m t n =
+    let rec locals m t n acc =
+      if n = 0 then (m, List.rev acc)
+      else let (m, x) = local m t "" in
+           locals m t (n - 1) (x :: acc)
+    in locals m t n []
+
   let global m t name =
     let ident = Ast.ID_Global (Ast.ID_FORMAT_Named, name) in
     let var = (t, Ast.VALUE_Ident ident) in
