@@ -386,29 +386,34 @@ let rec instr : env -> Ast.instr -> (env * Llvm.llvalue) =
      let (env, llv) = instr env inst in
      ({ env with mem = (id, llv) :: env.mem }, llv)
 
-let global = fun x -> assert false
+let global : env -> Ast.global -> env =
+  fun env g ->
+  let llv = value env g.g_typ (match g.g_value with Some x -> x
+                                                  | None -> assert false) in
+  let Ast.ID_Global (_, name) = g.g_ident in
+  let llv = Llvm.define_global name llv env.m in
+  {env with mem = (g.g_ident, llv) :: env.mem }
 
-let declaration : env -> Ast.declaration -> env * Llvm.llvalue =
+let declaration : env -> Ast.declaration -> env =
   fun env dc ->
-  let llv = Llvm.declare_function
-              (string_of_ident dc.dc_name)
-              (fst dc.dc_ret_typ |> typ env)
-              (env.m) in
-  (env, llv)
+  Llvm.declare_function (string_of_ident dc.dc_name)
+                        (fst dc.dc_ret_typ |> typ env)
+                        (env.m);
+  env
 
 let create_block : env -> Ast.block -> Llvm.llvalue -> env =
   fun env b fn ->
   let llb = Llvm.append_block env.c (fst b) fn in
   { env with labels = (fst b, llb) :: env.labels }
 
-let definition : env -> Ast.definition -> env * Llvm.llvalue =
+let definition : env -> Ast.definition -> env =
   fun env df ->
   let fn =
     Llvm.define_function
       (string_of_ident df.df_prototype.dc_name)
       (fst df.df_prototype.dc_ret_typ |> typ env)
       (env.m) in
-  let env= (* create needed block, label will lookup into memory *)
+  let env = (* create needed block, label will lookup into memory *)
     List.fold_left
       (fun env b -> create_block env b fn) env df.df_instrs in
   assert false (* TODO: process blocks *)
@@ -426,4 +431,11 @@ let modul : Ast.modul -> env =
   let Ast.TLE_Datalayout datalayout = modul.m_datalayout in
   Llvm.set_target_triple target m;
   Llvm.set_data_layout datalayout m;
-  { c = c; m = m; b = b; mem = []; labels = [] }
+  let env = { c = c; m = m; b = b; mem = []; labels = [] } in
+  let env = List.fold_left (fun env g -> global {env with mem=[]} g)
+                           env (List.map snd modul.m_globals) in
+  let env = List.fold_left (fun env dc -> declaration {env with mem=[]} dc)
+                           env (List.map snd modul.m_declarations) in
+  let env = List.fold_left (fun env df -> definition {env with mem=[]} df)
+                           env (List.map snd modul.m_definitions) in
+  { env with mem = [] }
