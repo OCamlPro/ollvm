@@ -1,15 +1,27 @@
 type env = { c: Llvm.llcontext;
              m: Llvm.llmodule;
-             b: Llvm.llbuilder; }
+             b: Llvm.llbuilder;
+
+             (* llvalue/llbasicblock binded to Ast.ident*)
+             mem: (Ast.ident * Llvm.llvalue) list; }
+
+let lookup env id = List.assoc id env.mem
+
+let lookup_fn env (id : Ast.ident) : Llvm.llvalue = match id with
+  | ID_Local _ -> assert false
+  | ID_Global (_, i) -> match Llvm.lookup_function i env.m with
+                        | Some fn -> fn
+                        | _ -> assert false
 
 let init module_name =
   let c = Llvm.global_context () in
   let m = Llvm.create_module c module_name in
   let b = Llvm.builder c in
-  {c=c; m=m; b=b}
+  { c = c; m = m; b = b; mem = [] }
 
 let label : env -> Ast.ident -> Llvm.llbasicblock =
-  fun env l -> assert false
+  fun env id ->
+  Llvm.block_of_value (lookup env id)
 
 let linkage : Ast.linkage -> Llvm.Linkage.t =
   let open Llvm.Linkage
@@ -102,11 +114,12 @@ let ident_format = function
 *)
 
 (** Should lookup into env *)
-let ident : env -> Ast.ident -> Llvm.llvalue =
+(* let ident : env -> Ast.ident -> string =
   fun env ->
   function
-  | ID_Global _
-  | ID_Local _ -> assert false
+  | ID_Global (_, i) -> i
+  | ID_Local _ -> assert false *)
+
 
 let rec typ : env -> Ast.typ -> Llvm.lltype =
   fun env ->
@@ -241,10 +254,10 @@ let rec value : env -> Ast.typ -> Ast.value -> Llvm.llvalue =
   fun env ty ->
   let open Llvm
   in function
-  | VALUE_Ident i          -> assert false
+  | VALUE_Ident i          -> lookup env i
   | VALUE_Integer i        -> const_int (typ env ty) i
   | VALUE_Float f          -> const_float (typ env ty) f
-  | VALUE_Bool b           -> assert false
+  | VALUE_Bool b           -> const_int (Llvm.i1_type env.c) (if b then 1 else 0)
   | VALUE_Null             -> const_null (typ env ty)
   | VALUE_Undef            -> undef (typ env ty)
   | VALUE_Struct s         ->
@@ -259,7 +272,7 @@ let rec value : env -> Ast.typ -> Ast.value -> Llvm.llvalue =
      const_vector (Array.of_list v |> Array.map (fun (ty, v) -> value env ty v))
   | VALUE_Zero_initializer -> assert false
 
-let rec instr : env -> Ast.instr -> Llvm.llvalue =
+let rec instr : env -> Ast.instr -> (env * Llvm.llvalue) =
   fun env ->
   let open Llvm
   in function
@@ -268,99 +281,98 @@ let rec instr : env -> Ast.instr -> Llvm.llvalue =
      let v1 = value env ty v1 in
      let v2 = value env ty v2 in
      let op = ibinop op in
-     op v1 v2 "" env.b
+     (env, op v1 v2 "" env.b)
 
   | INSTR_ICmp (cmp, ty, v1, v2)        ->
      let v1 = value env ty v1 in
      let v2 = value env ty v2 in
      let cmp = icmp cmp in
-     build_icmp cmp v1 v2 "" env.b
+     (env, build_icmp cmp v1 v2 "" env.b)
 
   | INSTR_FBinop (op, _, ty, v1, v2)       ->
      let v1 = value env ty v1 in
      let v2 = value env ty v2 in
      let op = fbinop op in
-     op v1 v2 "" env.b
+     (env, op v1 v2 "" env.b)
 
   | INSTR_FCmp (cmp, ty, v1, v2)        ->
      let v1 = value env ty v1 in
      let v2 = value env ty v2 in
      let cmp = fcmp cmp in
-     build_fcmp cmp v1 v2 "" env.b
+     (env, build_fcmp cmp v1 v2 "" env.b)
 
   | INSTR_Conversion (conv, ty, v, ty') ->
      let v = value env ty v in
      let conv = conversion_type conv in
-     conv v (typ env ty')
+     (env, conv v (typ env ty'))
 
   | INSTR_GetElementPtr ((t, v), tvl)       ->
      let indices = List.map (fun (t,v) -> value env t v) tvl
                    |> Array.of_list in
-     build_gep (value env t v) indices "" env.b
+     (env, build_gep (value env t v) indices "" env.b)
 
   | INSTR_ExtractElement ((ty, vec), (ty', idx))      ->
      let vec = value env ty vec in
      let idx = value env ty' idx in
-     build_extractelement vec idx "" env.b
+     (env, build_extractelement vec idx "" env.b)
 
   | INSTR_InsertElement ((ty, vec), (ty', el), (ty'', idx))  ->
      let vec = value env ty vec in
      let el = value env ty' el in
      let idx = value env ty'' idx in
-     build_insertelement vec el idx "" env.b
+     (env, build_insertelement vec el idx "" env.b)
 
   | INSTR_ShuffleVector ((t, v), (t', v'), (t'', v'')) ->
      let v = value env t v in
      let v' = value env t' v' in
      let v'' = value env t'' v'' in
-     build_shufflevector v v' v'' "" env.b
+     (env, build_shufflevector v v' v'' "" env.b)
 
   | INSTR_ExtractValue ((t, v), idx)         ->
      (* FIXME: llvm api take an int and not a list... *)
      let v = value env t v in
-     build_extractvalue v (List.hd idx) "" env.b
+     (env, build_extractvalue v (List.hd idx) "" env.b)
 
   | INSTR_InsertValue ((t, vec), (t', el), idx)    ->
      (* FIXME: llvm api take an int and not a list... *)
      let vec = value env t vec in
      let el = value env t' el in
-     build_insertvalue vec el (List.hd idx) "" env.b
+     (env, build_insertvalue vec el (List.hd idx) "" env.b)
 
   | INSTR_Call ((t, i), args)                ->
-     let fn = ident env i in
+     let fn = lookup_fn env i in
      let args = Array.of_list args
                 |> Array.map (fun (t, v) -> value env t v) in
-     build_call fn args "" env.b
+     (env, build_call fn args "" env.b)
 
   | INSTR_Alloca (ty, nb, _)          ->
-     begin
+     (env,
        match nb with
        | None -> build_alloca (typ env ty) "" env.b
        | Some (t, nb) ->
-          build_array_alloca (typ env ty) (value env t nb) "" env.b
-     end
+          build_array_alloca (typ env ty) (value env t nb) "" env.b )
 
   | INSTR_Load (_, (t, v), _)                 ->
-     build_load (value env t v) "" env.b
+     (env, build_load (value env t v) "" env.b)
 
   | INSTR_Phi (t, incoming)                 ->
      let incoming =
        List.map (fun (v, i) -> (value env t v, label env i)) incoming in
-     build_phi incoming "" env.b
+     (env, build_phi incoming "" env.b)
 
   | INSTR_Select ((t, cond), (t', thenv), (t'', elsev))        ->
      let cond = value env t cond in
      let thenv = value env t' thenv in
      let elsev = value env t'' elsev in
-     build_select cond thenv elsev "" env.b
+     (env, build_select cond thenv elsev "" env.b)
 
   | INSTR_VAArg                         -> assert false
   | INSTR_LandingPad                    -> assert false
 
   | INSTR_Store (_, (t, v), (_, p), _) ->
      let v = value env t v in
-     let p = ident env p in
-     build_store v p env.b
+     let p = lookup env p in
+     (env, build_store v p env.b)
 
   | INSTR_Fence                         -> assert false
   | INSTR_AtomicCmpXchg                 -> assert false
@@ -369,30 +381,43 @@ let rec instr : env -> Ast.instr -> Llvm.llvalue =
   | INSTR_Invoke ((t, i1), tvl, (_, i2), (_, i3))   ->
      let args = List.map (fun (t, v) -> value env t v) tvl
                 |> Array.of_list in
-     build_invoke (ident fn) args (label env i2) (label env i3) "" env.b
+     let fn = lookup_fn env i1 in
+     (env, build_invoke fn args (label env i2) (label env i3) "" env.b)
 
   | INSTR_Ret (t, v)                    ->
-     build_ret (value env t v) env.b
+     (env, build_ret (value env t v) env.b)
 
   | INSTR_Ret_void                      ->
-     build_ret_void env.b
+     (env, build_ret_void env.b)
 
   | INSTR_Br ((t, v), (_, tbb), (_, fbb))   ->
      let cond = value env t v in
      let tbb = label env tbb in
      let fbb = label env fbb in
-     build_cond_br cond tbb fbb env.b
+     (env, build_cond_br cond tbb fbb env.b)
 
   | INSTR_Br_1 (_, i)                   ->
-     build_br (label env i) env.b
+     (env, build_br (label env i) env.b)
 
-  | INSTR_Switch ((t, v), (t', i), tvtil)        -> assert false
-  (* (fun ((t, v), (_, l)) -> (value env t v, label env) ) tvtil*)
+  | INSTR_Switch ((t, v), (t', i), tvtil)        ->
+     let case = value env t v in
+     let elsebb = label env i in
+     let count = List.length tvtil in
+     assert false (* TODO: create cases blocks *)
+     (*build_switch case elsebb count b;*)
+
 
   | INSTR_IndirectBr                    -> assert false
-  | INSTR_Resume tv                     -> assert false
-  | INSTR_Unreachable                   -> assert false
-  | INSTR_Assign (id, inst)             -> assert false
+
+  | INSTR_Resume (t, v)                 ->
+     let llv = value env t v in
+     (env, build_resume llv env.b)
+
+  | INSTR_Unreachable                   -> (env, build_unreachable env.b)
+
+  | INSTR_Assign (id, inst)             ->
+     let (env, llv) = instr env inst in
+     ({ env with mem = (id, llv) :: env.mem }, llv)
 
 let toplevelentry : Ast.toplevelentry -> unit = function
   | TLE_Target _
