@@ -17,3 +17,6 @@
 
 - Implement a bitcode writer
   Bitcode would be more efficient for input/output between programs.
+
+- Implemente indirectbr instruction
+  See INSTR_IndirectBr in ast.
