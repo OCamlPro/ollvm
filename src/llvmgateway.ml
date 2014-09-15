@@ -406,6 +406,13 @@ let create_block : env -> Ast.block -> Llvm.llvalue -> env =
   let llb = Llvm.append_block env.c (fst b) fn in
   { env with labels = (fst b, llb) :: env.labels }
 
+and block : env -> Ast.block -> env =
+  fun env block ->
+  (* fetch the basicblock and set builder position at its end *)
+  Llvm.position_at_end (List.assoc (fst block) env.labels) env.b;
+  (* process instructions *)
+  List.fold_left (fun env i -> instr env i |> fst) env (snd block)
+
 let definition : env -> Ast.definition -> env =
   fun env df ->
   let fn =
@@ -413,14 +420,12 @@ let definition : env -> Ast.definition -> env =
       (string_of_ident df.df_prototype.dc_name)
       (fst df.df_prototype.dc_ret_typ |> typ env)
       (env.m) in
-  let env = (* create needed block, label will lookup into memory *)
+  let env =
+    (* First create needed blocks.
+     * block function will use them when building instructions. *)
     List.fold_left
       (fun env b -> create_block env b fn) env df.df_instrs in
-  assert false (* TODO: process blocks *)
-
-and block : env -> Ast.block -> env =
-  fun env block ->
-  List.fold_left (fun env i -> instr env i |> fst) env (snd block)
+  List.fold_left (fun env bl -> block env bl) env df.df_instrs
 
 let modul : Ast.modul -> env =
   fun modul ->
@@ -436,6 +441,7 @@ let modul : Ast.modul -> env =
                            env (List.map snd modul.m_globals) in
   let env = List.fold_left (fun env dc -> declaration {env with mem=[]} dc)
                            env (List.map snd modul.m_declarations) in
-  let env = List.fold_left (fun env df -> definition {env with mem=[]} df)
+  let env = List.fold_left (fun env df -> definition {env with mem=[];
+                                                               labels=[]} df)
                            env (List.map snd modul.m_definitions) in
-  { env with mem = [] }
+  { env with mem = [] ; labels = [] }
