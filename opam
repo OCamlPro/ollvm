@@ -1,0 +1,18 @@
+# This opam file only install the ollvm library,
+# not the llvmgateway add-on
+opam-version: "1.2"
+maintainer: "Julien Sagot <ju.sagot@gmail.com>"
+author: "Julien Sagot <ju.sagot@gmail.com>"
+name: "ollvm"
+version: "0.1"
+homepage: ""
+bug-reports: ""
+license: "LGPL"
+build: [
+  [ "autoreconf" ]
+  [ "./configure" ]
+  [ make ]
+]
+install: [make "install"]
+remove: ["ocamlfind" "remove" "ollvm"]
+depends: ["ocamlfind" "menhir"]
