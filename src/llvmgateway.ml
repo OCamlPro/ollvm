@@ -104,21 +104,6 @@ let fn_attr : Ast.fn_attr -> Llvm.Attribute.t =
   | FNATTR_Key_value (k, v) -> assert false
   | FNATTR_Attr_grp g       -> assert false
 
-(*
-let ident_format = function
-  | ID_FORMAT_Named
-  | ID_FORMAT_NamedString
-  | ID_FORMAT_Unnamed
-*)
-
-(** Should lookup into env *)
-(* let ident : env -> Ast.ident -> string =
-  fun env ->
-  function
-  | ID_Global (_, i) -> i
-  | ID_Local _ -> assert false *)
-
-
 let rec typ : env -> Ast.typ -> Llvm.lltype =
   fun env ->
   let ctx = env.c in
@@ -151,16 +136,6 @@ let rec typ : env -> Ast.typ -> Llvm.lltype =
      packed_struct_type ctx (Array.of_list s |> Array.map (typ env))
   | TYPE_Opaque            -> assert false
   | TYPE_Vector (i, t)      -> vector_type (typ env t) i
-
-(*
-let metadata = function
-  | METADATA_Const of tvalue
-  | METADATA_Null
-  | METADATA_Id of string
-  | METADATA_String of string
-  | METADATA_Named of string list
-  | METADATA_Node of metadata list
-*)
 
 let icmp : Ast.icmp -> Llvm.Icmp.t =
   let open Llvm.Icmp
@@ -240,12 +215,6 @@ let conversion_type : Ast.conversion_type ->
   | Inttoptr -> const_inttoptr
   | Ptrtoint -> const_ptrtoint
   | Bitcast  -> const_bitcast
-
-(*
-and tvalue = typ * value
-
-and tident = typ * ident
- *)
 
 (** FIXME: should be splitted into const/value? *)
 let rec value : env -> Ast.typ -> Ast.value -> Llvm.llvalue =
@@ -416,21 +385,6 @@ let rec instr : env -> Ast.instr -> (env * Llvm.llvalue) =
   | INSTR_Assign (id, inst)             ->
      let (env, llv) = instr env inst in
      ({ env with mem = (id, llv) :: env.mem }, llv)
-
-let toplevelentry : env -> Ast.toplevelentry -> unit =
-  fun env ->
-  let open Llvm in
-  function
-  | TLE_Target _
-  | TLE_Datalayout _
-  | TLE_Declaration _
-  | TLE_Definition _
-  | TLE_Type_decl _
-  | TLE_Global _
-  | TLE_Metadata _
-  | TLE_Attribute_group _ -> assert false
-
-and toplevelentries = fun x -> assert false
 
 let global = fun x -> assert false
 
