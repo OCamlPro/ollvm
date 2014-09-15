@@ -3,7 +3,8 @@ type env = { c: Llvm.llcontext;
              b: Llvm.llbuilder;
 
              (* llvalue/llbasicblock binded to Ast.ident*)
-             mem: (Ast.ident * Llvm.llvalue) list; }
+             mem: (Ast.ident * Llvm.llvalue) list;
+             labels: (string * Llvm.llbasicblock) list }
 
 let lookup env id = List.assoc id env.mem
 
@@ -13,15 +14,12 @@ let lookup_fn env (id : Ast.ident) : Llvm.llvalue = match id with
                         | Some fn -> fn
                         | _ -> assert false
 
-let init module_name =
-  let c = Llvm.global_context () in
-  let m = Llvm.create_module c module_name in
-  let b = Llvm.builder c in
-  { c = c; m = m; b = b; mem = [] }
+let string_of_ident : Ast.ident -> string = function
+  | ID_Local (_, i)
+  | ID_Global (_, i) -> i
 
 let label : env -> Ast.ident -> Llvm.llbasicblock =
-  fun env id ->
-  Llvm.block_of_value (lookup env id)
+  fun env id -> List.assoc (string_of_ident id) env.labels
 
 let linkage : Ast.linkage -> Llvm.Linkage.t =
   let open Llvm.Linkage
@@ -419,7 +417,10 @@ let rec instr : env -> Ast.instr -> (env * Llvm.llvalue) =
      let (env, llv) = instr env inst in
      ({ env with mem = (id, llv) :: env.mem }, llv)
 
-let toplevelentry : Ast.toplevelentry -> unit = function
+let toplevelentry : env -> Ast.toplevelentry -> unit =
+  fun env ->
+  let open Llvm in
+  function
   | TLE_Target _
   | TLE_Datalayout _
   | TLE_Declaration _
@@ -433,10 +434,42 @@ and toplevelentries = fun x -> assert false
 
 let global = fun x -> assert false
 
-let declaration = fun x -> assert false
+let declaration : env -> Ast.declaration -> env * Llvm.llvalue =
+  fun env dc ->
+  let llv = Llvm.declare_function
+              (string_of_ident dc.dc_name)
+              (fst dc.dc_ret_typ |> typ env)
+              (env.m) in
+  (env, llv)
 
-let definition = fun x -> assert false
+let create_block : env -> Ast.block -> Llvm.llvalue -> env =
+  fun env b fn ->
+  let llb = Llvm.append_block env.c (fst b) fn in
+  { env with labels = (fst b, llb) :: env.labels }
 
-and block = fun x -> assert false
+let definition : env -> Ast.definition -> env * Llvm.llvalue =
+  fun env df ->
+  let fn =
+    Llvm.define_function
+      (string_of_ident df.df_prototype.dc_name)
+      (fst df.df_prototype.dc_ret_typ |> typ env)
+      (env.m) in
+  let env= (* create needed block, label will lookup into memory *)
+    List.fold_left
+      (fun env b -> create_block env b fn) env df.df_instrs in
+  assert false (* TODO: process blocks *)
 
-let modul = fun x -> assert false
+and block : env -> Ast.block -> env =
+  fun env block ->
+  List.fold_left (fun env i -> instr env i |> fst) env (snd block)
+
+let modul : Ast.modul -> env =
+  fun modul ->
+  let c = Llvm.global_context () in
+  let m = Llvm.create_module c modul.m_name in
+  let b = Llvm.builder c in
+  let Ast.TLE_Target target = modul.m_target in
+  let Ast.TLE_Datalayout datalayout = modul.m_datalayout in
+  Llvm.set_target_triple target m;
+  Llvm.set_data_layout datalayout m;
+  { c = c; m = m; b = b; mem = []; labels = [] }
