@@ -3,7 +3,7 @@ begin library "ollvm"
   dirname = [ "src" ]
 
   files = [
-    "ast.mli" ;
+    "ast.ml" ;
     "lexer.mll" ;
     "parser.mly" ;
     "printer.ml" ;
