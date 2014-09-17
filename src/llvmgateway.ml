@@ -396,9 +396,7 @@ let global : env -> Ast.global -> env =
 
 let declaration : env -> Ast.declaration -> env =
   fun env dc ->
-  let ft = Llvm.function_type (fst dc.dc_ret_typ |> typ env)
-                              (List.map (fun x -> fst x |> typ env) dc.dc_args
-                               |> Array.of_list) in
+  let ft = typ env dc.dc_type in
   Llvm.declare_function (string_of_ident dc.dc_name) ft env.m ;
   env
 
@@ -420,7 +418,7 @@ let definition : env -> Ast.definition -> env =
   let fn =
     Llvm.define_function
       (string_of_ident df.df_prototype.dc_name)
-      (fst df.df_prototype.dc_ret_typ |> typ env)
+      (typ env df.df_prototype.dc_type)
       (env.m) in
 
   let env =

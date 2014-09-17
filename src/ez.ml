@@ -197,9 +197,9 @@ module Block = struct
   let declare fn args_typ =
     let (t, id) = Value.ident fn in
     let open Ast in
-    { dc_ret_typ = (t, []);
+    { dc_type = TYPE_Function (t, args_typ);
       dc_name = id;
-      dc_args = List.map (fun x -> (x, [])) args_typ }
+      dc_param_attrs = ([], [[]]) }
 
   let define fn args (instrs : block list) =
     let args = List.map Value.ident args in
@@ -292,11 +292,13 @@ module Module = struct
   let lookup_definition m name =
     List.assoc name m.m_module.m_definitions
 
+  (* TODO: remove name parameter *)
   let declaration m dc name =
     { m with m_module = { m.m_module with
                           m_declarations = (name, dc)
                                            :: m.m_module.m_declarations } }
 
+  (*TODO: remove name parameter  *)
   let definition m df name =
     let { Ast.df_prototype = dc; _; } = df in
     { m with m_module = { m.m_module with

@@ -352,20 +352,20 @@ and global : Ast.global -> string = fun {
                (align a)
 
 and declaration : Ast.declaration -> string = fun {
-    dc_ret_typ = (t, ret_attrs);
     dc_name = i;
-    dc_args = tl;
+    dc_type = TYPE_Function (ret_t, args_t);
+    dc_param_attrs = (ret_attrs, args_attrs)
   } -> let typ_attr = fun (t, attrs) -> typ t ^ list " " param_attr attrs in
        sprintf "declare %s %s %s(%s)"
                (list " " param_attr ret_attrs)
-               (typ t)
+               (typ ret_t)
                (ident i)
-               (list ", " typ_attr tl)
+               (list ", " typ_attr (List.combine args_t args_attrs))
 
 and definition : Ast.definition -> string =
-  fun ({ df_prototype = { dc_ret_typ = (t, ret_attrs);
-                          dc_name = i;
-                          dc_args = argt;};
+  fun ({ df_prototype = { dc_name = i;
+                          dc_type = TYPE_Function (ret_t, args_t);
+                          dc_param_attrs = (ret_attrs, args_attrs) };
        } as df) ->
   let typ_attr_id = fun ((t, attrs), id) ->
     sprintf "%s %s %s" (typ t) (list " " param_attr attrs) (ident id) in
@@ -376,9 +376,10 @@ and definition : Ast.definition -> string =
   ^ optional df.df_cconv cconv
   ^ sprintf "%s %s %s(%s) %s {\n%s\n}"
             (list " " param_attr ret_attrs)
-            (typ t)
+            (typ ret_t)
             (ident i)
-            (list ", " typ_attr_id (List.combine argt df.df_args))
+            (list ", " typ_attr_id
+                  (List.combine (List.combine args_t args_attrs) df.df_args))
             begin
               (list " " fn_attr df.df_attrs)
               ^ optional df.df_section  (fun x -> " section \"" ^ x ^ "\"")

@@ -245,9 +245,11 @@ and thread_local_storage = TLS_Localdynamic
                          | TLS_Localexec
 
 and declaration = {
-      dc_ret_typ: typ * param_attr list;
-         dc_name: ident;
-         dc_args: (typ * param_attr list) list;
+  dc_name: ident;
+  dc_type: typ; (* TYPE_Function (ret_t * args_t) *)
+
+  (* ret_attrs * args_attrs *)
+  dc_param_attrs: param_attr list * param_attr list list;
 }
 
 and definition = {

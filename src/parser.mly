@@ -221,9 +221,9 @@ declaration:
     name=GLOBAL
     LPAREN dc_args=separated_list(COMMA, dc_arg) RPAREN
     post_attrs=global_attr*
-    { {dc_ret_typ=(dc_ret_typ, dc_ret_attrs);
+    { {dc_type=TYPE_Function(dc_ret_typ, List.map fst dc_args);
        dc_name=ID_Global (fst name, snd name);
-       dc_args;} }
+       dc_param_attrs=(dc_ret_attrs, List.map snd dc_args);} }
 
 definition:
   | KW_DEFINE
@@ -236,9 +236,12 @@ definition:
     LCURLY EOL*
     df_blocks=df_blocks
     RCURLY
-    { { df_prototype = { dc_ret_typ=(df_ret_typ,df_ret_attrs);
-                         dc_name=ID_Global (fst name, snd name);
-                         dc_args=List.map fst df_args; };
+    { { df_prototype = {
+          dc_type = TYPE_Function (df_ret_typ,
+                                   List.map (fun x -> fst (fst x)) df_args) ;
+          dc_param_attrs = (df_ret_attrs,
+                           List.map (fun x -> snd (fst x)) df_args) ;
+          dc_name=ID_Global (fst name, snd name) ; } ;
         df_args=List.map snd df_args;
         df_instrs=df_blocks;
 
