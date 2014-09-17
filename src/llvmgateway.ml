@@ -396,9 +396,10 @@ let global : env -> Ast.global -> env =
 
 let declaration : env -> Ast.declaration -> env =
   fun env dc ->
-  Llvm.declare_function (string_of_ident dc.dc_name)
-                        (fst dc.dc_ret_typ |> typ env)
-                        (env.m);
+  let ft = Llvm.function_type (fst dc.dc_ret_typ |> typ env)
+                              (List.map (fun x -> fst x |> typ env) dc.dc_args
+                               |> Array.of_list) in
+  Llvm.declare_function (string_of_ident dc.dc_name) ft env.m ;
   env
 
 let create_block : env -> Ast.block -> Llvm.llvalue -> env =
@@ -411,7 +412,8 @@ and block : env -> Ast.block -> env =
   (* fetch the basicblock and set builder position at its end *)
   Llvm.position_at_end (List.assoc (fst block) env.labels) env.b;
   (* process instructions *)
-  List.fold_left (fun env i -> instr env i |> fst) env (snd block)
+  let env = List.fold_left (fun env i -> instr env i |> fst) env (snd block) in
+  env
 
 let definition : env -> Ast.definition -> env =
   fun env df ->
@@ -420,6 +422,15 @@ let definition : env -> Ast.definition -> env =
       (string_of_ident df.df_prototype.dc_name)
       (fst df.df_prototype.dc_ret_typ |> typ env)
       (env.m) in
+
+  let env =
+    lookup_fn env df.df_prototype.dc_name
+    |> Llvm.params
+    |> Array.mapi (fun i a -> (List.nth df.df_args i, a ))
+    |> Array.fold_left (fun env (i, a) ->
+                        Llvm.set_value_name (string_of_ident i) a;
+                        { env with mem = (i, a) :: env.mem }) env in
+
   let env =
     (* First create needed blocks.
      * block function will use them when building instructions. *)
