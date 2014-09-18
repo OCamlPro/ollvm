@@ -1,3 +1,5 @@
+open Ast
+
 type env = { c: Llvm.llcontext;
              m: Llvm.llmodule;
              b: Llvm.llbuilder;
@@ -241,8 +243,8 @@ let rec value : env -> Ast.typ -> Ast.value -> Llvm.llvalue =
 
 let rec instr : env -> Ast.instr -> (env * Llvm.llvalue) =
   fun env ->
-  let open Llvm
-  in function
+  let open Llvm in
+  function
 
   | INSTR_IBinop (op, ty, v1, v2)       ->
      let v1 = value env ty v1 in
@@ -367,9 +369,11 @@ let rec instr : env -> Ast.instr -> (env * Llvm.llvalue) =
      (env, build_br (label env i) env.b)
 
   | INSTR_Switch ((t, v), (t', i), tvtil)        ->
+(*
      let case = value env t v in
      let elsebb = label env i in
      let count = List.length tvtil in
+*)
      assert false (* TODO: create cases blocks *)
      (*build_switch case elsebb count b;*)
 
