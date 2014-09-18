@@ -265,10 +265,27 @@ module Module = struct
     m_env: Env.t;
   }
 
-  let data_layout layout = Ast.TLE_Datalayout layout
+  let init name (arch, vendor, os) data_layout =
+    { m_module = {
+        m_name = name ;
+        m_target = Ast.TLE_Target (arch ^ "-" ^ vendor ^ "-" ^ os) ;
+        m_datalayout = Ast.TLE_Datalayout data_layout ;
+        m_globals = [] ;
+        m_declarations = [] ;
+        m_definitions = [] ;
+      };
+      m_env = Env.empty }
 
-  let target_triple arch vendor os =
-    Ast.TLE_Target (arch ^ "-" ^ vendor ^ "-" ^ os)
+
+  let set_data_layout m layout =
+    { m with
+      m_module = { m.m_module with
+                   m_datalayout = Ast.TLE_Datalayout layout} }
+
+  let set_target_triple m arch vendor os =
+    { m with
+      m_module = { m.m_module with
+                   m_target = Ast.TLE_Target (arch^"-"^vendor^"-"^os) } }
 
   let local m t name =
     let (env, var) = Env.local m.m_env t name in

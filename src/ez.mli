@@ -211,13 +211,41 @@ module Module : sig
     m_env: Env.t;
   }
 
+  (** [init name (arch, vendor, os) data_layout] creates a fresh module with
+   * name, target triple and data layout set with given parameters and
+   * an empty environment. *)
+  val init : string -> (string * string * string) -> string -> t
+
+  (** [set_data_layout m new_datal_layout] returns m with new_data_layout
+   * as data layout. Data layout specifies how data is to be laid out
+   * in memory. *)
+  val set_data_layout : t -> string -> t
+
+  (** [set_target_triple m arch vendor os] returns m with target triple
+   * set according to [arch vendor os] parameters. *)
+  val set_target_triple : t -> string -> string -> string -> t
+
+  (** [local m t name] returns [(m', (t, v))] where [m'] is the new
+   * module with new local identifier declared and [(t, v)]
+   * is the resulting identifier and its type. If [name <> ""],
+   * it will be used as identifier (possibly with a number added
+   * as suffix), a number will be automatically assigned otherwise. *)
   val local : t -> Type.typ -> string -> (t * Value.tvalue)
+
+  (** [locals m t n] return [(m', values)] where [m'] is the new
+   * module with new local identifiers declared and [values] is
+   * a list of length [n] of new identifiers binded to type [t].
+   * Identifiers will be automatically choosen (a number will be
+   * used). *)
   val locals : t -> Type.typ -> int -> t * Value.tvalue list
+
+  (** [global m t name] returns [(m', g)] where [m'] is the new module
+   * resulting in the global variable [g] of name [name] and type [t]
+   * declaration. *)
   val global : t -> Type.typ -> string -> (t * Value.tvalue)
+
   val declaration : t -> Ast.declaration -> string -> t
   val definition : t -> Ast.definition -> string -> t
   val lookup_declaration : t -> string -> Ast.declaration
   val lookup_definition : t -> string -> Ast.definition
-  val data_layout : string -> Ast.toplevelentry
-  val target_triple : string -> string -> string -> Ast.toplevelentry
 end
