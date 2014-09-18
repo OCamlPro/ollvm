@@ -54,3 +54,14 @@ your own back-end if you please.
 
 - Via opam: `` opam install ollvm ``
 - From source: `` autoreconf && ./configure && make && make install ``
+
+=== Limitations ===
+
+Ollvm is still work in progress.
+
+- Parser misses some LLVM IR features (e.g. metadata attached to
+  instructions).
+- Ollvm does not checks types of your instruction, nor it ensures
+  SSA form (i.e. you can write wrong LLVM IR).
+  It *may* ensure good typing (statically) of your LLVM code in futur.
+- Llvmgateway is not ready.
