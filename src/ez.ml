@@ -213,7 +213,7 @@ end
 
 module Module = struct
 
-  module Env = struct
+  module Local = struct
 
     type t = { unnamed_counter : int;
                named_counter : (string * int) list }
@@ -246,7 +246,7 @@ module Module = struct
 
   type t = {
     m_module: Ast.modul;
-    m_env: Env.t;
+    m_env: Local.t;
   }
 
   let init name (arch, vendor, os) data_layout =
@@ -258,7 +258,7 @@ module Module = struct
         m_declarations = [] ;
         m_definitions = [] ;
       };
-      m_env = Env.empty }
+      m_env = Local.empty }
 
 
   let set_data_layout m layout =
@@ -272,7 +272,7 @@ module Module = struct
                    m_target = Ast.TLE_Target (arch^"-"^vendor^"-"^os) } }
 
   let local m t name =
-    let (env, var) = Env.local m.m_env t name in
+    let (env, var) = Local.local m.m_env t name in
     ({m with m_env = env}, var)
 
   let locals m t n =

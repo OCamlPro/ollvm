@@ -213,7 +213,7 @@ end
 module Module : sig
 
   (** Local variable names memory. *)
-  module Env :  sig
+  module Local :  sig
     (** Abstract type of the environment *)
     type t
 
@@ -229,7 +229,7 @@ module Module : sig
 
   type t = {
     m_module: Ast.modul;
-    m_env: Env.t;
+    m_env: Local.t;
   }
 
   (** [init name (arch, vendor, os) data_layout] creates a fresh module with
