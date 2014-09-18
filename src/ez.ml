@@ -2,7 +2,7 @@ module Type = struct
 
   open Ast
 
-  type typ = Ast.typ
+  type t = Ast.typ
 
   let i1 = TYPE_I 1
   let i32 = TYPE_I 32
@@ -20,9 +20,7 @@ end
 
 module Value = struct
 
-  type typ = Type.typ
-
-  type tvalue = typ * Ast.value
+  type t = Type.t * Ast.value
 
   let i1 n = (Type.i1, Ast.VALUE_Integer n)
 
@@ -50,12 +48,7 @@ end
 
 module Instr = struct
 
-
-  type typ = Type.typ
-
-  type tvalue = Value.tvalue
-
-  type tinstr = typ * Ast.instr
+  type t = Type.t * Ast.instr
 
   let ident = Value.ident
 
@@ -81,8 +74,6 @@ module Instr = struct
   let store ?(volatile=false)? (align=None) value pointer =
     (Type.void, Ast.INSTR_Store (volatile, value, ident pointer, align))
 
-  type bin_sig = tvalue -> tvalue -> tinstr
-
   let icmp cmp (t, op1) (_, op2) =
     (Type.i1, Ast.INSTR_ICmp (cmp, t, op1, op2))
 
@@ -104,9 +95,6 @@ module Instr = struct
   let fule = fcmp Ast.Ule let fune = fcmp Ast.Une
   let funo = fcmp Ast.Uno let ftrue = fcmp Ast.True
 
-  type nsw_nuw_ibinop_sig = ?nsw:bool -> ?nuw:bool -> bin_sig
-  type exact_ibinop_sig = ?exact:bool -> bin_sig
-
   let ibinop b (t, op1) (_, op2) =
     (t, Ast.INSTR_IBinop (b, t, op1, op2))
 
@@ -123,8 +111,6 @@ module Instr = struct
   let and_ = ibinop Ast.And
   let or_ = ibinop Ast.Or
   let xor = ibinop Ast.Xor
-
-  type fbinop_sig = ?flags:Ast.fast_math list -> bin_sig
 
   let fbinop b ?(flags=[])  (t, op1) (_, op2) =
     (t, Ast.INSTR_FBinop (b, flags, t, op1, op2))
@@ -145,8 +131,6 @@ module Instr = struct
   let shufflevector v1 v2 vmask =
     let (vec_t, _) = v1 in
     (vec_t, Ast.INSTR_ShuffleVector (v1, v2, vmask))
-
-  type convert_sig = tvalue -> typ -> tinstr
 
   let convert op (t, v) t' = (t', Ast.INSTR_Conversion(op, t, v, t'))
 
@@ -172,7 +156,7 @@ module Instr = struct
     let cases = List.map (fun (v, i) -> (v, ident i)) cases in
     Ast.INSTR_Switch (sw, ident default, cases)
 
-  let ret tvalue = Ast.INSTR_Ret tvalue
+  let ret x = Ast.INSTR_Ret x
 
   let ret_void = Ast.INSTR_Ret_void
 
@@ -189,10 +173,6 @@ end
 module Block = struct
 
   type block = Ast.ident * (Ast.instr list)
-
-  type typ = Type.typ
-
-  type tvalue = Value.tvalue
 
   let declare fn args_typ =
     let (t, id) = Value.ident fn in
