@@ -39,7 +39,7 @@ your own back-end if you please.
                   ret x3 ; ] ] in
 
     (* fact function registration in module *)
-    let m = M.definition m f "fact" in
+    let m = M.definition m f in
     (* ... *)
 ```
 

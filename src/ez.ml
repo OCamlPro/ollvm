@@ -293,15 +293,15 @@ module Module = struct
   let lookup_definition m name =
     List.assoc name m.m_module.m_definitions
 
-  (* TODO: remove name parameter *)
-  let declaration m dc name =
+  let declaration m dc =
+    let Ast.ID_Global (_, name) = dc.Ast.dc_name in
     { m with m_module = { m.m_module with
                           m_declarations = (name, dc)
                                            :: m.m_module.m_declarations } }
 
-  (*TODO: remove name parameter  *)
-  let definition m df name =
+  let definition m df =
     let { Ast.df_prototype = dc; _; } = df in
+    let Ast.ID_Global (_, name) = dc.dc_name in
     { m with m_module = { m.m_module with
                           m_declarations = (name, dc)
                                            :: m.m_module.m_declarations ;

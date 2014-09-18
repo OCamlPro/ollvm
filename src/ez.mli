@@ -226,7 +226,6 @@ module Module : sig
     val empty : t
   end
 
-
   type t = {
     m_module: Ast.modul;
     m_env: Local.t;
@@ -265,8 +264,21 @@ module Module : sig
       declaration. *)
   val global : t -> Type.t -> string -> (t * Value.t)
 
-  val declaration : t -> Ast.declaration -> string -> t
-  val definition : t -> Ast.definition -> string -> t
+  (** [declaration m dc] returns [m'], which is the same module than [m],
+      with [dc] declaration registered. *)
+  val declaration : t -> Ast.declaration -> t
+
+  (** [definition m df] returns [m'], which is the same module than [m],
+      with [df] definition registered. *)
+  val definition : t -> Ast.definition -> t
+
+  (** [lookup_declaration m "foo"] looks for declaration of function
+      named ["foo"] and returns it. Raises [Not_found] if ["foo"] is
+      not declared. *)
   val lookup_declaration : t -> string -> Ast.declaration
+
+  (** [lookup_definition m "foo"] looks for definition of function
+      named ["foo"] and returns it. Raises [Not_found] if ["foo"] is
+      not defined. *)
   val lookup_definition : t -> string -> Ast.definition
 end
