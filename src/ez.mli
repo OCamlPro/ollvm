@@ -1,5 +1,6 @@
-(** Type and Val module share some names (e.g. i1, i32). Avoid it? *)
+(** Use Ez module to generate LLVM IR in a easy and pleasant way. *)
 
+(** Basic predefined common types and type making functions. *)
 module Type : sig
 
   open Ast
@@ -20,6 +21,7 @@ module Type : sig
 
 end
 
+(** Annotate value with their type. *)
 module Value : sig
 
   type typ = Type.typ
@@ -44,6 +46,7 @@ module Value : sig
 
 end
 
+(** Instruction creation. *)
 module Instr : sig
 
   type typ = Type.typ
@@ -173,6 +176,7 @@ module Instr : sig
 
 end
 
+(** Function and block creation. *)
 module Block : sig
 
   type block = Ast.ident * (Ast.instr list)
@@ -194,13 +198,17 @@ module Block : sig
 
 end
 
+(** Local variable names memory. *)
 module Env :  sig
+  (* FIXME: Avoid this module being exposed in interface. *)
+
   type t = { unnamed_counter : int;
-             named_counter : (string * int) list } (* FIXME *)
+             named_counter : (string * int) list }
   val local : t -> Type.typ -> string -> (t * Value.tvalue)
   val empty : t
 end
 
+  (** Module hanlder. *)
 module Module : sig
 
   type t = {
