@@ -211,32 +211,36 @@ module Block = struct
 
 end
 
-module Env = struct
-
-  type t = { unnamed_counter : int;
-             named_counter : (string * int) list }
-
-  let empty = { unnamed_counter = 0 ;
-                named_counter = [] }
-
-  (* FIXME: Use better structure than list *)
-  let local env t name =
-    let (env, (format, name)) = match name with
-      | "" ->
-         let i = env.unnamed_counter in
-         ({ env with unnamed_counter = i + 1 ; },
-          (Ast.ID_FORMAT_Named, string_of_int i))
-      | name -> try let i = List.assoc name env.named_counter in
-                    ({env with named_counter = (name, i + 1) :: env.named_counter},
-                     (Ast.ID_FORMAT_Unnamed, name ^ string_of_int i))
-                with Not_found -> ({env with named_counter = (name, 0) :: env.named_counter},
-                                   (Ast.ID_FORMAT_Named, name))
-    in
-    (env, (t, Ast.VALUE_Ident (Ast.ID_Local (format, name))))
-
-end
-
 module Module = struct
+
+  module Env = struct
+
+    type t = { unnamed_counter : int;
+               named_counter : (string * int) list }
+
+    let empty = { unnamed_counter = 0 ;
+                  named_counter = [] }
+
+    (* FIXME: Use better structure than list *)
+    let local env t name =
+      let (env, (format, name)) = match name with
+        | "" ->
+           let i = env.unnamed_counter in
+           ({ env with unnamed_counter = i + 1 ; },
+            (Ast.ID_FORMAT_Named, string_of_int i))
+        | name -> try
+                  let i = List.assoc name env.named_counter in
+                  ({ env with
+                     named_counter = (name, i + 1) :: env.named_counter },
+                   (Ast.ID_FORMAT_Unnamed, name ^ string_of_int i))
+                  with Not_found ->
+                    ({ env with
+                       named_counter = (name, 0) :: env.named_counter },
+                     (Ast.ID_FORMAT_Named, name))
+      in
+      (env, (t, Ast.VALUE_Ident (Ast.ID_Local (format, name))))
+
+  end
 
   (** NOTE: declaration and definitions are kept in reverse order. **)
 

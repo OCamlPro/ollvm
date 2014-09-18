@@ -209,18 +209,23 @@ module Block : sig
 
 end
 
-(** Local variable names memory. *)
-module Env :  sig
-  (* FIXME: Avoid this module being exposed in interface. *)
-
-  type t = { unnamed_counter : int;
-             named_counter : (string * int) list }
-  val local : t -> Type.t -> string -> (t * Value.t)
-  val empty : t
-end
-
   (** Module hanlder. *)
 module Module : sig
+
+  (** Local variable names memory. *)
+  module Env :  sig
+    (** Abstract type of the environment *)
+    type t
+
+    (** Create a local identifier (returned as a value). If a local
+        variable already use [name] as identifier, it will be suffixed
+        by a number in order to return a unique identifier. *)
+    val local : t -> Type.t -> string -> (t * Value.t)
+
+    (** The empty environment *)
+    val empty : t
+  end
+
 
   type t = {
     m_module: Ast.modul;
