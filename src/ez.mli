@@ -24,13 +24,14 @@ module Value : sig
 
   type typ = Type.typ
 
-  (** [llvmocp] value annotated with type its. *)
+  (** [ollvm] value annotated with type its. *)
   type tvalue = typ * Ast.value
 
  (** Values constructors.
-  * Do not confound with types in Type module.
-  * Be careful about module inclusion/opening order
-  * when using both Value and Type modules. *)
+     Do not confound with types in Type module.
+     Be careful about module inclusion/opening order
+     when using both Value and Type modules. *)
+
   val i1 : int -> tvalue
   val i32 : int -> tvalue
   val half : float -> tvalue
@@ -49,29 +50,28 @@ module Instr : sig
 
   type tvalue = Value.tvalue
 
-  (** [llvmocp] instr annotated with its type. *)
+  (** [ollvm] instr annotated with its type. *)
   type tinstr = typ * Ast.instr
 
-  (** [call fn args] call the function [fn] with [args] as argument.
-   * FIXME: functions should have their own type. *)
+  (** [call fn args] call the function [fn] with [args] as argument. *)
   val call : tvalue -> tvalue list -> tinstr
 
   (** [phi [(value1, label1); ... ; (valueN, labelN)]] return a value depending on
-   * the incoming block. [value1, ..., valueN] must have the same type. *)
+      the incoming block. [value1, ..., valueN] must have the same type. *)
   val phi : (tvalue * tvalue) list -> tinstr
 
   (** [select cond value_true value_false] yields [value_true] or [value_false]
-   * depending on the value [cond]. *)
+      depending on the value [cond]. *)
   val select : tvalue -> tvalue -> tvalue -> tinstr
 
   (** [alloca ty] allocates memory on the stask of current function,
-   * which will be automatically freed on function returns.
-   * Use [nb] to specify the number of values to allocate (default is one).
-   * Use [align] to specify the alignment option (default is None) *)
+      which will be automatically freed on function returns.
+      Use [nb] to specify the number of values to allocate (default is one).
+      Use [align] to specify the alignment option (default is None) *)
   val alloca : ?nb:Ast.tvalue option -> ?align:int option -> typ -> tinstr
 
   (** [load ptr] yields value stored in [ptr] alloca.
-   * Use [align] to specify the alignment option (default is None) *)
+      Use [align] to specify the alignment option (default is None) *)
   val load : ?volatile:bool -> ?align:int option -> tvalue -> tinstr
 
   (** [store val ptr] store [val] in [ptr] alloca. *)
@@ -114,11 +114,11 @@ module Instr : sig
   val fdiv : fbinop_sig val frem : fbinop_sig
 
   (** [extractelement vec idx] returns the element contained in [vec]
-   * at index [idx]. *)
+      at index [idx]. *)
   val extractelement : tvalue -> tvalue -> tinstr
 
   (** [insertelement vec val idx] returns a vector whose elements ares the same as
-   * [vec], except the element at index [idx] which will be [val] *)
+      [vec], except the element at index [idx] which will be [val] *)
   val insertelement : tvalue -> tvalue -> tvalue -> tinstr
 
   val shufflevector : tvalue -> tvalue -> tvalue -> tinstr
@@ -140,19 +140,19 @@ module Instr : sig
   val insertvalue : tvalue -> tvalue -> int list -> tinstr
 
   (** Terminators.
-   * A block has to finish its instruction list with a terminator.
-   * These constructions return a [llvmocp] instruction. *)
+      A block has to finish its instruction list with a terminator.
+      These constructions return a [ollvm] instruction. *)
 
   (** [br cond lbl_true lbl_false] jumps to [lbl_true] or [lbl_false]
-   * depending on the value of [cond]. *)
+      depending on the value of [cond]. *)
   val br : tvalue -> tvalue -> tvalue -> Ast.instr
 
  (** [br1 label] jumps to [label]. *)
   val br1 : tvalue -> Ast.instr
 
   (** [switch cond default [(int1, labelN); ... ; (intN, labelN)]]
-   * jumps to the [labelX] whose associted [intX] is equal to [cond].
-   * If no such integer is found, then jumps to [default] label. *)
+      jumps to the [labelX] whose associted [intX] is equal to [cond].
+      If no such integer is found, then jumps to [default] label. *)
   val switch : tvalue -> tvalue -> (tvalue * tvalue) list -> Ast.instr
 
   (** [ret val] returns [val]. *)
@@ -162,21 +162,18 @@ module Instr : sig
   val ret_void : Ast.instr
 
   (** Binds a [tinstr] to an identifier.
-   * i. e. build a [llvmocp] assignment instruction. *)
+      i. e. build a [ollvm] assignment instruction. *)
   val assign : tvalue -> tinstr -> Ast.instr
 
   (** Infix operator equivalent to [assign] function. *)
   val ( <-- ) : tvalue -> tinstr -> Ast.instr
 
-  (** Converts a [tinstr] into a [llvmocp] instr. *)
+  (** Converts a [tinstr] into a [ollvm] instr. *)
   val ignore : tinstr -> Ast.instr
 
 end
 
 module Block : sig
-
-  (** FIXME: llvmocp may fix its block/function type,
-   * so this module may change. *)
 
   type block = Ast.ident * (Ast.instr list)
 
@@ -185,11 +182,11 @@ module Block : sig
   type tvalue = Value.tvalue
 
   (** [declare (ret_ty, fn) args_ty] declares [fn] as a function
-   * returning [ret_ty] and requiring arguments of types [args_ty]. *)
+      returning [ret_ty] and requiring arguments of types [args_ty]. *)
   val declare : tvalue -> typ list -> Ast.declaration
 
   (** [define (ret_ty, fn) args instrs] defines [fn] as a function
-   * returning [ret_ty], with [args] as arguments and [instrs] as body. *)
+      returning [ret_ty], with [args] as arguments and [instrs] as body. *)
   val define : tvalue -> tvalue list -> block list -> Ast.definition
 
   (** [block label instrs] binds [instrs] to [label], creating a [block]. *)
@@ -212,36 +209,36 @@ module Module : sig
   }
 
   (** [init name (arch, vendor, os) data_layout] creates a fresh module with
-   * name, target triple and data layout set with given parameters and
-   * an empty environment. *)
+      name, target triple and data layout set with given parameters and
+      an empty environment. *)
   val init : string -> (string * string * string) -> string -> t
 
   (** [set_data_layout m new_datal_layout] returns m with new_data_layout
-   * as data layout. Data layout specifies how data is to be laid out
-   * in memory. *)
+      as data layout. Data layout specifies how data is to be laid out
+      in memory. *)
   val set_data_layout : t -> string -> t
 
   (** [set_target_triple m arch vendor os] returns m with target triple
-   * set according to [arch vendor os] parameters. *)
+      set according to [arch vendor os] parameters. *)
   val set_target_triple : t -> string -> string -> string -> t
 
   (** [local m t name] returns [(m', (t, v))] where [m'] is the new
-   * module with new local identifier declared and [(t, v)]
-   * is the resulting identifier and its type. If [name <> ""],
-   * it will be used as identifier (possibly with a number added
-   * as suffix), a number will be automatically assigned otherwise. *)
+      module with new local identifier declared and [(t, v)]
+      is the resulting identifier and its type. If [name <> ""],
+      it will be used as identifier (possibly with a number added
+      as suffix), a number will be automatically assigned otherwise. *)
   val local : t -> Type.typ -> string -> (t * Value.tvalue)
 
   (** [locals m t n] return [(m', values)] where [m'] is the new
-   * module with new local identifiers declared and [values] is
-   * a list of length [n] of new identifiers binded to type [t].
-   * Identifiers will be automatically choosen (a number will be
-   * used). *)
+      module with new local identifiers declared and [values] is
+      a list of length [n] of new identifiers binded to type [t].
+      Identifiers will be automatically choosen (a number will be
+      used). *)
   val locals : t -> Type.typ -> int -> t * Value.tvalue list
 
   (** [global m t name] returns [(m', g)] where [m'] is the new module
-   * resulting in the global variable [g] of name [name] and type [t]
-   * declaration. *)
+      resulting in the global variable [g] of name [name] and type [t]
+      declaration. *)
   val global : t -> Type.typ -> string -> (t * Value.tvalue)
 
   val declaration : t -> Ast.declaration -> string -> t
