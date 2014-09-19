@@ -30,8 +30,8 @@ if test "$MENHIR" = "no"; then
 fi
 
 AC_CHECK_OCAML_PKG([llvm])
-AM_CONDITIONAL([BUILD_LLVMGATEWAY], [test "$OCAML_PKG_llvm" = "no"])
-if test ! "$BUILD_LLVMGATEWAY" ; then
+AM_CONDITIONAL([BUILD_LLVMGATEWAY], [test "$OCAML_PKG_llvm" != "no"])
+if test "$OCAML_PKG_llvm" = "no" ; then
   AC_MSG_WARN([Llvmgateway module will not be installed.])
 fi
 
