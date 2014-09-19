@@ -1,4 +1,8 @@
-LIB=ollvm ollvm_llvmgateway
+if BUILD_LLVMGATEWAY
+  LIB=ollvm
+else
+  LIB=ollvm ollvm_llvmgateway
+endif
 
 all: $(LIB)
 
