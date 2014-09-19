@@ -9,7 +9,7 @@ homepage: ""
 bug-reports: ""
 license: "LGPL"
 build: [
-  [ "autoreconf" ]
+  [ "autoreconf" "-vfi" ]
   [ "./configure" ]
   [ make ]
 ]
