@@ -6,6 +6,7 @@ version: "0.1"
 homepage: "sagotch.github.io/ollvm/"
 bug-reports: "https://github.com/sagotch/ollvm/issues"
 license: "LGPL"
+available: [ ocaml-version >= "4.02" ]
 build: [
   [ "autoreconf" "-vfi" ]
   [ "./configure" ]
