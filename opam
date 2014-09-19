@@ -15,5 +15,6 @@ build: [
 install: [ make "install" ]
 remove: [ [ "ocamlfind" "remove" "ollvm"]
           [ "ocamlfind" "remove" "ollvm_llvmgateway" ] ]
-depends: [ "ocamlfind" "menhir" ]
-depopts: [ "llvm" ]
+depends: [ "ocamlfind" { build }
+           "menhir" { build } ]
+depopts: [ "llvm" { = "3.5" } ]
