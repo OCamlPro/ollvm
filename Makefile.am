@@ -4,6 +4,8 @@ else
   LIB=ollvm ollvm_llvmgateway
 endif
 
+DOCDIR=doc
+
 all: $(LIB)
 
 $(LIB):
@@ -15,8 +17,9 @@ install:
 uninstall:
 	ocamlfind remove $(LIB)
 
-doc-html: $(LIB)
-	mkdir -p doc ; ocamldoc -d doc -html -I _obuild/ollvm src/*.mli
+doc: $(LIB)
+	mkdir -p doc ; ocamldoc -d $(DOCDIR) -html -I _obuild/ollvm src/*.mli
 
 clean:
 	$(OCPBUILD) clean
+	rm -rf $(DOCDIR)
