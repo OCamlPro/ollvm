@@ -11,7 +11,7 @@ all: $(LIB)
 $(LIB):
 	$(OCPBUILD) init && $(OCPBUILD) $(LIB)
 
-install:
+install: $(LIB)
 	$(OCPBUILD) install $(LIB)
 
 uninstall:
