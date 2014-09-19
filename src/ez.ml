@@ -68,7 +68,7 @@ module Instr = struct
     (Type.pointer t, Ast.INSTR_Alloca (t, nb, align))
 
   let load ?(volatile=false) ?(align=None) (ptr_t, value) =
-    let [@ocaml.warning "-8"] Ast.TYPE_Pointer t = ptr_t in
+    let Ast.TYPE_Pointer t = ptr_t in
     (t, Ast.INSTR_Load (volatile, (ptr_t, value), align))
 
   let store ?(volatile=false)? (align=None) value pointer =
@@ -122,7 +122,7 @@ module Instr = struct
   let frem = fbinop Ast.FRem
 
   let extractelement vec idx =
-    let [@ocaml.warning "-8"] (Ast.TYPE_Vector (n, t), _) = vec in
+    let (Ast.TYPE_Vector (n, t), _) = vec in
     (t, Ast.INSTR_ExtractElement (vec, idx))
 
   let insertelement vec el idx =
