@@ -1,404 +1,556 @@
+open Format
 open Ast
 
-let quote s = "\"" ^ s ^ "\""
+(*
+let rec list : string -> (Format.formatter -> 'a -> unit) -> Format.formatter ->
+               'a list -> unit =
+  fun sep printer ppf l ->
+  match l with
+  | []     -> ()
+  | [ e ]  -> printer ppf e
+  | h :: q -> printer ppf h ;
+              pp_print_string ppf sep ;
+              list sep printer ppf q
+ *)
 
-let list : string -> ('a -> string) -> 'a list -> string =
-  fun sep printer l -> List.map printer l |> String.concat sep
+let pp_sep str =
+  fun ppf () -> pp_print_string ppf str
 
-let sprintf = Printf.sprintf
+let pp_space ppf () = pp_print_char ppf ' '
 
-let optional x f = match x with None -> "" | Some x -> f x ^ " "
+let pp_comma_space ppf () = pp_print_string ppf ", "
 
-let rec linkage : Ast.linkage -> string = function
-  | LINKAGE_Private                      -> "private"
-  | LINKAGE_Internal                     -> "internal"
-  | LINKAGE_Available_externally         -> "available_externally"
-  | LINKAGE_Linkonce                     -> "linkonce"
-  | LINKAGE_Weak                         -> "weak"
-  | LINKAGE_Common                       -> "common"
-  | LINKAGE_Appending                    -> "appending"
-  | LINKAGE_Extern_weak                  -> "extern_weak"
-  | LINKAGE_Linkonce_odr                 -> "linkonce_ord"
-  | LINKAGE_Weak_odr                     -> "weak_odr"
-  | LINKAGE_External                     -> "external"
+let rec linkage : Format.formatter -> Ast.linkage -> unit =
+  fun ppf ->
+  function
+  | LINKAGE_Private              -> fprintf ppf "private"
+  | LINKAGE_Internal             -> fprintf ppf "internal"
+  | LINKAGE_Available_externally -> fprintf ppf "available_externally"
+  | LINKAGE_Linkonce             -> fprintf ppf "linkonce"
+  | LINKAGE_Weak                 -> fprintf ppf "weak"
+  | LINKAGE_Common               -> fprintf ppf "common"
+  | LINKAGE_Appending            -> fprintf ppf "appending"
+  | LINKAGE_Extern_weak          -> fprintf ppf "extern_weak"
+  | LINKAGE_Linkonce_odr         -> fprintf ppf "linkonce_ord"
+  | LINKAGE_Weak_odr             -> fprintf ppf "weak_odr"
+  | LINKAGE_External             -> fprintf ppf "external"
 
- and dll_storage : Ast.dll_storage -> string = function
-  | DLLSTORAGE_Dllimport -> "dllimport"
-  | DLLSTORAGE_Dllexport -> "dllexport"
+ and dll_storage : Format.formatter -> Ast.dll_storage -> unit =
+   fun ppf ->
+   function
+   | DLLSTORAGE_Dllimport -> fprintf ppf "dllimport"
+   | DLLSTORAGE_Dllexport -> fprintf ppf "dllexport"
 
-and visibility : Ast.visibility -> string = function
-  | VISIBILITY_Default   -> "default"
-  | VISIBILITY_Hidden    -> "hidden"
-  | VISIBILITY_Protected -> "protected"
+and visibility : Format.formatter -> Ast.visibility -> unit =
+  fun ppf ->
+  function
+  | VISIBILITY_Default   -> fprintf ppf "default"
+  | VISIBILITY_Hidden    -> fprintf ppf "hidden"
+  | VISIBILITY_Protected -> fprintf ppf "protected"
 
-and cconv : Ast.cconv -> string = function
-  | CC_Ccc    -> "ccc"
-  | CC_Fastcc -> "fastcc"
-  | CC_Coldcc -> "coldcc"
-  | CC_Cc i   -> "cc " ^ string_of_int i
+and cconv : Format.formatter -> Ast.cconv -> unit =
+  fun ppf -> function
+          | CC_Ccc    -> fprintf ppf "ccc"
+          | CC_Fastcc -> fprintf ppf "fastcc"
+          | CC_Coldcc -> fprintf ppf "coldcc"
+          | CC_Cc i   -> fprintf ppf "cc %d" i
 
-and param_attr : Ast.param_attr -> string = function
-  | PARAMATTR_Zeroext           -> "zeroext"
-  | PARAMATTR_Signext           -> "signext"
-  | PARAMATTR_Inreg             -> "inreg"
-  | PARAMATTR_Byval             -> "byval"
-  | PARAMATTR_Inalloca          -> "inalloca"
-  | PARAMATTR_Sret              -> "sret"
-  | PARAMATTR_Align n           -> "align " ^ string_of_int n
-  | PARAMATTR_Noalias           -> "noalias"
-  | PARAMATTR_Nocapture         -> "nocapture"
-  | PARAMATTR_Nest              -> "nest"
-  | PARAMATTR_Returned          -> "returned"
-  | PARAMATTR_Nonnull           -> "nonnull"
-  | PARAMATTR_Dereferenceable n -> "dereferenceable(" ^ string_of_int n ^ ")"
+and param_attr : Format.formatter -> Ast.param_attr -> unit =
+  fun ppf ->
+  function
+  | PARAMATTR_Zeroext           -> fprintf ppf "zeroext"
+  | PARAMATTR_Signext           -> fprintf ppf "signext"
+  | PARAMATTR_Inreg             -> fprintf ppf "inreg"
+  | PARAMATTR_Byval             -> fprintf ppf "byval"
+  | PARAMATTR_Inalloca          -> fprintf ppf "inalloca"
+  | PARAMATTR_Sret              -> fprintf ppf "sret"
+  | PARAMATTR_Align n           -> fprintf ppf "align %d" n
+  | PARAMATTR_Noalias           -> fprintf ppf "noalias"
+  | PARAMATTR_Nocapture         -> fprintf ppf "nocapture"
+  | PARAMATTR_Nest              -> fprintf ppf "nest"
+  | PARAMATTR_Returned          -> fprintf ppf "returned"
+  | PARAMATTR_Nonnull           -> fprintf ppf "nonnull"
+  | PARAMATTR_Dereferenceable n -> fprintf ppf "dereferenceable(%d)" n
 
-and fn_attr : Ast.fn_attr -> string = function
-  | FNATTR_Alignstack i -> sprintf "alignstack(%d)" i
-  | FNATTR_Alwaysinline -> "alwaysinline"
-  | FNATTR_Builtin -> "builtin"
-  | FNATTR_Cold -> "cold"
-  | FNATTR_Inlinehint -> "inlinehint"
-  | FNATTR_Jumptable -> "jumptable"
-  | FNATTR_Minsize -> "minsize"
-  | FNATTR_Naked -> "naked"
-  | FNATTR_Nobuiltin -> "nobuiltin"
-  | FNATTR_Noduplicate -> "noduplicate"
-  | FNATTR_Noimplicitfloat -> "noimplicitfloat"
-  | FNATTR_Noinline -> "noinline"
-  | FNATTR_Nonlazybind -> "nonlazybind"
-  | FNATTR_Noredzone -> "noredzone"
-  | FNATTR_Noreturn -> "noreturn"
-  | FNATTR_Nounwind -> "nounwind"
-  | FNATTR_Optnone -> "optnone"
-  | FNATTR_Optsize -> "optsize"
-  | FNATTR_Readnone -> "readone"
-  | FNATTR_Readonly -> "readonly"
-  | FNATTR_Returns_twice -> "returns_twice"
-  | FNATTR_Sanitize_address -> "sanitize_address"
-  | FNATTR_Sanitize_memory -> "sanitize_memory"
-  | FNATTR_Sanitize_thread -> "sanitize_thread"
-  | FNATTR_Ssp -> "ssp"
-  | FNATTR_Sspreq -> "sspreq"
-  | FNATTR_Sspstrong -> "sspstrong"
-  | FNATTR_Uwtable -> "uwtable"
-  | FNATTR_String s -> "\"" ^ s ^ "\""
-  | FNATTR_Key_value (k, v) -> "\"" ^ k ^ "\"=\"" ^ v ^ "\""
-  | FNATTR_Attr_grp i -> "#" ^ string_of_int i
+and fn_attr : Format.formatter -> Ast.fn_attr -> unit =
+  fun ppf ->
+  function
+  | FNATTR_Alignstack i     -> fprintf ppf "alignstack(%d)" i
+  | FNATTR_Alwaysinline     -> fprintf ppf "alwaysinline"
+  | FNATTR_Builtin          -> fprintf ppf "builtin"
+  | FNATTR_Cold             -> fprintf ppf "cold"
+  | FNATTR_Inlinehint       -> fprintf ppf "inlinehint"
+  | FNATTR_Jumptable        -> fprintf ppf "jumptable"
+  | FNATTR_Minsize          -> fprintf ppf "minsize"
+  | FNATTR_Naked            -> fprintf ppf "naked"
+  | FNATTR_Nobuiltin        -> fprintf ppf "nobuiltin"
+  | FNATTR_Noduplicate      -> fprintf ppf "noduplicate"
+  | FNATTR_Noimplicitfloat  -> fprintf ppf "noimplicitfloat"
+  | FNATTR_Noinline         -> fprintf ppf "noinline"
+  | FNATTR_Nonlazybind      -> fprintf ppf "nonlazybind"
+  | FNATTR_Noredzone        -> fprintf ppf "noredzone"
+  | FNATTR_Noreturn         -> fprintf ppf "noreturn"
+  | FNATTR_Nounwind         -> fprintf ppf "nounwind"
+  | FNATTR_Optnone          -> fprintf ppf "optnone"
+  | FNATTR_Optsize          -> fprintf ppf "optsize"
+  | FNATTR_Readnone         -> fprintf ppf "readone"
+  | FNATTR_Readonly         -> fprintf ppf "readonly"
+  | FNATTR_Returns_twice    -> fprintf ppf "returns_twice"
+  | FNATTR_Sanitize_address -> fprintf ppf "sanitize_address"
+  | FNATTR_Sanitize_memory  -> fprintf ppf "sanitize_memory"
+  | FNATTR_Sanitize_thread  -> fprintf ppf "sanitize_thread"
+  | FNATTR_Ssp              -> fprintf ppf "ssp"
+  | FNATTR_Sspreq           -> fprintf ppf "sspreq"
+  | FNATTR_Sspstrong        -> fprintf ppf "sspstrong"
+  | FNATTR_Uwtable          -> fprintf ppf "uwtable"
+  | FNATTR_String s         -> fprintf ppf "\"%s\"" s
+  | FNATTR_Key_value (k, v) -> fprintf ppf "\"%s\"=\"%s\"" k v
+  | FNATTR_Attr_grp i       -> fprintf ppf "#%d" i
 
-and ident : Ast.ident -> string = function
-  | ID_Global (f, i) -> "@" ^ ident_format f i
-  | ID_Local (f, i)  -> "%" ^ ident_format f i
+and ident : Format.formatter -> Ast.ident -> unit =
+  fun ppf ->
+  function
+  | ID_Global (f, i) -> pp_print_char ppf '@' ; ident_format ppf f i
+  | ID_Local (f, i)  -> pp_print_char ppf '%' ; ident_format ppf f i
 
-and ident_format : Ast.ident_format -> string -> string =
-  fun f i -> match f with
+(** FIXME: see #4 *)
+and ident_format : Format.formatter -> Ast.ident_format -> string -> unit =
+  fun ppf f i -> match f with
              | ID_FORMAT_Named
-             | ID_FORMAT_Unnamed -> i
-             | ID_FORMAT_NamedString -> "\"" ^ i ^ "\""
+             | ID_FORMAT_Unnamed     -> fprintf ppf "%s" i
+             | ID_FORMAT_NamedString -> fprintf ppf "\"%s\"" i
 
-and typ : Ast.typ -> string = function
-  | TYPE_I i              -> "i" ^ string_of_int i
-  | TYPE_Pointer t        -> typ t ^ "*"
-  | TYPE_Void             -> "void"
-  | TYPE_Half             -> "half"
-  | TYPE_Float            -> "float"
-  | TYPE_Double           -> "double"
-  | TYPE_Label            -> "label"
+and typ : Format.formatter -> Ast.typ -> unit =
+  fun ppf ->
+  function
+  | TYPE_I i              -> fprintf ppf "i%d" i
+  | TYPE_Pointer t        -> fprintf ppf "%a*" typ t ;
+  | TYPE_Void             -> fprintf ppf "void"
+  | TYPE_Half             -> fprintf ppf "half"
+  | TYPE_Float            -> fprintf ppf "float"
+  | TYPE_Double           -> fprintf ppf "double"
+  | TYPE_Label            -> fprintf ppf "label"
   | TYPE_X86_fp80         -> assert false
   | TYPE_Fp128            -> assert false
   | TYPE_Ppc_fp128        -> assert false
-  | TYPE_Metadata         -> "metadata"
+  | TYPE_Metadata         -> fprintf ppf "metadata"
   | TYPE_X86_mmx          -> assert false
-  | TYPE_Array (i, t)     -> sprintf "[%d x %s]" i (typ t)
-  | TYPE_Function (t, tl) -> assert false (* (t, tl) : (typ * typ list) *)
-  | TYPE_Struct tl        -> "{ " ^ (list ", " typ tl) ^ " }"
-  | TYPE_Packed_struct tl ->  "<{ " ^ (list ", " typ tl) ^ " }>"
+  | TYPE_Array (i, t)     -> fprintf ppf "[%d x %a]" i typ t ;
+  | TYPE_Function (t, tl) -> assert false (* (t, tl) : Format.formatter -> (typ * typ list) *)
+  | TYPE_Struct tl        -> fprintf ppf "{%a}"
+                                     (pp_print_list ~pp_sep:pp_comma_space typ) tl
+  | TYPE_Packed_struct tl -> fprintf ppf "<{%a}>"
+                                     (pp_print_list ~pp_sep:pp_comma_space typ) tl
   | TYPE_Opaque           -> assert false
-  | TYPE_Vector (i, t)    -> sprintf "<%d x %s>" i (typ t)
+  | TYPE_Vector (i, t)    -> fprintf ppf "<%d x %a>" i typ t ;
 
-and icmp : Ast.icmp -> string = function
-  | Eq  -> "eq"
-  | Ne  -> "neq"
-  | Ugt -> "ugt"
-  | Uge -> "uge"
-  | Ult -> "ult"
-  | Ule -> "ule"
-  | Sgt -> "sgt"
-  | Sge -> "sge"
-  | Slt -> "slt"
-  | Sle -> "cmp"
 
-and fcmp : Ast.fcmp -> string = function
-  | False -> "false"
-  | Oeq -> "oeq"
-  | Ogt -> "ogt"
-  | Oge -> "oge"
-  | Olt -> "olt"
-  | Ole -> "ole"
-  | One -> "one"
-  | Ord -> "ord"
-  | Uno -> "uno"
-  | Ueq -> "ueq"
-  | Ugt -> "ugt"
-  | Uge -> "uge"
-  | Ult -> "ult"
-  | Ule -> "ule"
-  | Une -> "une"
-  | True -> "true"
+and icmp : Format.formatter -> Ast.icmp -> unit =
+  fun ppf icmp ->
+  fprintf ppf ( match icmp with
+                | Eq  -> "eq"
+                | Ne  -> "neq"
+                | Ugt -> "ugt"
+                | Uge -> "uge"
+                | Ult -> "ult"
+                | Ule -> "ule"
+                | Sgt -> "sgt"
+                | Sge -> "sge"
+                | Slt -> "slt"
+                | Sle -> "cmp")
 
-and nuw = function true -> " nuw" | false -> ""
+and fcmp : Format.formatter -> Ast.fcmp -> unit =
+  fun ppf fcmp ->
+  fprintf ppf ( match fcmp with
+                | False -> "false"
+                | Oeq   -> "oeq"
+                | Ogt   -> "ogt"
+                | Oge   -> "oge"
+                | Olt   -> "olt"
+                | Ole   -> "ole"
+                | One   -> "one"
+                | Ord   -> "ord"
+                | Uno   -> "uno"
+                | Ueq   -> "ueq"
+                | Ugt   -> "ugt"
+                | Uge   -> "uge"
+                | Ult   -> "ult"
+                | Ule   -> "ule"
+                | Une   -> "une"
+                | True  -> "true")
 
-and nsw = function true -> " nsw" | false -> ""
 
-and exact = function true -> " exact" | false -> ""
+and ibinop : Format.formatter -> Ast.ibinop -> unit =
+  fun ppf ->
+  let nuw ppf flag = if flag then fprintf ppf " nuw" in
+  let nsw ppf flag = if flag then fprintf ppf " nsw" in
+  let exact ppf flag = if flag then fprintf ppf " exact" in
+  function
+  | Add (nu, ns) -> fprintf ppf "add" ; nuw ppf nu ; nsw ppf ns
+  | Sub (nu, ns) -> fprintf ppf "sub" ; nuw ppf nu ; nsw ppf ns
+  | Mul (nu, ns) -> fprintf ppf "mul" ; nuw ppf nu ; nsw ppf ns
+  | UDiv e       -> fprintf ppf "udiv" ; exact ppf e
+  | SDiv e       -> fprintf ppf "sdiv" ; exact ppf e
+  | URem         -> fprintf ppf "urem"
+  | SRem         -> fprintf ppf "srem"
+  | Shl (nu, ns) -> fprintf ppf "shl" ; nuw ppf nu ; nsw ppf ns
+  | LShr e       -> fprintf ppf "lshr" ; exact ppf e
+  | AShr e       -> fprintf ppf "ashr" ; exact ppf e
+  | And          -> fprintf ppf "and"
+  | Or           -> fprintf ppf "or"
+  | Xor          -> fprintf ppf "xor"
 
-and ibinop : Ast.ibinop -> string = function
-  | Add (nu, ns) -> "add" ^ nuw nu ^ nsw ns
-  | Sub (nu, ns) -> "sub" ^ nuw nu ^ nsw ns
-  | Mul (nu, ns) -> "mul" ^ nuw nu ^ nsw ns
-  | UDiv e       -> "udiv" ^ exact e
-  | SDiv e       -> "sdiv" ^ exact e
-  | URem         -> "urem"
-  | SRem         -> "srem"
-  | Shl (nu, ns) -> "shl" ^ nuw nu ^ nsw ns
-  | LShr e       -> "lshr" ^ exact e
-  | AShr e       -> "ashr" ^ exact e
-  | And          -> "and"
-  | Or           -> "or"
-  | Xor          -> "xor"
+and fbinop =
+  fun ppf fbinop ->
+  fprintf ppf (match fbinop with
+                 | FAdd -> "fadd"
+                 | FSub -> "fsub"
+                 | FMul -> "fmul"
+                 | FDiv -> "fdiv"
+                 | FRem -> "frem")
 
-and fbinop = function
-  | FAdd -> "fadd"
-  | FSub -> "fsub"
-  | FMul -> "fmul"
-  | FDiv -> "fdiv"
-  | FRem -> "frem"
+and fast_math =
+  fun ppf fast_math ->
+  pp_print_string ppf (match fast_math with
+                       | Nnan -> "nnan"
+                       | Ninf -> "ninf"
+                       | Nsz  -> "nsz"
+                       | Arcp -> "arcp"
+                       | Fast -> "fast")
 
-and fast_math = function
-  | Nnan -> "nnan"
-  | Ninf -> "ninf"
-  | Nsz  -> "nsz"
-  | Arcp -> "arcp"
-  | Fast -> "fast"
+and conversion_type : Format.formatter -> Ast.conversion_type -> unit =
+  fun ppf conv ->
+  fprintf ppf (match conv with
+               | Trunc    -> "trunc"
+               | Zext     -> "zext"
+               | Sext     -> "sext"
+               | Fptrunc  -> "fptrunc"
+               | Fpext    -> "fpext"
+               | Uitofp   -> "uitofp"
+               | Sitofp   -> "sitofp"
+               | Fptoui   -> "fptoui"
+               | Fptosi   -> "fptosi"
+               | Inttoptr -> "inttoptr"
+               | Ptrtoint -> "ptrtoint"
+               | Bitcast  -> "bitcast")
 
-and conversion_type : Ast.conversion_type -> string = function
-  | Trunc    -> "trunc"
-  | Zext     -> "zext"
-  | Sext     -> "sext"
-  | Fptrunc  -> "fptrunc"
-  | Fpext    -> "fpext"
-  | Uitofp   -> "uitofp"
-  | Sitofp   -> "sitofp"
-  | Fptoui   -> "fptoui"
-  | Fptosi   -> "fptosi"
-  | Inttoptr -> "inttoptr"
-  | Ptrtoint -> "ptrtoint"
-  | Bitcast  -> "bitcast"
-
-and align = function
-  | None -> ""
-  | Some a -> ", align " ^ string_of_int a
-
-and section = function
-  | None -> ""
-  | Some s -> ", section " ^ s
-
-and volatile = function true -> "volatile " | false -> ""
-
-and instr : Ast.instr -> string = function
+and instr : Format.formatter -> Ast.instr -> unit =
+  fun ppf ->
+  function
 
   | INSTR_IBinop (op, t, v1, v2) ->
-     sprintf "%s %s %s, %s" (ibinop op) (typ t) (value v1) (value v2)
+     fprintf ppf "%a %a %a, %a"
+             ibinop op
+             typ t
+             value v1
+             value v2
 
   | INSTR_ICmp (c, t, v1, v2) ->
-     sprintf "icmp %s %s %s, %s" (icmp c) (typ t) (value v1) (value v2)
+     fprintf ppf "icmp %a %a %a, %a"
+             icmp c
+             typ t
+             value v1
+             value v2
 
   | INSTR_FBinop (op, f, t, v1, v2) ->
-     sprintf "%s %s %s %s, %s"
-             (fbinop op) (list " " fast_math f) (typ t) (value v1) (value v2)
+     fbinop ppf op ;
+     if f <> [] then (pp_space ppf () ;
+                      pp_print_list ~pp_sep:pp_space fast_math ppf f) ;
+     fprintf ppf " %a %a, %a"
+             typ t
+             value v1
+             value v2
 
   | INSTR_FCmp (c, t, v1, v2) ->
-     sprintf "fcmp %s %s %s, %s" (fcmp c) (typ t) (value v1) (value v2)
+     fprintf ppf "fcmp %a %a %a, %a"
+             fcmp c
+             typ t
+             value v1
+             value v2
 
   | INSTR_Conversion (c, t1, v, t2) ->
-     sprintf "%s %s %s to %s" (conversion_type c) (typ t1) (value v) (typ t2)
+     fprintf ppf "%a %a %a to %a"
+             conversion_type c
+             typ t1
+             value v
+             typ t2
 
   | INSTR_GetElementPtr (tv, tvl) ->
-     sprintf "getelementptr %s, %s" (tvalue tv) (list ", " tvalue tvl)
+     fprintf ppf "getelementptr %a, %a"
+             tvalue tv
+             (pp_print_list ~pp_sep:pp_comma_space tvalue) tvl
 
   | INSTR_Call (ti, tvl) ->
-     sprintf "call %s(%s)" (tident ti) (list ", " tvalue tvl)
+     fprintf ppf "call %a(%a)"
+             tident ti
+             (pp_print_list ~pp_sep:pp_comma_space tvalue) tvl
 
   | INSTR_Alloca (t, n, a) ->
-     "alloca " ^ (typ t)
-     ^ (match n with None -> "" | Some n -> ", " ^ tvalue n)
-     ^ align a
+     fprintf ppf "alloca %a" typ t ;
+     (match n with None -> ()
+                 | Some n -> fprintf ppf ", %a" tvalue n) ;
+     (match a with None -> ()
+                 | Some a -> fprintf ppf ", align %d" a)
 
-  | INSTR_Load (vol, tv,a) ->
-     "load " ^ volatile vol ^ tvalue tv ^ align a
+  | INSTR_Load (vol, tv, a) ->
+     pp_print_string ppf "load " ;
+     if vol then pp_print_string ppf "volatile " ;
+     tvalue ppf tv ;
+     (match a with None -> ()
+                 | Some a -> fprintf ppf ", align %d" a)
 
   | INSTR_Phi (t, vil) ->
-     sprintf "phi %s [%s]"
-             (typ t) (list "], [" (fun (v, i) -> value v ^ ", " ^ ident i) vil)
+     fprintf ppf "phi %a [%a]"
+             typ t
+             (pp_print_list ~pp_sep:(pp_sep "], [")
+                            (fun ppf (v, i) -> value ppf v ;
+                                               pp_print_string ppf ", " ;
+                                               ident ppf i)) vil
 
   | INSTR_Select (if_, then_, else_) ->
-     sprintf "select %s, %s, %s"
-             (tvalue if_) (tvalue then_) (tvalue else_)
+     fprintf ppf "select %a, %a, %a"
+             tvalue if_
+             tvalue then_
+             tvalue else_
 
-  | INSTR_VAArg -> "vaarg"
+  | INSTR_VAArg -> pp_print_string ppf "vaarg"
 
   | INSTR_ExtractElement (vec, idx) ->
-     sprintf "extractelement %s, %s" (tvalue vec) (tvalue idx)
+     fprintf ppf "extractelement %a, %a"
+             tvalue vec
+             tvalue idx
 
   | INSTR_InsertElement (vec, new_val, idx) ->
-     sprintf "insertelement %s, %s, %s"
-             (tvalue vec) (tvalue new_val) (tvalue idx)
+     fprintf ppf "insertelement %a, %a, %a"
+             tvalue vec
+             tvalue new_val
+             tvalue idx
 
   | INSTR_ExtractValue (agg, idx) ->
-     sprintf "extractvalue %s, %s"
-             (tvalue agg) (list ", " string_of_int idx)
+     fprintf ppf "extractvalue %a, %a"
+             tvalue agg
+             (pp_print_list ~pp_sep:pp_comma_space pp_print_int) idx
 
   | INSTR_InsertValue (agg, new_val, idx) ->
-     sprintf "insertvalue %s, %s, %s"
-             (tvalue agg) (tvalue new_val) (list ", " string_of_int idx)
+     fprintf ppf "insertvalue %a, %a, %a"
+             tvalue agg
+             tvalue new_val
+             (pp_print_list ~pp_sep:pp_comma_space pp_print_int) idx
 
   | INSTR_ShuffleVector (v1, v2, mask) ->
-     sprintf "shufflevector %s, %s, %s" (tvalue v1) (tvalue v2) (tvalue mask)
+     fprintf ppf "shufflevector %a, %a, %a"
+             tvalue v1
+             tvalue v2
+             tvalue mask
 
   | INSTR_LandingPad -> assert false
 
   | INSTR_Store (vol, v, ptr, a) ->
-     sprintf "store %s%s, %s%s" (volatile vol) (tvalue v) (tident ptr) (align a)
+     pp_print_string ppf "store " ;
+     if vol then pp_print_string ppf "volatile " ;
+     fprintf ppf "%a, %a" tvalue v tident ptr ;
+     (match a with None -> ()
+                 | Some a -> fprintf ppf ", align %d" a)
 
   | INSTR_AtomicCmpXchg
   | INSTR_AtomicRMW
   | INSTR_Fence -> assert false
 
-  | INSTR_Ret (t, v)       -> "ret " ^ tvalue (t, v)
+  | INSTR_Ret (t, v)       -> fprintf ppf "ret %a" tvalue (t, v)
 
-  | INSTR_Ret_void         -> "ret void"
+  | INSTR_Ret_void         -> pp_print_string ppf "ret void"
 
   | INSTR_Br (c, i1, i2)   ->
-     sprintf "br %s, %s, %s" (tvalue c) (tident i1) (tident i2)
+     fprintf ppf "br %a, %a, %a" tvalue c tident i1 tident i2
 
-  | INSTR_Br_1 (t, i)       -> "br " ^ typ t ^ " " ^ ident i
+  | INSTR_Br_1 (t, i)       -> fprintf ppf "br %a %a" typ t ident i
 
   | INSTR_Switch (c, def, cases) ->
-     sprintf "switch %s, %s [%s]"
-             (tvalue c) (tident def)
-             (list ", " (fun (v, i) -> tvalue v ^ ", " ^ tident i) cases)
+     fprintf ppf "switch %a, %a [%a]"
+             tvalue c
+             tident def
+             (pp_print_list ~pp_sep:pp_space
+                            (fun ppf (v, i) -> tvalue ppf v ;
+                                               pp_print_string ppf ", " ;
+                                               tident ppf i)) cases
 
-  | INSTR_Resume (t, v) -> "resume " ^ tvalue (t, v)
+  | INSTR_Resume (t, v) -> fprintf ppf "resume %a" tvalue (t, v)
 
-  | INSTR_Unreachable -> "unreachable"
+  | INSTR_Unreachable -> pp_print_string ppf "unreachable"
 
   | INSTR_IndirectBr     -> assert false
 
   | INSTR_Invoke (ti, tvl, i2, i3) ->
-     sprintf "invoke %s(%s) to %s unwind %s"
-             (tident ti) (list ", " tvalue tvl) (tident i2) (tident i3)
+     fprintf ppf "invoke %a(%a) to %a unwind %a"
+             tident ti
+             (pp_print_list ~pp_sep:pp_comma_space tvalue) tvl
+             tident i2
+             tident i3
 
-  | INSTR_Assign (id, inst) -> ident id ^ " = " ^ instr inst
+  | INSTR_Assign (id, inst) -> fprintf ppf "%a = %a" ident id instr inst
 
-and value : Ast.value -> string = function
-  | VALUE_Ident i           -> ident i
-  | VALUE_Integer i         -> (string_of_int i)
-  | VALUE_Float f           -> sprintf "%f" f
-  | VALUE_Bool b            -> (string_of_bool b)
-  | VALUE_Null              -> "null"
-  | VALUE_Undef             -> "undef"
-  | VALUE_Array tvl         -> "[ " ^ list ", " tvalue tvl ^ " ]"
-  | VALUE_Vector tvl        -> "< " ^ list ", " tvalue tvl ^ " >"
-  | VALUE_Struct tvl        -> "{ " ^ list ", " tvalue tvl ^ " }"
-  | VALUE_Packed_struct tvl -> "<{ " ^ list ", " tvalue tvl ^ " }>"
-  | VALUE_Zero_initializer  -> "zeroinitializer"
+and value : Format.formatter -> Ast.value -> unit =
+  fun ppf ->
+  function
+  | VALUE_Ident i           -> ident ppf i
+  | VALUE_Integer i         -> pp_print_int ppf i
+  | VALUE_Float f           -> pp_print_float ppf f
+  | VALUE_Bool b            -> pp_print_bool ppf b
+  | VALUE_Null              -> pp_print_string ppf "null"
+  | VALUE_Undef             -> pp_print_string ppf "undef"
+  | VALUE_Array tvl         -> fprintf ppf "[%a]"
+                                       (pp_print_list ~pp_sep:pp_comma_space tvalue) tvl
+  | VALUE_Vector tvl        -> fprintf ppf "<%a>"
+                                       (pp_print_list ~pp_sep:pp_comma_space tvalue) tvl
+  | VALUE_Struct tvl        -> fprintf ppf "{%a}"
+                                       (pp_print_list ~pp_sep:pp_comma_space tvalue) tvl
+  | VALUE_Packed_struct tvl -> fprintf ppf "<{%a}>"
+                                       (pp_print_list ~pp_sep:pp_comma_space tvalue) tvl
+  | VALUE_Zero_initializer  -> pp_print_string ppf "zeroinitializer"
 
-and tvalue  = fun (t, v) -> typ t ^ " " ^ value v
+and tvalue  = fun ppf (t, v) -> fprintf ppf "%a %a" typ t value v
 
-and tident  = fun (t, v) -> typ t ^ " " ^ ident v
+and tident  = fun ppf (t, v) -> fprintf ppf "%a %a" typ t ident v
 
-and toplevelentries : Ast.toplevelentries-> string =
-  fun m -> list "\n" toplevelentry m
+and toplevelentries : Format.formatter -> Ast.toplevelentries -> unit =
+  fun ppf entries ->
+  pp_print_list ~pp_sep:pp_force_newline toplevelentry ppf entries
 
-and toplevelentry : Ast.toplevelentry -> string = function
-  | TLE_Target s -> "target triple = " ^ quote s
-  | TLE_Datalayout s -> "target datalayout = " ^ quote s
-  | TLE_Declaration d -> declaration d
-  | TLE_Definition d -> definition d
-  | TLE_Type_decl (i, t) -> ident i ^ typ t
-  | TLE_Global g -> global g
-  | TLE_Metadata (i, m) -> sprintf "!%s = %s" i (metadata m)
-  | TLE_Attribute_group (i, a) ->
-    sprintf "#%d = { %s }" i (list " " fn_attr a)
+and toplevelentry : Format.formatter -> Ast.toplevelentry -> unit =
+  fun ppf ->
+  function
+  | TLE_Target s               -> fprintf ppf "target triple = \"%s\"" s
+  | TLE_Datalayout s           -> fprintf ppf "target datalayout = \"%s\"" s
+  | TLE_Declaration d          -> declaration ppf d
+  | TLE_Definition d           -> definition ppf d
+  | TLE_Type_decl (i, t)       -> fprintf ppf "%a %a" ident i typ t
+  | TLE_Global g               -> global ppf g
+  | TLE_Metadata (i, m)        -> fprintf ppf "!%s = %a" i metadata m
+  | TLE_Attribute_group (i, a) -> fprintf ppf "#%d = { %a }" i
+                                          (pp_print_list ~pp_sep:pp_space fn_attr) a
 
-and metadata : Ast.metadata -> string = function
-  | METADATA_Const v -> tvalue v
-  | METADATA_Null -> "null"
-  | METADATA_Id i -> "!" ^ i
-  | METADATA_String s -> "metadata !\"" ^ s ^ "\""
-  | METADATA_Node m -> "metadata !{" ^ list ", " metadata m ^ "}"
-  | METADATA_Named m -> "!{ " ^ list ", " (fun i -> "!" ^ i) m ^ " }"
+and metadata : Format.formatter -> Ast.metadata -> unit =
+  fun ppf ->
+  function
+  | METADATA_Const v  -> tvalue ppf v
+  | METADATA_Null     -> pp_print_string ppf "null"
+  | METADATA_Id i     -> fprintf ppf "!%s" i
+  | METADATA_String s -> fprintf ppf "metadata !\"%s\"" s
+  | METADATA_Node m   -> fprintf ppf "metadata !{%a}"
+                                 (pp_print_list ~pp_sep:pp_comma_space metadata) m
+  | METADATA_Named m  -> fprintf ppf "!{%a}"
+                                 (pp_print_list ~pp_sep:pp_comma_space
+                                                (fun ppf i ->
+                                                 fprintf ppf "!%s" i)) m
 
-and global : Ast.global -> string = fun {
+and global : Format.formatter -> Ast.global -> unit =
+  fun ppf ->
+  fun {
     g_ident = i;
     g_typ = t;
     g_constant = b;
     g_section = s;
     g_align = a;
     g_value = vo;
-  } -> sprintf "%s = %s %s %s%s%s"
-               (ident i) (if b then "constant" else "global") (typ t)
-               (match vo with None -> "" | Some v -> value v)
-               (section s)
-               (align a)
+  } -> fprintf ppf "%a = %s %a"
+               ident i (if b then "constant" else "global") typ t ;
+       (match vo with None -> () | Some v -> value ppf v) ;
+       (match s with None -> ()
+                   | Some s -> fprintf ppf ", section %s" s) ;
+       (match a with None -> ()
+                   | Some a -> fprintf ppf ", align %d" a)
 
-and declaration : Ast.declaration -> string = fun {
+and declaration : Format.formatter -> Ast.declaration -> unit =
+  fun ppf ->
+  fun {
     dc_name = i;
     dc_type = TYPE_Function (ret_t, args_t);
     dc_param_attrs = (ret_attrs, args_attrs)
-  } -> let typ_attr = fun (t, attrs) -> typ t ^ list " " param_attr attrs in
-       sprintf "declare %s %s %s(%s)"
-               (list " " param_attr ret_attrs)
-               (typ ret_t)
-               (ident i)
-               (list ", " typ_attr (List.combine args_t args_attrs))
+  } -> let typ_attr =
+         fun ppf (t, attrs) ->
+         typ ppf t ;
+         pp_print_list ~pp_sep:pp_space param_attr ppf attrs in
+       pp_print_string ppf "declare " ;
+       if ret_attrs <> [] then (pp_space ppf () ;
+                                pp_print_list ~pp_sep:pp_space
+                                              param_attr ppf ret_attrs) ;
+       fprintf ppf "%a %a(%a)"
+               typ ret_t
+               ident i
+               (pp_print_list ~pp_sep:pp_comma_space typ_attr)
+               (List.combine args_t args_attrs);
 
-and definition : Ast.definition -> string =
+and definition : Format.formatter -> Ast.definition -> unit =
+  fun ppf ->
   fun ({ df_prototype = { dc_name = i;
                           dc_type = TYPE_Function (ret_t, args_t);
                           dc_param_attrs = (ret_attrs, args_attrs) };
        } as df) ->
-  let typ_attr_id = fun ((t, attrs), id) ->
-    sprintf "%s %s %s" (typ t) (list " " param_attr attrs) (ident id) in
-  "define"
-  ^ optional df.df_linkage linkage
-  ^ optional df.df_visibility visibility
-  ^ optional df.df_dll_storage dll_storage
-  ^ optional df.df_cconv cconv
-  ^ sprintf "%s %s %s(%s) %s {\n%s\n}"
-            (list " " param_attr ret_attrs)
-            (typ ret_t)
-            (ident i)
-            (list ", " typ_attr_id
-                  (List.combine (List.combine args_t args_attrs) df.df_args))
-            begin
-              (list " " fn_attr df.df_attrs)
-              ^ optional df.df_section  (fun x -> " section \"" ^ x ^ "\"")
-              ^ optional df.df_align (fun x -> " align " ^ string_of_int x)
-              ^ optional df.df_gc (fun gc -> " gc \"" ^ gc ^ "\"")
-            end
-            (list "\n" block df.df_instrs)
+  let typ_attr_id =
+    fun ppf ((t, attrs), id) ->
+    typ ppf t ;
+    pp_space ppf () ;
+    if attrs <> [] then (pp_print_list ~pp_sep:pp_space
+                                       param_attr ppf attrs ;
+                         pp_space ppf ()) ;
+    ident ppf id in
+  pp_print_string ppf "define " ;
+  (match df.df_linkage with
+   | Some x -> linkage ppf x ; pp_space ppf ()
+   | _ -> ()) ;
+  (match df.df_visibility with
+   | Some x -> visibility ppf x ; pp_space ppf ()
+   | _ -> ()) ;
+  (match df.df_dll_storage with
+   | Some x -> dll_storage ppf x ; pp_space ppf ()
+   | _ -> ()) ;
+  (match df.df_cconv with
+   | Some x -> cconv ppf x ; pp_space ppf ()
+   | _ -> ()) ;
+  if ret_attrs <> [] then (pp_print_list ~pp_sep:pp_space
+                                         param_attr ppf ret_attrs ;
+                           pp_space ppf ()) ;
+  fprintf ppf "%a %a(%a) "
+            typ ret_t
+            ident i
+            (pp_print_list ~pp_sep:pp_comma_space typ_attr_id)
+            (List.combine (List.combine args_t args_attrs) df.df_args) ;
+            if df.df_attrs <> [] then (pp_print_list ~pp_sep:pp_space
+                                                     fn_attr ppf df.df_attrs ;
+                                       pp_space ppf ()) ;
+  (match df.df_section with
+     Some x -> fprintf ppf "section \"%s\" " x | _ -> ()) ;
+  (match df.df_align with
+     Some x -> fprintf ppf "align %d " x | _ -> ()) ;
+  (match df.df_gc with
+     Some x -> fprintf ppf "gc \"%s\" " x | _ -> ()) ;
+  pp_print_char ppf '{' ;
+  pp_force_newline ppf () ;
+  pp_print_list ~pp_sep:pp_force_newline block ppf df.df_instrs ;
+  pp_force_newline ppf () ;
+  pp_print_char ppf '}' ;
 
-and block : Ast.block -> string = fun (i, b) ->
-  (match i with "" -> ""
-              | i -> i ^ ":")
-  ^ "\n"
-  ^ (list "\n" instr b)
+and block : Format.formatter -> Ast.block -> unit =
+  fun ppf (i, b) ->
+  pp_print_string ppf i ;
+  pp_print_char ppf ':' ;
+  pp_open_box ppf 2 ;
+  pp_force_newline ppf () ;
+  pp_print_list ~pp_sep:pp_force_newline instr ppf b ;
+  pp_close_box ppf ()
 
-and modul : Ast.modul -> string = fun m ->
-  sprintf "; ModuleID = '%s'\n%s\n%s\n%s\n%s\n%s"
-          m.m_name
-          (toplevelentry m.m_target)
-          (toplevelentry m.m_datalayout)
-          (list "\n" global (List.map snd m.m_globals))
-          (list "\n" declaration (List.map snd m.m_declarations))
-          (list "\n" definition (List.map snd m.m_definitions))
+and modul : Format.formatter -> Ast.modul -> unit =
+  fun ppf m ->
+  fprintf ppf "; ModuleID = '%s'" m.m_name ;
+  pp_force_newline ppf () ;
+  toplevelentry ppf m.m_target ;
+  toplevelentry ppf m.m_datalayout ;
+  pp_print_list ~pp_sep:pp_force_newline global ppf
+                (List.map snd m.m_globals) ;
+  pp_force_newline ppf () ;
+  pp_print_list ~pp_sep:pp_force_newline declaration ppf
+                (List.map snd m.m_declarations) ;
+  pp_force_newline ppf () ;
+  pp_print_list ~pp_sep:pp_force_newline definition ppf
+                (List.map snd m.m_definitions) ;
+  pp_force_newline ppf ()
