@@ -406,13 +406,14 @@ let declaration : env -> Ollvm_ast.declaration -> env =
 
 let create_block : env -> Ollvm_ast.block -> Llvm.llvalue -> env =
   fun env b fn ->
+  if List.mem_assoc (fst b) env.labels then assert false ;
   let llb = Llvm.append_block env.c (fst b) fn in
   { env with labels = (fst b, llb) :: env.labels }
 
 and block : env -> Ollvm_ast.block -> env =
   fun env block ->
-  (* fetch the basicblock and set builder position at its end *)
-  Llvm.position_at_end (List.assoc (fst block) env.labels) env.b;
+  let bb = List.assoc (fst block) env.labels in
+  Llvm.position_at_end bb env.b;
   (* process instructions *)
   let env = List.fold_left (fun env i -> instr env i |> fst) env (snd block) in
   env
@@ -432,13 +433,17 @@ let definition : env -> Ollvm_ast.definition -> env =
     |> Array.fold_left (fun env (i, a) ->
                         Llvm.set_value_name (string_of_ident i) a;
                         { env with mem = (i, a) :: env.mem }) env in
-
-  let env =
     (* First create needed blocks.
-     * block function will use them when building instructions. *)
+     * block function will use them when building instructions.
+     * NB: Creating a function create the entry block as well. We only need
+     * to create following blocks. *)
+  let env =
+    let b = Llvm.entry_block fn in
+    { env with labels = (fst (List.hd df.df_instrs), b) :: env.labels } in
+  let env =
     List.fold_left
-      (fun env b -> create_block env b fn) env df.df_instrs in
-  List.fold_left (fun env bl -> block env bl) env df.df_instrs
+      (fun env b -> create_block env b fn) env (List.tl df.df_instrs) in
+  List.fold_left (fun env bl -> block env bl) env (df.df_instrs)
 
 let modul : Ollvm_ast.modul -> env =
   fun modul ->
