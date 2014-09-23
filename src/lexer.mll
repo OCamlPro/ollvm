@@ -310,3 +310,20 @@ and ident_body = parse
   | digit+ as i               { (Ast.ID_FORMAT_Unnamed, i) }
   | '"'                       { (Ast.ID_FORMAT_NamedString,
                                  string (Buffer.create 10) lexbuf) }
+
+{
+
+  let parse lexbuf =
+    let parsing_err lexbuf =
+      let pos = Lexing.lexeme_start_p lexbuf in
+      let msg =
+        Printf.sprintf "Parsing error: line %d, column %d, character '%s'"
+                       pos.Lexing.pos_lnum
+                       (pos.Lexing.pos_cnum - pos.Lexing.pos_bol)
+                       (Lexing.lexeme lexbuf)
+      in failwith msg
+    in
+    try toplevelentries token lexbuf
+    with Error -> parsing_err lexbuf
+
+}
