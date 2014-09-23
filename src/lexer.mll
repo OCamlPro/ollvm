@@ -310,7 +310,6 @@ and ident_body = parse
   | digit+ as i               { (Ast.ID_FORMAT_Unnamed, i) }
   | '"'                       { (Ast.ID_FORMAT_NamedString,
                                  string (Buffer.create 10) lexbuf) }
-
 {
 
   let parse lexbuf =
@@ -323,7 +322,7 @@ and ident_body = parse
                        (Lexing.lexeme lexbuf)
       in failwith msg
     in
-    try toplevelentries token lexbuf
-    with Error -> parsing_err lexbuf
+    try Parser.toplevelentries token lexbuf
+    with Parser.Error -> parsing_err lexbuf
 
 }

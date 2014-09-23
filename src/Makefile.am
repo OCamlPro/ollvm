@@ -19,7 +19,7 @@ LIBNAME=ollvm
 
 SOURCES = ast.ml parser.mly lexer.mll printer.ml ez.ml
 CMILIB = $(LIBNAME).cmi ast.cmi ez.cmi printer.cmi lexer.cmi
-CAMLFLAGS =-for-pack Ollvm
+CAMLFLAGS =
 
 if BUILD_LLVMGATEWAY
   SOURCES += llvmgateway.ml
@@ -40,11 +40,11 @@ DOCDIR=doc
 all: depend $(BYTELIB) $(NATIVELIB)
 
 $(BYTELIB): $(CMO)
-	$(CAMLC) -pack -o $(LIBNAME).cmo $^
+	$(CAMLC) -c -no-alias-deps $(LIBNAME).ml
 	$(CAMLC) -a -o $(LIBNAME).cma $(LIBNAME).cmo $^
 
 $(NATIVELIB): $(CMX)
-	$(CAMLOPT) -pack -o $(LIBNAME).cmx $^
+	$(CAMLOPT) -c -no-alias-deps -o $(LIBNAME).cmx $(LIBNAME).ml
 	$(CAMLOPT) -a -o $(LIBNAME).cmxa $(LIBNAME).cmx $^
 
 .POSIX:
