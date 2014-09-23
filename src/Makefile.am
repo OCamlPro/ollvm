@@ -17,13 +17,13 @@ CAMLYACC =$(MENHIR)
 
 LIBNAME=ollvm
 
-SOURCES = ast.ml parser.mly lexer.mll printer.ml ez.ml
-CMILIB = $(LIBNAME).cmi ast.cmi ez.cmi printer.cmi lexer.cmi
+SOURCES = ollvm_ast.ml ollvm_parser.mly ollvm_lexer.mll ollvm_printer.ml ollvm_ez.ml
+CMILIB = $(LIBNAME).cmi ollvm_ast.cmi ollvm_ez.cmi ollvm_printer.cmi ollvm_lexer.cmi
 CAMLFLAGS =
 
 if BUILD_LLVMGATEWAY
-  SOURCES += llvmgateway.ml
-  CMILIB += llvmgateway.cmi
+  SOURCES += ollvm_llvmgateway.ml
+  CMILIB += ollvm_llvmgateway.cmi
   CAMLFLAGS += -package llvm
 endif
 
@@ -102,8 +102,8 @@ depend: $(SOURCES2)
 
 include .depend
 
-doc: $(BYTELIB) ez.mli
-	mkdir -p $(DOCDIR) ; $(OCAMLDOC) -d $(DOCDIR) -I . -html ez.mli
+doc: $(BYTELIB)
+	mkdir -p $(DOCDIR) ; $(OCAMLDOC) -d $(DOCDIR) -I . -html *.mli
 
 install: $(BYTELIB) $(NATIVELIB) $(CMILIB)
 	$(OCAMLFIND) install $(LIBNAME) META $^

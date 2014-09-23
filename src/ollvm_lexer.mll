@@ -19,7 +19,7 @@
   * }}}                                                                      *)
 
 {
-  open Parser
+  open Ollvm_parser
 
   exception Lex_error_unterminated_string of Lexing.position
 
@@ -275,9 +275,9 @@ rule token = parse
   | "!{" { BANGLCURLY }
   | '!'  { let (format, id) = ident_body lexbuf in
            match format with
-           | Ast.ID_FORMAT_Named
-           | Ast.ID_FORMAT_Unnamed -> METADATA_ID id
-           | Ast.ID_FORMAT_NamedString -> METADATA_STRING (id)
+           | Ollvm_ast.ID_FORMAT_Named
+           | Ollvm_ast.ID_FORMAT_Unnamed -> METADATA_ID id
+           | Ollvm_ast.ID_FORMAT_NamedString -> METADATA_STRING (id)
          }
 
   | '#' (digit+ as i) { ATTR_GRP_ID (int_of_string i) }
@@ -306,9 +306,9 @@ and string buf = parse
   | _ as c { Buffer.add_char buf c; string buf lexbuf }
 
 and ident_body = parse
-  | ident_fst ident_nxt* as i { (Ast.ID_FORMAT_Named, i) }
-  | digit+ as i               { (Ast.ID_FORMAT_Unnamed, i) }
-  | '"'                       { (Ast.ID_FORMAT_NamedString,
+  | ident_fst ident_nxt* as i { (Ollvm_ast.ID_FORMAT_Named, i) }
+  | digit+ as i               { (Ollvm_ast.ID_FORMAT_Unnamed, i) }
+  | '"'                       { (Ollvm_ast.ID_FORMAT_NamedString,
                                  string (Buffer.create 10) lexbuf) }
 {
 
@@ -322,7 +322,7 @@ and ident_body = parse
                        (Lexing.lexeme lexbuf)
       in failwith msg
     in
-    try Parser.toplevelentries token lexbuf
-    with Parser.Error -> parsing_err lexbuf
+    try Ollvm_parser.toplevelentries token lexbuf
+    with Ollvm_parser.Error -> parsing_err lexbuf
 
 }

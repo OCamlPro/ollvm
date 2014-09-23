@@ -1,8 +1,8 @@
 module Type = struct
 
-  open Ast
+  open Ollvm_ast
 
-  type t = Ast.typ
+  type t = Ollvm_ast.typ
 
   let i1 = TYPE_I 1
   let i32 = TYPE_I 32
@@ -20,149 +20,149 @@ end
 
 module Value = struct
 
-  type t = Type.t * Ast.value
+  type t = Type.t * Ollvm_ast.value
 
-  let i1 n = (Type.i1, Ast.VALUE_Integer n)
+  let i1 n = (Type.i1, Ollvm_ast.VALUE_Integer n)
 
-  let i32 n = (Type.i32, Ast.VALUE_Integer n)
+  let i32 n = (Type.i32, Ollvm_ast.VALUE_Integer n)
 
-  let half f = (Type.half, Ast.VALUE_Float f)
+  let half f = (Type.half, Ollvm_ast.VALUE_Float f)
 
-  let float f = (Type.float, Ast.VALUE_Float f)
+  let float f = (Type.float, Ollvm_ast.VALUE_Float f)
 
-  let double f = (Type.double, Ast.VALUE_Float f)
+  let double f = (Type.double, Ollvm_ast.VALUE_Float f)
 
   let vector l =
-    (Type.vector (List.length l) (fst (List.hd l)), Ast.VALUE_Vector l)
+    (Type.vector (List.length l) (fst (List.hd l)), Ollvm_ast.VALUE_Vector l)
 
   let array l =
-    (Type.array (List.length l) (fst (List.hd l)), Ast.VALUE_Array l)
+    (Type.array (List.length l) (fst (List.hd l)), Ollvm_ast.VALUE_Array l)
 
   let structure l =
     (Type.structure (List.map fst l),
-     Ast.VALUE_Struct l)
+     Ollvm_ast.VALUE_Struct l)
 
-  let ident (t, Ast.VALUE_Ident id) = (t, id)
+  let ident (t, Ollvm_ast.VALUE_Ident id) = (t, id)
 
 end
 
 module Instr = struct
 
-  type t = Type.t * Ast.instr
+  type t = Type.t * Ollvm_ast.instr
 
   let ident = Value.ident
 
   let call ((t, _) as fn) args =
-    (t, Ast.INSTR_Call (ident fn, args))
+    (t, Ollvm_ast.INSTR_Call (ident fn, args))
 
   let phi value_label =
     let t = List.hd value_label |> fst |> fst in
     let value_label =
       List.map (fun (v, i) -> (snd v, snd (ident i))) value_label in
-    (t, Ast.INSTR_Phi (t, value_label))
+    (t, Ollvm_ast.INSTR_Phi (t, value_label))
 
   let select tcond (t, v1) tv2 =
-    (t, Ast.INSTR_Select (tcond, (t, v1), tv2))
+    (t, Ollvm_ast.INSTR_Select (tcond, (t, v1), tv2))
 
   let alloca ?(nb=None) ?(align=None) t =
-    (Type.pointer t, Ast.INSTR_Alloca (t, nb, align))
+    (Type.pointer t, Ollvm_ast.INSTR_Alloca (t, nb, align))
 
   let load ?(volatile=false) ?(align=None) (ptr_t, value) =
-    let Ast.TYPE_Pointer t = ptr_t in
-    (t, Ast.INSTR_Load (volatile, (ptr_t, value), align))
+    let Ollvm_ast.TYPE_Pointer t = ptr_t in
+    (t, Ollvm_ast.INSTR_Load (volatile, (ptr_t, value), align))
 
   let store ?(volatile=false)? (align=None) value pointer =
-    (Type.void, Ast.INSTR_Store (volatile, value, ident pointer, align))
+    (Type.void, Ollvm_ast.INSTR_Store (volatile, value, ident pointer, align))
 
   let icmp cmp (t, op1) (_, op2) =
-    (Type.i1, Ast.INSTR_ICmp (cmp, t, op1, op2))
+    (Type.i1, Ollvm_ast.INSTR_ICmp (cmp, t, op1, op2))
 
-  let eq = icmp Ast.Eq let ne = icmp Ast.Ne
-  let ugt = icmp Ast.Ugt let uge = icmp Ast.Uge
-  let ult = icmp Ast.Ult let ule = icmp Ast.Ule
-  let sgt = icmp Ast.Sgt let sge = icmp Ast.Sge
-  let slt = icmp Ast.Slt let sle = icmp Ast.Sle
+  let eq = icmp Ollvm_ast.Eq let ne = icmp Ollvm_ast.Ne
+  let ugt = icmp Ollvm_ast.Ugt let uge = icmp Ollvm_ast.Uge
+  let ult = icmp Ollvm_ast.Ult let ule = icmp Ollvm_ast.Ule
+  let sgt = icmp Ollvm_ast.Sgt let sge = icmp Ollvm_ast.Sge
+  let slt = icmp Ollvm_ast.Slt let sle = icmp Ollvm_ast.Sle
 
   let fcmp cmp (t, op1) (_, op2) =
-    (Type.i1, Ast.INSTR_FCmp (cmp, t, op1, op2))
+    (Type.i1, Ollvm_ast.INSTR_FCmp (cmp, t, op1, op2))
 
-  let ffalse = fcmp Ast.False let foeq = fcmp Ast.Oeq
-  let fogt = fcmp Ast.Ogt let foge = fcmp Ast.Oge
-  let folt = fcmp Ast.Olt let fole = fcmp Ast.Ole
-  let fone = fcmp Ast.One let ord = fcmp Ast.Ord
-  let fueq = fcmp Ast.Ueq let fugt = fcmp Ast.Ugt
-  let fuge = fcmp Ast.Uge let fult = fcmp Ast.Ult
-  let fule = fcmp Ast.Ule let fune = fcmp Ast.Une
-  let funo = fcmp Ast.Uno let ftrue = fcmp Ast.True
+  let ffalse = fcmp Ollvm_ast.False let foeq = fcmp Ollvm_ast.Oeq
+  let fogt = fcmp Ollvm_ast.Ogt let foge = fcmp Ollvm_ast.Oge
+  let folt = fcmp Ollvm_ast.Olt let fole = fcmp Ollvm_ast.Ole
+  let fone = fcmp Ollvm_ast.One let ord = fcmp Ollvm_ast.Ord
+  let fueq = fcmp Ollvm_ast.Ueq let fugt = fcmp Ollvm_ast.Ugt
+  let fuge = fcmp Ollvm_ast.Uge let fult = fcmp Ollvm_ast.Ult
+  let fule = fcmp Ollvm_ast.Ule let fune = fcmp Ollvm_ast.Une
+  let funo = fcmp Ollvm_ast.Uno let ftrue = fcmp Ollvm_ast.True
 
   let ibinop b (t, op1) (_, op2) =
-    (t, Ast.INSTR_IBinop (b, t, op1, op2))
+    (t, Ollvm_ast.INSTR_IBinop (b, t, op1, op2))
 
-  let add ?(nsw=false) ?(nuw=false) = ibinop (Ast.Add (nsw, nuw))
-  let sub ?(nsw=false) ?(nuw=false) = ibinop (Ast.Sub (nsw, nuw))
-  let mul ?(nsw=false) ?(nuw=false) = ibinop (Ast.Mul (nsw, nuw))
-  let udiv ?(exact=false) = ibinop (Ast.UDiv exact)
-  let sdiv ?(exact=false) = ibinop (Ast.SDiv exact)
-  let urem = ibinop Ast.URem
-  let srem = ibinop Ast.SRem
-  let shl ?(nsw=false) ?(nuw=false) = ibinop (Ast.Shl (nsw, nuw))
-  let lshr ?(exact=false) = ibinop (Ast.LShr exact)
-  let ashr ?(exact=false) = ibinop (Ast.AShr exact)
-  let and_ = ibinop Ast.And
-  let or_ = ibinop Ast.Or
-  let xor = ibinop Ast.Xor
+  let add ?(nsw=false) ?(nuw=false) = ibinop (Ollvm_ast.Add (nsw, nuw))
+  let sub ?(nsw=false) ?(nuw=false) = ibinop (Ollvm_ast.Sub (nsw, nuw))
+  let mul ?(nsw=false) ?(nuw=false) = ibinop (Ollvm_ast.Mul (nsw, nuw))
+  let udiv ?(exact=false) = ibinop (Ollvm_ast.UDiv exact)
+  let sdiv ?(exact=false) = ibinop (Ollvm_ast.SDiv exact)
+  let urem = ibinop Ollvm_ast.URem
+  let srem = ibinop Ollvm_ast.SRem
+  let shl ?(nsw=false) ?(nuw=false) = ibinop (Ollvm_ast.Shl (nsw, nuw))
+  let lshr ?(exact=false) = ibinop (Ollvm_ast.LShr exact)
+  let ashr ?(exact=false) = ibinop (Ollvm_ast.AShr exact)
+  let and_ = ibinop Ollvm_ast.And
+  let or_ = ibinop Ollvm_ast.Or
+  let xor = ibinop Ollvm_ast.Xor
 
   let fbinop b ?(flags=[])  (t, op1) (_, op2) =
-    (t, Ast.INSTR_FBinop (b, flags, t, op1, op2))
+    (t, Ollvm_ast.INSTR_FBinop (b, flags, t, op1, op2))
 
-  let fadd = fbinop Ast.FAdd
-  let fsub = fbinop Ast.FSub
-  let fmul = fbinop Ast.FMul
-  let fdiv = fbinop Ast.FDiv
-  let frem = fbinop Ast.FRem
+  let fadd = fbinop Ollvm_ast.FAdd
+  let fsub = fbinop Ollvm_ast.FSub
+  let fmul = fbinop Ollvm_ast.FMul
+  let fdiv = fbinop Ollvm_ast.FDiv
+  let frem = fbinop Ollvm_ast.FRem
 
   let extractelement vec idx =
-    let (Ast.TYPE_Vector (n, t), _) = vec in
-    (t, Ast.INSTR_ExtractElement (vec, idx))
+    let (Ollvm_ast.TYPE_Vector (n, t), _) = vec in
+    (t, Ollvm_ast.INSTR_ExtractElement (vec, idx))
 
   let insertelement vec el idx =
-    (fst vec, Ast.INSTR_InsertElement (vec, el, idx))
+    (fst vec, Ollvm_ast.INSTR_InsertElement (vec, el, idx))
 
   let shufflevector v1 v2 vmask =
     let (vec_t, _) = v1 in
-    (vec_t, Ast.INSTR_ShuffleVector (v1, v2, vmask))
+    (vec_t, Ollvm_ast.INSTR_ShuffleVector (v1, v2, vmask))
 
-  let convert op (t, v) t' = (t', Ast.INSTR_Conversion(op, t, v, t'))
+  let convert op (t, v) t' = (t', Ollvm_ast.INSTR_Conversion(op, t, v, t'))
 
-  let trunc = convert Ast.Trunc let zext = convert Ast.Zext
-  let sext = convert Ast.Sext let fptrunc = convert Ast.Fptrunc
-  let fpext = convert Ast.Fpext let fptoui = convert Ast.Fptoui
-  let fptosi = convert Ast.Fptosi let uitofp = convert Ast.Uitofp
-  let sitofp = convert Ast.Sitofp
+  let trunc = convert Ollvm_ast.Trunc let zext = convert Ollvm_ast.Zext
+  let sext = convert Ollvm_ast.Sext let fptrunc = convert Ollvm_ast.Fptrunc
+  let fpext = convert Ollvm_ast.Fpext let fptoui = convert Ollvm_ast.Fptoui
+  let fptosi = convert Ollvm_ast.Fptosi let uitofp = convert Ollvm_ast.Uitofp
+  let sitofp = convert Ollvm_ast.Sitofp
 
   let extractvalue agg idx =
-    (fst agg, Ast.INSTR_ExtractValue (agg, idx))
+    (fst agg, Ollvm_ast.INSTR_ExtractValue (agg, idx))
 
   let insertvalue agg el idx =
-    (fst agg, Ast.INSTR_InsertValue (agg, el, idx))
+    (fst agg, Ollvm_ast.INSTR_InsertValue (agg, el, idx))
 
-  let br cond (t, Ast.VALUE_Ident then_) (t', Ast.VALUE_Ident else_) =
-    Ast.INSTR_Br (cond, (t, then_), (t', else_))
+  let br cond (t, Ollvm_ast.VALUE_Ident then_) (t', Ollvm_ast.VALUE_Ident else_) =
+    Ollvm_ast.INSTR_Br (cond, (t, then_), (t', else_))
 
-  let br1 (t, Ast.VALUE_Ident branch) =
-    Ast.INSTR_Br_1 (t, branch)
+  let br1 (t, Ollvm_ast.VALUE_Ident branch) =
+    Ollvm_ast.INSTR_Br_1 (t, branch)
 
   let switch sw default cases =
     let cases = List.map (fun (v, i) -> (v, ident i)) cases in
-    Ast.INSTR_Switch (sw, ident default, cases)
+    Ollvm_ast.INSTR_Switch (sw, ident default, cases)
 
-  let ret x = Ast.INSTR_Ret x
+  let ret x = Ollvm_ast.INSTR_Ret x
 
-  let ret_void = Ast.INSTR_Ret_void
+  let ret_void = Ollvm_ast.INSTR_Ret_void
 
   let assign id (_, expr) =
     let (_, id) = ident id in
-    Ast.INSTR_Assign (id, expr)
+    Ollvm_ast.INSTR_Assign (id, expr)
 
   let ( <-- ) tid texpr = assign tid texpr
 
@@ -172,20 +172,20 @@ end
 
 module Block = struct
 
-  type block = Ast.ident * (Ast.instr list)
+  type block = Ollvm_ast.ident * (Ollvm_ast.instr list)
 
   let declare fn args_typ =
     let (t, id) = Value.ident fn in
-    let open Ast in
+    let open Ollvm_ast in
     { dc_type = TYPE_Function (t, args_typ);
       dc_name = id;
       dc_param_attrs = ([], [[]]) }
 
   let define fn args (instrs : block list) =
     let args = List.map Value.ident args in
-    let open Ast in
+    let open Ollvm_ast in
     let extract_name = function
-      | Ast.ID_Local (Ast.ID_FORMAT_Named, s) -> s
+      | Ollvm_ast.ID_Local (Ollvm_ast.ID_FORMAT_Named, s) -> s
       | _ -> assert false in
 
     let blocks = List.map (fun (id, instrs) -> (extract_name id, instrs)) instrs
@@ -227,33 +227,33 @@ module Module = struct
         | "" ->
            let i = env.unnamed_counter in
            ({ env with unnamed_counter = i + 1 ; },
-            (Ast.ID_FORMAT_Named, string_of_int i))
+            (Ollvm_ast.ID_FORMAT_Named, string_of_int i))
         | name -> try
                   let i = List.assoc name env.named_counter in
                   ({ env with
                      named_counter = (name, i + 1) :: env.named_counter },
-                   (Ast.ID_FORMAT_Unnamed, name ^ string_of_int i))
+                   (Ollvm_ast.ID_FORMAT_Unnamed, name ^ string_of_int i))
                   with Not_found ->
                     ({ env with
                        named_counter = (name, 0) :: env.named_counter },
-                     (Ast.ID_FORMAT_Named, name))
+                     (Ollvm_ast.ID_FORMAT_Named, name))
       in
-      (env, (t, Ast.VALUE_Ident (Ast.ID_Local (format, name))))
+      (env, (t, Ollvm_ast.VALUE_Ident (Ollvm_ast.ID_Local (format, name))))
 
   end
 
   (** NOTE: declaration and definitions are kept in reverse order. **)
 
   type t = {
-    m_module: Ast.modul;
+    m_module: Ollvm_ast.modul;
     m_env: Local.t;
   }
 
   let init name (arch, vendor, os) data_layout =
     { m_module = {
         m_name = name ;
-        m_target = Ast.TLE_Target (arch ^ "-" ^ vendor ^ "-" ^ os) ;
-        m_datalayout = Ast.TLE_Datalayout data_layout ;
+        m_target = Ollvm_ast.TLE_Target (arch ^ "-" ^ vendor ^ "-" ^ os) ;
+        m_datalayout = Ollvm_ast.TLE_Datalayout data_layout ;
         m_globals = [] ;
         m_declarations = [] ;
         m_definitions = [] ;
@@ -264,12 +264,12 @@ module Module = struct
   let set_data_layout m layout =
     { m with
       m_module = { m.m_module with
-                   m_datalayout = Ast.TLE_Datalayout layout} }
+                   m_datalayout = Ollvm_ast.TLE_Datalayout layout} }
 
   let set_target_triple m arch vendor os =
     { m with
       m_module = { m.m_module with
-                   m_target = Ast.TLE_Target (arch^"-"^vendor^"-"^os) } }
+                   m_target = Ollvm_ast.TLE_Target (arch^"-"^vendor^"-"^os) } }
 
   let local m t name =
     let (env, var) = Local.local m.m_env t name in
@@ -283,8 +283,8 @@ module Module = struct
     in locals m t n []
 
   let global m t name =
-    let ident = Ast.ID_Global (Ast.ID_FORMAT_Named, name) in
-    let var = (t, Ast.VALUE_Ident ident) in
+    let ident = Ollvm_ast.ID_Global (Ollvm_ast.ID_FORMAT_Named, name) in
+    let var = (t, Ollvm_ast.VALUE_Ident ident) in
     (m, var)
 
   let lookup_declaration m name =
@@ -294,14 +294,14 @@ module Module = struct
     List.assoc name m.m_module.m_definitions
 
   let declaration m dc =
-    let Ast.ID_Global (_, name) = dc.Ast.dc_name in
+    let Ollvm_ast.ID_Global (_, name) = dc.Ollvm_ast.dc_name in
     { m with m_module = { m.m_module with
                           m_declarations = (name, dc)
                                            :: m.m_module.m_declarations } }
 
   let definition m df =
-    let { Ast.df_prototype = dc; _; } = df in
-    let Ast.ID_Global (_, name) = dc.dc_name in
+    let { Ollvm_ast.df_prototype = dc; _; } = df in
+    let Ollvm_ast.ID_Global (_, name) = dc.dc_name in
     { m with m_module = { m.m_module with
                           m_declarations = (name, dc)
                                            :: m.m_module.m_declarations ;

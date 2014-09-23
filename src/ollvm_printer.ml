@@ -1,5 +1,5 @@
 open Format
-open Ast
+open Ollvm_ast
 
 let pp_sep str =
   fun ppf () -> pp_print_string ppf str
@@ -8,7 +8,7 @@ let pp_space ppf () = pp_print_char ppf ' '
 
 let pp_comma_space ppf () = pp_print_string ppf ", "
 
-let rec linkage : Format.formatter -> Ast.linkage -> unit =
+let rec linkage : Format.formatter -> Ollvm_ast.linkage -> unit =
   fun ppf ->
   function
   | LINKAGE_Private              -> fprintf ppf "private"
@@ -23,27 +23,27 @@ let rec linkage : Format.formatter -> Ast.linkage -> unit =
   | LINKAGE_Weak_odr             -> fprintf ppf "weak_odr"
   | LINKAGE_External             -> fprintf ppf "external"
 
- and dll_storage : Format.formatter -> Ast.dll_storage -> unit =
+ and dll_storage : Format.formatter -> Ollvm_ast.dll_storage -> unit =
    fun ppf ->
    function
    | DLLSTORAGE_Dllimport -> fprintf ppf "dllimport"
    | DLLSTORAGE_Dllexport -> fprintf ppf "dllexport"
 
-and visibility : Format.formatter -> Ast.visibility -> unit =
+and visibility : Format.formatter -> Ollvm_ast.visibility -> unit =
   fun ppf ->
   function
   | VISIBILITY_Default   -> fprintf ppf "default"
   | VISIBILITY_Hidden    -> fprintf ppf "hidden"
   | VISIBILITY_Protected -> fprintf ppf "protected"
 
-and cconv : Format.formatter -> Ast.cconv -> unit =
+and cconv : Format.formatter -> Ollvm_ast.cconv -> unit =
   fun ppf -> function
           | CC_Ccc    -> fprintf ppf "ccc"
           | CC_Fastcc -> fprintf ppf "fastcc"
           | CC_Coldcc -> fprintf ppf "coldcc"
           | CC_Cc i   -> fprintf ppf "cc %d" i
 
-and param_attr : Format.formatter -> Ast.param_attr -> unit =
+and param_attr : Format.formatter -> Ollvm_ast.param_attr -> unit =
   fun ppf ->
   function
   | PARAMATTR_Zeroext           -> fprintf ppf "zeroext"
@@ -60,7 +60,7 @@ and param_attr : Format.formatter -> Ast.param_attr -> unit =
   | PARAMATTR_Nonnull           -> fprintf ppf "nonnull"
   | PARAMATTR_Dereferenceable n -> fprintf ppf "dereferenceable(%d)" n
 
-and fn_attr : Format.formatter -> Ast.fn_attr -> unit =
+and fn_attr : Format.formatter -> Ollvm_ast.fn_attr -> unit =
   fun ppf ->
   function
   | FNATTR_Alignstack i     -> fprintf ppf "alignstack(%d)" i
@@ -95,20 +95,20 @@ and fn_attr : Format.formatter -> Ast.fn_attr -> unit =
   | FNATTR_Key_value (k, v) -> fprintf ppf "\"%s\"=\"%s\"" k v
   | FNATTR_Attr_grp i       -> fprintf ppf "#%d" i
 
-and ident : Format.formatter -> Ast.ident -> unit =
+and ident : Format.formatter -> Ollvm_ast.ident -> unit =
   fun ppf ->
   function
   | ID_Global (f, i) -> pp_print_char ppf '@' ; ident_format ppf f i
   | ID_Local (f, i)  -> pp_print_char ppf '%' ; ident_format ppf f i
 
 (** FIXME: see #4 *)
-and ident_format : Format.formatter -> Ast.ident_format -> string -> unit =
+and ident_format : Format.formatter -> Ollvm_ast.ident_format -> string -> unit =
   fun ppf f i -> match f with
              | ID_FORMAT_Named
              | ID_FORMAT_Unnamed     -> fprintf ppf "%s" i
              | ID_FORMAT_NamedString -> fprintf ppf "\"%s\"" i
 
-and typ : Format.formatter -> Ast.typ -> unit =
+and typ : Format.formatter -> Ollvm_ast.typ -> unit =
   fun ppf ->
   function
   | TYPE_I i              -> fprintf ppf "i%d" i
@@ -133,7 +133,7 @@ and typ : Format.formatter -> Ast.typ -> unit =
   | TYPE_Vector (i, t)    -> fprintf ppf "<%d x %a>" i typ t ;
 
 
-and icmp : Format.formatter -> Ast.icmp -> unit =
+and icmp : Format.formatter -> Ollvm_ast.icmp -> unit =
   fun ppf icmp ->
   fprintf ppf ( match icmp with
                 | Eq  -> "eq"
@@ -147,7 +147,7 @@ and icmp : Format.formatter -> Ast.icmp -> unit =
                 | Slt -> "slt"
                 | Sle -> "cmp")
 
-and fcmp : Format.formatter -> Ast.fcmp -> unit =
+and fcmp : Format.formatter -> Ollvm_ast.fcmp -> unit =
   fun ppf fcmp ->
   fprintf ppf ( match fcmp with
                 | False -> "false"
@@ -168,7 +168,7 @@ and fcmp : Format.formatter -> Ast.fcmp -> unit =
                 | True  -> "true")
 
 
-and ibinop : Format.formatter -> Ast.ibinop -> unit =
+and ibinop : Format.formatter -> Ollvm_ast.ibinop -> unit =
   fun ppf ->
   let nuw ppf flag = if flag then fprintf ppf " nuw" in
   let nsw ppf flag = if flag then fprintf ppf " nsw" in
@@ -206,7 +206,7 @@ and fast_math =
                        | Arcp -> "arcp"
                        | Fast -> "fast")
 
-and conversion_type : Format.formatter -> Ast.conversion_type -> unit =
+and conversion_type : Format.formatter -> Ollvm_ast.conversion_type -> unit =
   fun ppf conv ->
   fprintf ppf (match conv with
                | Trunc    -> "trunc"
@@ -222,7 +222,7 @@ and conversion_type : Format.formatter -> Ast.conversion_type -> unit =
                | Ptrtoint -> "ptrtoint"
                | Bitcast  -> "bitcast")
 
-and instr : Format.formatter -> Ast.instr -> unit =
+and instr : Format.formatter -> Ollvm_ast.instr -> unit =
   fun ppf ->
   function
 
@@ -377,7 +377,7 @@ and instr : Format.formatter -> Ast.instr -> unit =
 
   | INSTR_Assign (id, inst) -> fprintf ppf "%a = %a" ident id instr inst
 
-and value : Format.formatter -> Ast.value -> unit =
+and value : Format.formatter -> Ollvm_ast.value -> unit =
   fun ppf ->
   function
   | VALUE_Ident i           -> ident ppf i
@@ -400,11 +400,11 @@ and tvalue  = fun ppf (t, v) -> fprintf ppf "%a %a" typ t value v
 
 and tident  = fun ppf (t, v) -> fprintf ppf "%a %a" typ t ident v
 
-and toplevelentries : Format.formatter -> Ast.toplevelentries -> unit =
+and toplevelentries : Format.formatter -> Ollvm_ast.toplevelentries -> unit =
   fun ppf entries ->
   pp_print_list ~pp_sep:pp_force_newline toplevelentry ppf entries
 
-and toplevelentry : Format.formatter -> Ast.toplevelentry -> unit =
+and toplevelentry : Format.formatter -> Ollvm_ast.toplevelentry -> unit =
   fun ppf ->
   function
   | TLE_Target s               -> fprintf ppf "target triple = \"%s\"" s
@@ -417,7 +417,7 @@ and toplevelentry : Format.formatter -> Ast.toplevelentry -> unit =
   | TLE_Attribute_group (i, a) -> fprintf ppf "#%d = { %a }" i
                                           (pp_print_list ~pp_sep:pp_space fn_attr) a
 
-and metadata : Format.formatter -> Ast.metadata -> unit =
+and metadata : Format.formatter -> Ollvm_ast.metadata -> unit =
   fun ppf ->
   function
   | METADATA_Const v  -> tvalue ppf v
@@ -431,7 +431,7 @@ and metadata : Format.formatter -> Ast.metadata -> unit =
                                                 (fun ppf i ->
                                                  fprintf ppf "!%s" i)) m
 
-and global : Format.formatter -> Ast.global -> unit =
+and global : Format.formatter -> Ollvm_ast.global -> unit =
   fun ppf ->
   fun {
     g_ident = i;
@@ -448,7 +448,7 @@ and global : Format.formatter -> Ast.global -> unit =
        (match a with None -> ()
                    | Some a -> fprintf ppf ", align %d" a)
 
-and declaration : Format.formatter -> Ast.declaration -> unit =
+and declaration : Format.formatter -> Ollvm_ast.declaration -> unit =
   fun ppf ->
   fun {
     dc_name = i;
@@ -468,7 +468,7 @@ and declaration : Format.formatter -> Ast.declaration -> unit =
                (pp_print_list ~pp_sep:pp_comma_space typ_attr)
                (List.combine args_t args_attrs);
 
-and definition : Format.formatter -> Ast.definition -> unit =
+and definition : Format.formatter -> Ollvm_ast.definition -> unit =
   fun ppf ->
   fun ({ df_prototype = { dc_name = i;
                           dc_type = TYPE_Function (ret_t, args_t);
@@ -518,7 +518,7 @@ and definition : Format.formatter -> Ast.definition -> unit =
   pp_force_newline ppf () ;
   pp_print_char ppf '}' ;
 
-and block : Format.formatter -> Ast.block -> unit =
+and block : Format.formatter -> Ollvm_ast.block -> unit =
   fun ppf (i, b) ->
   pp_print_string ppf i ;
   pp_print_char ppf ':' ;
@@ -527,7 +527,7 @@ and block : Format.formatter -> Ast.block -> unit =
   pp_print_list ~pp_sep:pp_force_newline instr ppf b ;
   pp_close_box ppf ()
 
-and modul : Format.formatter -> Ast.modul -> unit =
+and modul : Format.formatter -> Ollvm_ast.modul -> unit =
   fun ppf m ->
   fprintf ppf "; ModuleID = '%s'" m.m_name ;
   pp_force_newline ppf () ;
