@@ -60,6 +60,7 @@ let _ =
   in the official GIT repository.
 - [[http://llvm.org/ << Official LLVM website]]: more details on LLVM and
   its itermediate representation specification.
+- [[http://sagotch.github.io/ollvm << Online documentation]]
 
 === Install ===
 
