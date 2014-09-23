@@ -1,18 +1,6 @@
 open Format
 open Ast
 
-(*
-let rec list : string -> (Format.formatter -> 'a -> unit) -> Format.formatter ->
-               'a list -> unit =
-  fun sep printer ppf l ->
-  match l with
-  | []     -> ()
-  | [ e ]  -> printer ppf e
-  | h :: q -> printer ppf h ;
-              pp_print_string ppf sep ;
-              list sep printer ppf q
- *)
-
 let pp_sep str =
   fun ppf () -> pp_print_string ppf str
 
