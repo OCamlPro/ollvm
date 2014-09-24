@@ -398,11 +398,13 @@ let global : env -> Ollvm_ast.global -> env =
   let llv = Llvm.define_global name llv env.m in
   {env with mem = (g.g_ident, llv) :: env.mem }
 
-let declaration : env -> Ollvm_ast.declaration -> env =
+let declaration : env -> Ollvm_ast.declaration -> env * Llvm.llvalue =
   fun env dc ->
-  let ft = typ env dc.dc_type in
-  Llvm.declare_function (string_of_ident dc.dc_name) ft env.m ;
-  env
+  let name = (string_of_ident dc.dc_name) in
+  let fn =  match Llvm.lookup_function name env.m with
+    | None -> Llvm.declare_function name (typ env dc.dc_type) env.m ;
+    | Some fn -> fn in
+  (env, fn)
 
 let create_block : env -> Ollvm_ast.block -> Llvm.llvalue -> env =
   fun env b fn ->
@@ -410,7 +412,7 @@ let create_block : env -> Ollvm_ast.block -> Llvm.llvalue -> env =
   let llb = Llvm.append_block env.c (fst b) fn in
   { env with labels = (fst b, llb) :: env.labels }
 
-and block : env -> Ollvm_ast.block -> env =
+let block : env -> Ollvm_ast.block -> env =
   fun env block ->
   let bb = List.assoc (fst block) env.labels in
   Llvm.position_at_end bb env.b;
@@ -420,12 +422,7 @@ and block : env -> Ollvm_ast.block -> env =
 
 let definition : env -> Ollvm_ast.definition -> env =
   fun env df ->
-  let fn =
-    Llvm.define_function
-      (string_of_ident df.df_prototype.dc_name)
-      (typ env df.df_prototype.dc_type)
-      (env.m) in
-
+  let (env, fn) = declaration env df.df_prototype in
   let env =
     lookup_fn env df.df_prototype.dc_name
     |> Llvm.params
@@ -433,16 +430,10 @@ let definition : env -> Ollvm_ast.definition -> env =
     |> Array.fold_left (fun env (i, a) ->
                         Llvm.set_value_name (string_of_ident i) a;
                         { env with mem = (i, a) :: env.mem }) env in
-    (* First create needed blocks.
-     * block function will use them when building instructions.
-     * NB: Creating a function create the entry block as well. We only need
-     * to create following blocks. *)
+  (* First create needed blocks.
+   * block function will use them when building instructions. *)
   let env =
-    let b = Llvm.entry_block fn in
-    { env with labels = (fst (List.hd df.df_instrs), b) :: env.labels } in
-  let env =
-    List.fold_left
-      (fun env b -> create_block env b fn) env (List.tl df.df_instrs) in
+    List.fold_left (fun env b -> create_block env b fn) env df.df_instrs in
   List.fold_left (fun env bl -> block env bl) env (df.df_instrs)
 
 let modul : Ollvm_ast.modul -> env =
@@ -457,7 +448,7 @@ let modul : Ollvm_ast.modul -> env =
   let env = { c = c; m = m; b = b; mem = []; labels = [] } in
   let env = List.fold_left (fun env g -> global {env with mem=[]} g)
                            env (List.map snd modul.m_globals) in
-  let env = List.fold_left (fun env dc -> declaration {env with mem=[]} dc)
+  let env = List.fold_left (fun env dc -> fst (declaration {env with mem=[]} dc))
                            env (List.map snd modul.m_declarations) in
   let env = List.fold_left (fun env df -> definition {env with mem=[];
                                                                labels=[]} df)

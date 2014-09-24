@@ -1,0 +1,18 @@
+ollvm_ez.cmi : ollvm_ast.cmo
+ollvm_parser.cmi : ollvm_ast.cmo
+ollvm_ast.cmo :
+ollvm_ast.cmx :
+ollvm_ez.cmo : ollvm_ast.cmo ollvm_ez.cmi
+ollvm_ez.cmx : ollvm_ast.cmx ollvm_ez.cmi
+ollvm_lexer.cmo : ollvm_parser.cmi ollvm_ast.cmo
+ollvm_lexer.cmx : ollvm_parser.cmx ollvm_ast.cmx
+ollvm_llvmgateway.cmo : ollvm_ast.cmo
+ollvm_llvmgateway.cmx : ollvm_ast.cmx
+ollvm.cmo : ollvm_printer.cmo ollvm_llvmgateway.cmo ollvm_lexer.cmo \
+    ollvm_ez.cmi ollvm_ast.cmo
+ollvm.cmx : ollvm_printer.cmx ollvm_llvmgateway.cmx ollvm_lexer.cmx \
+    ollvm_ez.cmx ollvm_ast.cmx
+ollvm_parser.cmo : ollvm_ast.cmo ollvm_parser.cmi
+ollvm_parser.cmx : ollvm_ast.cmx ollvm_parser.cmi
+ollvm_printer.cmo : ollvm_ast.cmo
+ollvm_printer.cmx : ollvm_ast.cmx
