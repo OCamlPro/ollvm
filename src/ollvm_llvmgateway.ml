@@ -423,6 +423,9 @@ let block : env -> Ollvm_ast.block -> env =
 let definition : env -> Ollvm_ast.definition -> env =
   fun env df ->
   let (env, fn) = declaration env df.df_prototype in
+  (* Do not allow function redefinition. May change? *)
+  if Array.length (Llvm.basic_blocks fn) <> 0
+  then assert false;
   let env =
     lookup_fn env df.df_prototype.dc_name
     |> Llvm.params
@@ -431,7 +434,7 @@ let definition : env -> Ollvm_ast.definition -> env =
                         Llvm.set_value_name (string_of_ident i) a;
                         { env with mem = (i, a) :: env.mem }) env in
   (* First create needed blocks.
-   * block function will use them when building instructions. *)
+   * [block] function will use them when building instructions. *)
   let env =
     List.fold_left (fun env b -> create_block env b fn) env df.df_instrs in
   List.fold_left (fun env bl -> block env bl) env (df.df_instrs)
