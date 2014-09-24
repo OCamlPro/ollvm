@@ -65,10 +65,12 @@ SUFFIXES: .ml .mli .cmo .cmi .cmx .mll .mly
 
 .mll.cmo:
 	$(CAMLLEX) $<
+	$(CAMLC) $(CAMLFLAGS) -c $*.mli
 	$(CAMLC) $(CAMLFLAGS) -c $*.ml
 
 .mll.cmx:
 	$(CAMLLEX) $<
+	$(CAMLOPT) $(CAMLFLAGS) -c $*.mli
 	$(CAMLOPT) $(CAMLFLAGS) -c $*.ml
 
 .mly.cmo:
@@ -81,10 +83,6 @@ SUFFIXES: .ml .mli .cmo .cmi .cmx .mll .mly
 	$(CAMLOPT) -c $*.mli
 	$(CAMLOPT) -c $*.ml
 
-.mly.cmi:
-	$(CAMLYACC) $<
-	$(CAMLC) $(CAMLFLAGS) -c $*.mli
-
 .mll.ml:
 	$(CAMLLEX) $<
 
@@ -95,8 +93,8 @@ clean:
 	rm -f *.cm[iox] *~ .*~ *.o *.cma *.cmxa *.a
 	rm -rf $(DOCDIR)
 
-.depend:
-	touch .depend
+.depend: $(SOURCES2)
+	$(CAMLDEP) *.mli *.ml > .depend
 
 depend: $(SOURCES2) .depend
 	$(CAMLDEP) *.mli *.ml > .depend
