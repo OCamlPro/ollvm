@@ -14,6 +14,7 @@ CAMLOPT =$(OCAMLFIND) ocamlopt
 CAMLDEP =$(OCAMLDEP)
 CAMLLEX =$(OCAMLLEX)
 CAMLYACC =$(MENHIR)
+CAMLDOC =$(OCAMLFIND) ocamldoc
 
 LIBNAME=ollvm
 
@@ -94,16 +95,17 @@ clean:
 	rm -f *.cm[iox] *~ .*~ *.o *.cma *.cmxa *.a
 	rm -rf $(DOCDIR)
 
-.depend: $(SOURCES2)
-	$(CAMLDEP) *.mli *.ml > .depend
+.depend:
+	touch .depend
 
-depend: $(SOURCES2)
+depend: $(SOURCES2) .depend
 	$(CAMLDEP) *.mli *.ml > .depend
 
 include .depend
 
 doc: $(BYTELIB)
-	mkdir -p $(DOCDIR) ; $(OCAMLDOC) -d $(DOCDIR) -I . -html *.mli
+	mkdir -p $(DOCDIR)
+	$(CAMLDOC) -d $(DOCDIR) -I `$(OCAMLFIND) query llvm` -I . -html *.mli
 
 install: $(BYTELIB) $(NATIVELIB) $(CMILIB)
 	$(OCAMLFIND) install $(LIBNAME) META $^
