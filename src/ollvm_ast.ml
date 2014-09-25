@@ -95,14 +95,9 @@ and fn_attr =
   | FNATTR_Key_value of string * string (* "unsafe-fp-math"="false" *)
   | FNATTR_Attr_grp of int
 
-and ident_format =
-  | ID_FORMAT_Named
-  | ID_FORMAT_NamedString
-  | ID_FORMAT_Unnamed
-
 and ident =
-  | ID_Global of ident_format * string
-  | ID_Local  of ident_format * string
+  | ID_Global of string
+  | ID_Local  of string
 
 and typ =
   | TYPE_I of int

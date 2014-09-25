@@ -3,9 +3,9 @@
 (** Basic predefined common types and type making functions. *)
 module Type : sig
 
-  open Ast
+  open Ollvm_ast
 
-  type t = Ast.typ
+  type t = Ollvm_ast.typ
 
   val i1 : t
   val i32 : t
@@ -25,7 +25,7 @@ end
 module Value : sig
 
   (** [ollvm] value annotated with type its. *)
-  type t = Type.t * Ast.value
+  type t = Type.t * Ollvm_ast.value
 
  (** Values constructors.
      Do not confound with types in Type module.
@@ -40,7 +40,7 @@ module Value : sig
   val vector : t list -> t
   val array : t list -> t
   val structure : t list -> t
-  val ident : t -> Type.t * Ast.ident
+  val ident : t -> Type.t * Ollvm_ast.ident
 
 end
 
@@ -48,7 +48,7 @@ end
 module Instr : sig
 
   (** [ollvm] instr annotated with its type. *)
-  type t = Type.t * Ast.instr
+  type t = Type.t * Ollvm_ast.instr
 
   (** [call fn args] call the function [fn] with [args] as argument. *)
   val call : Value.t -> Value.t list -> t
@@ -122,11 +122,11 @@ module Instr : sig
   val xor  : Value.t -> Value.t -> t
 
   (** Float binary operations. *)
-  val fadd : ?flags:Ast.fast_math list -> Value.t -> Value.t -> t
-  val fsub : ?flags:Ast.fast_math list -> Value.t -> Value.t -> t
-  val fmul : ?flags:Ast.fast_math list -> Value.t -> Value.t -> t
-  val fdiv : ?flags:Ast.fast_math list -> Value.t -> Value.t -> t
-  val frem : ?flags:Ast.fast_math list -> Value.t -> Value.t -> t
+  val fadd : ?flags:Ollvm_ast.fast_math list -> Value.t -> Value.t -> t
+  val fsub : ?flags:Ollvm_ast.fast_math list -> Value.t -> Value.t -> t
+  val fmul : ?flags:Ollvm_ast.fast_math list -> Value.t -> Value.t -> t
+  val fdiv : ?flags:Ollvm_ast.fast_math list -> Value.t -> Value.t -> t
+  val frem : ?flags:Ollvm_ast.fast_math list -> Value.t -> Value.t -> t
 
   (** [extractelement vec idx] returns the element contained in [vec]
       at index [idx]. *)
@@ -163,49 +163,49 @@ module Instr : sig
 
   (** [br cond lbl_true lbl_false] jumps to [lbl_true] or [lbl_false]
       depending on the value of [cond]. *)
-  val br : Value.t -> Value.t -> Value.t -> Ast.instr
+  val br : Value.t -> Value.t -> Value.t -> Ollvm_ast.instr
 
  (** [br1 label] jumps to [label]. *)
-  val br1 : Value.t -> Ast.instr
+  val br1 : Value.t -> Ollvm_ast.instr
 
   (** [switch cond default [(int1, labelN); ... ; (intN, labelN)]]
       jumps to the [labelX] whose associted [intX] is equal to [cond].
       If no such integer is found, then jumps to [default] label. *)
-  val switch : Value.t -> Value.t -> (Value.t * Value.t) list -> Ast.instr
+  val switch : Value.t -> Value.t -> (Value.t * Value.t) list -> Ollvm_ast.instr
 
   (** [ret val] returns [val]. *)
-  val ret : Value.t -> Ast.instr
+  val ret : Value.t -> Ollvm_ast.instr
 
   (** [ret_void] returns with no value. *)
-  val ret_void : Ast.instr
+  val ret_void : Ollvm_ast.instr
 
   (** Binds a [t] to an identifier.
       i. e. build a [ollvm] assignment instruction. *)
-  val assign : Value.t -> t -> Ast.instr
+  val assign : Value.t -> t -> Ollvm_ast.instr
 
   (** Infix operator equivalent to [assign] function. *)
-  val ( <-- ) : Value.t -> t -> Ast.instr
+  val ( <-- ) : Value.t -> t -> Ollvm_ast.instr
 
   (** Converts a [t] into a [ollvm] instr. *)
-  val ignore : t -> Ast.instr
+  val ignore : t -> Ollvm_ast.instr
 
 end
 
 (** Function and block creation. *)
 module Block : sig
 
-  type block = Ast.ident * (Ast.instr list)
+  type block = Ollvm_ast.ident * (Ollvm_ast.instr list)
 
   (** [declare (ret_ty, fn) args_ty] declares [fn] as a function
       returning [ret_ty] and requiring arguments of types [args_ty]. *)
-  val declare : Value.t -> Type.t list -> Ast.declaration
+  val declare : Value.t -> Type.t list -> Ollvm_ast.declaration
 
   (** [define (ret_ty, fn) args instrs] defines [fn] as a function
       returning [ret_ty], with [args] as arguments and [instrs] as body. *)
-  val define : Value.t -> Value.t list -> block list -> Ast.definition
+  val define : Value.t -> Value.t list -> block list -> Ollvm_ast.definition
 
   (** [block label instrs] binds [instrs] to [label], creating a [block]. *)
-  val block : Value.t -> Ast.instr list -> block
+  val block : Value.t -> Ollvm_ast.instr list -> block
 
 end
 
@@ -227,7 +227,7 @@ module Module : sig
   end
 
   type t = {
-    m_module: Ast.modul;
+    m_module: Ollvm_ast.modul;
     m_env: Local.t;
   }
 
@@ -250,14 +250,18 @@ module Module : sig
       is the resulting identifier and its type. If [name <> ""],
       it will be used as identifier (possibly with a number added
       as suffix), a number will be automatically assigned otherwise. *)
-  val local : t -> Type.t -> string -> (t * Value.t)
+  val local : t -> Type.t -> string -> t * Value.t
 
-  (** [locals m t n] return [(m', values)] where [m'] is the new
+  (** [locals m t names] return [(m', values)] where [m'] is the new
       module with new local identifiers declared and [values] is
-      a list of length [n] of new identifiers binded to type [t].
-      Identifiers will be automatically choosen (a number will be
-      used). *)
-  val locals : t -> Type.t -> int -> t * Value.t list
+      a list of the same length then [names] of new identifiers
+      using names hint from [names] and binded to type [t]. *)
+  val locals : t -> Type.t -> string list -> t * Value.t list
+
+  (** [batch_locals m list] returns [(m', values)] where [m'] is the new
+      module with new local identifiers declared and [value] is the
+      list of values built with type and name hint provided by [list]. *)
+  val batch_locals : t -> (Type.t * string) list -> t * Value.t list
 
   (** [global m t name] returns [(m', g)] where [m'] is the new module
       resulting in the global variable [g] of name [name] and type [t]
@@ -266,19 +270,19 @@ module Module : sig
 
   (** [declaration m dc] returns [m'], which is the same module than [m],
       with [dc] declaration registered. *)
-  val declaration : t -> Ast.declaration -> t
+  val declaration : t -> Ollvm_ast.declaration -> t
 
   (** [definition m df] returns [m'], which is the same module than [m],
       with [df] definition registered. *)
-  val definition : t -> Ast.definition -> t
+  val definition : t -> Ollvm_ast.definition -> t
 
   (** [lookup_declaration m "foo"] looks for declaration of function
       named ["foo"] and returns it. Raises [Not_found] if ["foo"] is
       not declared. *)
-  val lookup_declaration : t -> string -> Ast.declaration
+  val lookup_declaration : t -> string -> Ollvm_ast.declaration
 
   (** [lookup_definition m "foo"] looks for definition of function
       named ["foo"] and returns it. Raises [Not_found] if ["foo"] is
       not defined. *)
-  val lookup_definition : t -> string -> Ast.definition
+  val lookup_definition : t -> string -> Ollvm_ast.definition
 end

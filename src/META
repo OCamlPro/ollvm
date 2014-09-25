@@ -1,0 +1,4 @@
+version = "0.9"
+description = "An higher-level LLVM binding for OCaml"
+archive(byte) = "ollvm.cma"
+archive(native) = "ollvm.cmxa"
