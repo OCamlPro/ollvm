@@ -179,7 +179,7 @@ module Block = struct
     let open Ollvm_ast in
     { dc_type = TYPE_Function (t, args_typ);
       dc_name = id;
-      dc_param_attrs = ([], [[]]) }
+      dc_param_attrs = ([], List.map (fun _ -> []) args_typ) }
 
   let define fn args (instrs : block list) =
     let args = List.map Value.ident args in
