@@ -4,8 +4,8 @@ open Ollvm_ast
 type t = { local: int ref * (int, int) Hashtbl.t;
            global: int ref * (int, int) Hashtbl.t }
 
-let empty_env () = { local = ref 1, Hashtbl.create 0 ;
-                     global = ref 1, Hashtbl.create 0 }
+let empty_env () = { local = ref 0, Hashtbl.create 0 ;
+                     global = ref 0, Hashtbl.create 0 }
 
 let find_env (cntr, tbl) i =
   let i = int_of_string i in
@@ -117,7 +117,7 @@ and ident : t -> Format.formatter -> Ollvm_ast.ident -> unit =
 
   let ident_format : (string -> int) -> Format.formatter -> string -> unit =
   fun finder ppf i ->
-  if i.[0] > '0' && i.[0] < '9' then pp_print_int ppf (finder i)
+  if i.[0] >= '0' && i.[0] <= '9' then pp_print_int ppf (finder i)
   else pp_print_string ppf i in
 
   fun env ppf ->
