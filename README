@@ -76,4 +76,13 @@ Ollvm is still work in progress.
 - Ollvm does not checks types of your instruction, nor it ensures
   SSA form (i.e. you can write wrong LLVM IR).
   It *may* ensure good typing (statically) of your LLVM code in futur.
-- Llvmgateway is not ready.
+
+=== Known bugs ===
+
+- ``Ez`` / ``Printer`` modules:
+  -- Unnamed labels are not correctly printed with.
+  -- Unnamed function arguments are printed in prototypes while they
+     should not.
+
+Note that passing though Llvmgateway and printing with official
+binding results in a correct LLVM IR output.
