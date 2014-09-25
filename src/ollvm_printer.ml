@@ -556,8 +556,13 @@ and modul : t -> Format.formatter -> Ollvm_ast.modul -> unit =
   pp_print_list ~pp_sep:pp_force_newline (global env) ppf
                 (List.map snd m.m_globals) ;
   pp_force_newline ppf () ;
+  (* Print function declaration only if there is no corresponding
+     function definition *)
   pp_print_list ~pp_sep:pp_force_newline (declaration env) ppf
-                (List.map snd m.m_declarations) ;
+                (List.filter
+                   (fun (n, _) -> not (List.mem_assoc n m.m_definitions))
+                   m.m_declarations
+                 |> List.map snd) ;
   pp_force_newline ppf () ;
   pp_print_list ~pp_sep:pp_force_newline (definition env) ppf
                 (List.map snd m.m_definitions) ;
