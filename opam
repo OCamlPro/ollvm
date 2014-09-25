@@ -2,9 +2,9 @@ opam-version: "1.2"
 maintainer: "Julien Sagot <ju.sagot@gmail.com>"
 author: "Julien Sagot <ju.sagot@gmail.com>"
 name: "ollvm"
-version: "0.1"
+version: "0.9"
 homepage: "sagotch.github.io/ollvm/"
-bug-reports: "https://github.com/sagotch/ollvm/issues"
+bug-reports: "https://github.com/OCamlPro/ollvm/issues"
 license: "LGPL"
 available: [ ocaml-version >= "4.02" ]
 build: [
