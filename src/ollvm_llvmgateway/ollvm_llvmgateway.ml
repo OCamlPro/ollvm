@@ -1,29 +1,29 @@
-open Ollvm_ast
+open Ollvm.Ast
 
 type env = { c: Llvm.llcontext;
              m: Llvm.llmodule;
              b: Llvm.llbuilder;
 
-             (* llvalue/llbasicblock binded to Ollvm_ast.ident*)
-             mem: (Ollvm_ast.ident * Llvm.llvalue) list;
+             (* llvalue/llbasicblock binded to Ollvm.Ast.ident*)
+             mem: (Ollvm.Ast.ident * Llvm.llvalue) list;
              labels: (string * Llvm.llbasicblock) list }
 
 let lookup env id = List.assoc id env.mem
 
-let lookup_fn env (id : Ollvm_ast.ident) : Llvm.llvalue = match id with
+let lookup_fn env (id : Ollvm.Ast.ident) : Llvm.llvalue = match id with
   | ID_Local _ -> assert false
   | ID_Global i -> match Llvm.lookup_function i env.m with
                    | Some fn -> fn
                    | _ -> assert false
 
-let string_of_ident : Ollvm_ast.ident -> string = function
+let string_of_ident : Ollvm.Ast.ident -> string = function
   | ID_Local i
   | ID_Global i -> i
 
-let label : env -> Ollvm_ast.ident -> Llvm.llbasicblock =
+let label : env -> Ollvm.Ast.ident -> Llvm.llbasicblock =
   fun env id -> List.assoc (string_of_ident id) env.labels
 
-let linkage : Ollvm_ast.linkage -> Llvm.Linkage.t =
+let linkage : Ollvm.Ast.linkage -> Llvm.Linkage.t =
   let open Llvm.Linkage
   in function
   | LINKAGE_Private               -> Private
@@ -38,20 +38,20 @@ let linkage : Ollvm_ast.linkage -> Llvm.Linkage.t =
   | LINKAGE_Weak_odr              -> Weak_odr
   | LINKAGE_External              -> External
 
-let dll_storage : Ollvm_ast.dll_storage -> Llvm.Linkage.t =
+let dll_storage : Ollvm.Ast.dll_storage -> Llvm.Linkage.t =
   let open Llvm.Linkage
   in function
   | DLLSTORAGE_Dllimport -> Dllimport
   | DLLSTORAGE_Dllexport -> Dllexport
 
-let visibility : Ollvm_ast.visibility -> Llvm.Visibility.t =
+let visibility : Ollvm.Ast.visibility -> Llvm.Visibility.t =
   let open Llvm.Visibility
   in function
   | VISIBILITY_Default   -> Default
   | VISIBILITY_Hidden    -> Hidden
   | VISIBILITY_Protected -> Protected
 
-let cconv : Ollvm_ast.cconv -> int =
+let cconv : Ollvm.Ast.cconv -> int =
   let open Llvm.CallConv
   in function
   | CC_Ccc    -> c
@@ -59,7 +59,7 @@ let cconv : Ollvm_ast.cconv -> int =
   | CC_Coldcc -> cold
   | CC_Cc i   -> assert false
 
-let typ_attr : Ollvm_ast.param_attr -> Llvm.Attribute.t =
+let typ_attr : Ollvm.Ast.param_attr -> Llvm.Attribute.t =
   let open Llvm.Attribute
   in function
   | PARAMATTR_Zeroext   -> Zext
@@ -71,7 +71,7 @@ let typ_attr : Ollvm_ast.param_attr -> Llvm.Attribute.t =
   | PARAMATTR_Nocapture -> Nocapture
   | PARAMATTR_Nest      -> Nest
 
-let fn_attr : Ollvm_ast.fn_attr -> Llvm.Attribute.t =
+let fn_attr : Ollvm.Ast.fn_attr -> Llvm.Attribute.t =
   let open Llvm.Attribute
   in function
   | FNATTR_Alignstack i     -> Stackalignment i
@@ -106,7 +106,7 @@ let fn_attr : Ollvm_ast.fn_attr -> Llvm.Attribute.t =
   | FNATTR_Key_value (k, v) -> assert false
   | FNATTR_Attr_grp g       -> assert false
 
-let rec typ : env -> Ollvm_ast.typ -> Llvm.lltype =
+let rec typ : env -> Ollvm.Ast.typ -> Llvm.lltype =
   fun env ->
   let ctx = env.c in
   let open Llvm
@@ -139,7 +139,7 @@ let rec typ : env -> Ollvm_ast.typ -> Llvm.lltype =
   | TYPE_Opaque            -> assert false
   | TYPE_Vector (i, t)      -> vector_type (typ env t) i
 
-let icmp : Ollvm_ast.icmp -> Llvm.Icmp.t =
+let icmp : Ollvm.Ast.icmp -> Llvm.Icmp.t =
   let open Llvm.Icmp
   in function
   | Eq  -> Eq
@@ -153,7 +153,7 @@ let icmp : Ollvm_ast.icmp -> Llvm.Icmp.t =
   | Slt -> Slt
   | Sle -> Sle
 
-let fcmp : Ollvm_ast.fcmp -> Llvm.Fcmp.t =
+let fcmp : Ollvm.Ast.fcmp -> Llvm.Fcmp.t =
   let open Llvm.Fcmp
   in function
   | False -> False
@@ -173,7 +173,7 @@ let fcmp : Ollvm_ast.fcmp -> Llvm.Fcmp.t =
   | Une   -> Une
   | True  -> True
 
-let ibinop : Ollvm_ast.ibinop -> (Llvm.llvalue -> Llvm.llvalue -> string ->
+let ibinop : Ollvm.Ast.ibinop -> (Llvm.llvalue -> Llvm.llvalue -> string ->
                                 Llvm.llbuilder -> Llvm.llvalue) =
   let open Llvm
   in function
@@ -191,7 +191,7 @@ let ibinop : Ollvm_ast.ibinop -> (Llvm.llvalue -> Llvm.llvalue -> string ->
   | Or         -> build_or
   | Xor        -> build_xor
 
-let fbinop : Ollvm_ast.fbinop -> (Llvm.llvalue -> Llvm.llvalue -> string ->
+let fbinop : Ollvm.Ast.fbinop -> (Llvm.llvalue -> Llvm.llvalue -> string ->
                                 Llvm.llbuilder -> Llvm.llvalue) =
   let open Llvm
   in function
@@ -201,7 +201,7 @@ let fbinop : Ollvm_ast.fbinop -> (Llvm.llvalue -> Llvm.llvalue -> string ->
   | FDiv -> build_fdiv
   | FRem -> build_frem
 
-let conversion_type : Ollvm_ast.conversion_type ->
+let conversion_type : Ollvm.Ast.conversion_type ->
                       (Llvm.llvalue -> Llvm.lltype -> Llvm.llvalue) =
   let open Llvm
   in function
@@ -219,7 +219,7 @@ let conversion_type : Ollvm_ast.conversion_type ->
   | Bitcast  -> const_bitcast
 
 (** FIXME: should be splitted into const/value? *)
-let rec value : env -> Ollvm_ast.typ -> Ollvm_ast.value -> Llvm.llvalue =
+let rec value : env -> Ollvm.Ast.typ -> Ollvm.Ast.value -> Llvm.llvalue =
   fun env ty ->
   let open Llvm
   in function
@@ -241,7 +241,7 @@ let rec value : env -> Ollvm_ast.typ -> Ollvm_ast.value -> Llvm.llvalue =
      const_vector (Array.of_list v |> Array.map (fun (ty, v) -> value env ty v))
   | VALUE_Zero_initializer -> assert false
 
-let rec instr : env -> Ollvm_ast.instr -> (env * Llvm.llvalue) =
+let rec instr : env -> Ollvm.Ast.instr -> (env * Llvm.llvalue) =
   fun env ->
   let open Llvm in
   function
@@ -390,15 +390,15 @@ let rec instr : env -> Ollvm_ast.instr -> (env * Llvm.llvalue) =
      let (env, llv) = instr env inst in
      ({ env with mem = (id, llv) :: env.mem }, llv)
 
-let global : env -> Ollvm_ast.global -> env =
+let global : env -> Ollvm.Ast.global -> env =
   fun env g ->
   let llv = value env g.g_typ (match g.g_value with Some x -> x
                                                   | None -> assert false) in
-  let Ollvm_ast.ID_Global name = g.g_ident in
+  let Ollvm.Ast.ID_Global name = g.g_ident in
   let llv = Llvm.define_global name llv env.m in
   {env with mem = (g.g_ident, llv) :: env.mem }
 
-let declaration : env -> Ollvm_ast.declaration -> env * Llvm.llvalue =
+let declaration : env -> Ollvm.Ast.declaration -> env * Llvm.llvalue =
   fun env dc ->
   let name = (string_of_ident dc.dc_name) in
   let fn =  match Llvm.lookup_function name env.m with
@@ -406,13 +406,13 @@ let declaration : env -> Ollvm_ast.declaration -> env * Llvm.llvalue =
     | Some fn -> fn in
   (env, fn)
 
-let create_block : env -> Ollvm_ast.block -> Llvm.llvalue -> env =
+let create_block : env -> Ollvm.Ast.block -> Llvm.llvalue -> env =
   fun env b fn ->
   if List.mem_assoc (fst b) env.labels then assert false ;
   let llb = Llvm.append_block env.c (fst b) fn in
   { env with labels = (fst b, llb) :: env.labels }
 
-let block : env -> Ollvm_ast.block -> env =
+let block : env -> Ollvm.Ast.block -> env =
   fun env block ->
   let bb = List.assoc (fst block) env.labels in
   Llvm.position_at_end bb env.b;
@@ -420,7 +420,7 @@ let block : env -> Ollvm_ast.block -> env =
   let env = List.fold_left (fun env i -> instr env i |> fst) env (snd block) in
   env
 
-let definition : env -> Ollvm_ast.definition -> env =
+let definition : env -> Ollvm.Ast.definition -> env =
   fun env df ->
   let (env, fn) = declaration env df.df_prototype in
   (* Do not allow function redefinition. May change? *)
@@ -439,13 +439,13 @@ let definition : env -> Ollvm_ast.definition -> env =
     List.fold_left (fun env b -> create_block env b fn) env df.df_instrs in
   List.fold_left (fun env bl -> block env bl) env (df.df_instrs)
 
-let modul : Ollvm_ast.modul -> env =
+let modul : Ollvm.Ast.modul -> env =
   fun modul ->
   let c = Llvm.global_context () in
   let m = Llvm.create_module c modul.m_name in
   let b = Llvm.builder c in
-  let Ollvm_ast.TLE_Target target = modul.m_target in
-  let Ollvm_ast.TLE_Datalayout datalayout = modul.m_datalayout in
+  let Ollvm.Ast.TLE_Target target = modul.m_target in
+  let Ollvm.Ast.TLE_Datalayout datalayout = modul.m_datalayout in
   Llvm.set_target_triple target m;
   Llvm.set_data_layout datalayout m;
   let env = { c = c; m = m; b = b; mem = []; labels = [] } in
