@@ -275,12 +275,19 @@ module Module = struct
     let (env, var) = Local.local m.m_env t name in
     ({m with m_env = env}, var)
 
-  let locals m t n =
-    let rec locals m t n acc =
-      if n = 0 then (m, List.rev acc)
-      else let (m, x) = local m t "" in
-           locals m t (n - 1) (x :: acc)
-    in locals m t n []
+  let locals m t list =
+    let rec loop m acc = function
+      | []     -> (m, List.rev acc)
+      | n :: q -> let (env, x) = local m t n in
+                  loop env (x :: acc) q
+    in loop m [] list
+
+  let batch_locals m list =
+    let rec loop m acc = function
+      | []     -> (m, List.rev acc)
+      | (t, n) :: q -> let (env, x) = local m t n in
+                       loop env (x :: acc) q
+    in loop m [] list
 
   let global m t name =
     let ident = Ollvm_ast.ID_Global name in

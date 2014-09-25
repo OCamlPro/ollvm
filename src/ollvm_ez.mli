@@ -250,14 +250,18 @@ module Module : sig
       is the resulting identifier and its type. If [name <> ""],
       it will be used as identifier (possibly with a number added
       as suffix), a number will be automatically assigned otherwise. *)
-  val local : t -> Type.t -> string -> (t * Value.t)
+  val local : t -> Type.t -> string -> t * Value.t
 
-  (** [locals m t n] return [(m', values)] where [m'] is the new
+  (** [locals m t names] return [(m', values)] where [m'] is the new
       module with new local identifiers declared and [values] is
-      a list of length [n] of new identifiers binded to type [t].
-      Identifiers will be automatically choosen (a number will be
-      used). *)
-  val locals : t -> Type.t -> int -> t * Value.t list
+      a list of the same length then [names] of new identifiers
+      using names hint from [names] and binded to type [t]. *)
+  val locals : t -> Type.t -> string list -> t * Value.t list
+
+  (** [batch_locals m list] returns [(m', values)] where [m'] is the new
+      module with new local identifiers declared and [value] is the
+      list of values built with type and name hint provided by [list]. *)
+  val batch_locals : t -> (Type.t * string) list -> t * Value.t list
 
   (** [global m t name] returns [(m', g)] where [m'] is the new module
       resulting in the global variable [g] of name [name] and type [t]
