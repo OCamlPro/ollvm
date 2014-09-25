@@ -88,7 +88,7 @@ let is_externally_initialized l =
 
 %}
 
-%token<Ollvm_ast.ident_format * string> GLOBAL LOCAL
+%token<string> GLOBAL LOCAL
 %token LPAREN RPAREN LCURLY RCURLY LTLCURLY RCURLYGT LSQUARE RSQUARE LT GT EQ COMMA EOF EOL STAR
 
 %token<string> STRING
@@ -141,8 +141,7 @@ toplevelentry:
   | d=declaration                       { TLE_Declaration d              }
   | KW_TARGET KW_DATALAYOUT EQ s=STRING { TLE_Datalayout s               }
   | KW_TARGET KW_TRIPLE EQ s=STRING     { TLE_Target s                   }
-  | i=LOCAL EQ KW_TYPE t=typ            { TLE_Type_decl
-                                            (ID_Local (fst i, snd i), t) }
+  | i=LOCAL EQ KW_TYPE t=typ            { TLE_Type_decl (ID_Local i, t) }
   | g=global_decl                       { TLE_Global g                   }
   | i=METADATA_ID EQ m=tle_metadata     { TLE_Metadata (i, m)            }
   | KW_ATTRIBUTES i=ATTR_GRP_ID EQ LCURLY a=fn_attr* RCURLY
@@ -178,7 +177,7 @@ global_decl:
       g_value=const?
       opt=preceded(COMMA, separated_list(COMMA, global_attr))?
       { let opt = match opt with Some o -> o | None -> [] in
-        { g_ident=ID_Global (fst ident, snd ident);
+        { g_ident=ID_Global ident;
           g_typ;
           g_constant;
           g_value;
@@ -222,7 +221,7 @@ declaration:
     LPAREN dc_args=separated_list(COMMA, dc_arg) RPAREN
     post_attrs=global_attr*
     { {dc_type=TYPE_Function(dc_ret_typ, List.map fst dc_args);
-       dc_name=ID_Global (fst name, snd name);
+       dc_name=ID_Global name;
        dc_param_attrs=(dc_ret_attrs, List.map snd dc_args);} }
 
 definition:
@@ -241,7 +240,7 @@ definition:
                                    List.map (fun x -> fst (fst x)) df_args) ;
           dc_param_attrs = (df_ret_attrs,
                            List.map (fun x -> snd (fst x)) df_args) ;
-          dc_name=ID_Global (fst name, snd name) ; } ;
+          dc_name=ID_Global name ; } ;
         df_args=List.map snd df_args;
         df_instrs=df_blocks;
 
@@ -550,8 +549,8 @@ value:
   | i=ident { VALUE_Ident i }
 
 ident:
-  | l=GLOBAL { ID_Global (fst l, snd l) }
-  | l=LOCAL  { ID_Local (fst l, snd l)  }
+  | l=GLOBAL { ID_Global l }
+  | l=LOCAL  { ID_Local l  }
 
 tvalue: t=typ v=value { (t, v) }
 tconst: t=typ c=const { (t, c) }

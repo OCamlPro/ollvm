@@ -185,7 +185,7 @@ module Block = struct
     let args = List.map Value.ident args in
     let open Ollvm_ast in
     let extract_name = function
-      | Ollvm_ast.ID_Local (Ollvm_ast.ID_FORMAT_Named, s) -> s
+      | Ollvm_ast.ID_Local s -> s
       | _ -> assert false in
 
     let blocks = List.map (fun (id, instrs) -> (extract_name id, instrs)) instrs
@@ -223,22 +223,22 @@ module Module = struct
 
     (* FIXME: Use better structure than list *)
     let local env t name =
-      let (env, (format, name)) = match name with
+      let (env, name) = match name with
         | "" ->
            let i = env.unnamed_counter in
            ({ env with unnamed_counter = i + 1 ; },
-            (Ollvm_ast.ID_FORMAT_Named, string_of_int i))
+            string_of_int i)
         | name -> try
                   let i = List.assoc name env.named_counter in
                   ({ env with
                      named_counter = (name, i + 1) :: env.named_counter },
-                   (Ollvm_ast.ID_FORMAT_Unnamed, name ^ string_of_int i))
+                   name ^ string_of_int i)
                   with Not_found ->
                     ({ env with
                        named_counter = (name, 0) :: env.named_counter },
-                     (Ollvm_ast.ID_FORMAT_Named, name))
+                     name)
       in
-      (env, (t, Ollvm_ast.VALUE_Ident (Ollvm_ast.ID_Local (format, name))))
+      (env, (t, Ollvm_ast.VALUE_Ident (Ollvm_ast.ID_Local name)))
 
   end
 
@@ -283,7 +283,7 @@ module Module = struct
     in locals m t n []
 
   let global m t name =
-    let ident = Ollvm_ast.ID_Global (Ollvm_ast.ID_FORMAT_Named, name) in
+    let ident = Ollvm_ast.ID_Global name in
     let var = (t, Ollvm_ast.VALUE_Ident ident) in
     (m, var)
 
@@ -294,14 +294,14 @@ module Module = struct
     List.assoc name m.m_module.m_definitions
 
   let declaration m dc =
-    let Ollvm_ast.ID_Global (_, name) = dc.Ollvm_ast.dc_name in
+    let Ollvm_ast.ID_Global name = dc.Ollvm_ast.dc_name in
     { m with m_module = { m.m_module with
                           m_declarations = (name, dc)
                                            :: m.m_module.m_declarations } }
 
   let definition m df =
     let { Ollvm_ast.df_prototype = dc; _; } = df in
-    let Ollvm_ast.ID_Global (_, name) = dc.dc_name in
+    let Ollvm_ast.ID_Global name = dc.dc_name in
     { m with m_module = { m.m_module with
                           m_declarations = (name, dc)
                                            :: m.m_module.m_declarations ;

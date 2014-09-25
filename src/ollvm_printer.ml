@@ -115,21 +115,17 @@ and fn_attr : Format.formatter -> Ollvm_ast.fn_attr -> unit =
 
 and ident : t -> Format.formatter -> Ollvm_ast.ident -> unit =
 
-  let ident_format : (string -> int) -> Format.formatter -> Ollvm_ast.ident_format -> string -> unit =
-  fun finder ppf f i ->
-  (* Do not trust Named/Unnamed flag. *)
-  match f with
-  | ID_FORMAT_Named
-  | ID_FORMAT_Unnamed     -> (try pp_print_int ppf (finder i)
-                              with Failure "int_of_string" -> pp_print_string ppf i)
-  | ID_FORMAT_NamedString -> fprintf ppf "\"%s\"" i in
+  let ident_format : (string -> int) -> Format.formatter -> string -> unit =
+  fun finder ppf i ->
+  if i.[0] > '0' && i.[0] < '9' then pp_print_int ppf (finder i)
+  else pp_print_string ppf i in
 
   fun env ppf ->
   function
-  | ID_Global (f, i) -> pp_print_char ppf '@' ;
-                        ident_format (find_global env) ppf f i
-  | ID_Local (f, i)  -> pp_print_char ppf '%' ;
-                        ident_format (find_local env) ppf f i
+  | ID_Global i -> pp_print_char ppf '@' ;
+                   ident_format (find_global env) ppf i
+  | ID_Local i  -> pp_print_char ppf '%' ;
+                   ident_format (find_local env) ppf i
 
 and typ : Format.formatter -> Ollvm_ast.typ -> unit =
   fun ppf ->

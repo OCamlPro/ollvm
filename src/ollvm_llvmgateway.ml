@@ -12,13 +12,13 @@ let lookup env id = List.assoc id env.mem
 
 let lookup_fn env (id : Ollvm_ast.ident) : Llvm.llvalue = match id with
   | ID_Local _ -> assert false
-  | ID_Global (_, i) -> match Llvm.lookup_function i env.m with
-                        | Some fn -> fn
-                        | _ -> assert false
+  | ID_Global i -> match Llvm.lookup_function i env.m with
+                   | Some fn -> fn
+                   | _ -> assert false
 
 let string_of_ident : Ollvm_ast.ident -> string = function
-  | ID_Local (_, i)
-  | ID_Global (_, i) -> i
+  | ID_Local i
+  | ID_Global i -> i
 
 let label : env -> Ollvm_ast.ident -> Llvm.llbasicblock =
   fun env id -> List.assoc (string_of_ident id) env.labels
@@ -394,7 +394,7 @@ let global : env -> Ollvm_ast.global -> env =
   fun env g ->
   let llv = value env g.g_typ (match g.g_value with Some x -> x
                                                   | None -> assert false) in
-  let Ollvm_ast.ID_Global (_, name) = g.g_ident in
+  let Ollvm_ast.ID_Global name = g.g_ident in
   let llv = Llvm.define_global name llv env.m in
   {env with mem = (g.g_ident, llv) :: env.mem }
 

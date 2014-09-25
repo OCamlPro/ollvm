@@ -268,16 +268,15 @@ rule token = parse
   | (label_char)+ as l ':' { LABEL l }
 
   (* identifier *)
-  | '@' { let (f, i) = ident_body lexbuf in GLOBAL (f, i) }
-  | '%' { let (f, i) = ident_body lexbuf in LOCAL (f, i) }
+  | '@' { GLOBAL (ident_body lexbuf) }
+  | '%' { LOCAL (ident_body lexbuf) }
 
   (* FIXME: support metadata strings and struct. Parsed as identifier here. *)
   | "!{" { BANGLCURLY }
-  | '!'  { let (format, id) = ident_body lexbuf in
-           match format with
-           | Ollvm_ast.ID_FORMAT_Named
-           | Ollvm_ast.ID_FORMAT_Unnamed -> METADATA_ID id
-           | Ollvm_ast.ID_FORMAT_NamedString -> METADATA_STRING (id)
+  | '!'  { let id = ident_body lexbuf in
+           if id.[0] = '"' && id.[String.length id - 1] = '"'
+           then METADATA_STRING (id)
+           else METADATA_ID id
          }
 
   | '#' (digit+ as i) { ATTR_GRP_ID (int_of_string i) }
@@ -306,10 +305,10 @@ and string buf = parse
   | _ as c { Buffer.add_char buf c; string buf lexbuf }
 
 and ident_body = parse
-  | ident_fst ident_nxt* as i { (Ollvm_ast.ID_FORMAT_Named, i) }
-  | digit+ as i               { (Ollvm_ast.ID_FORMAT_Unnamed, i) }
-  | '"'                       { (Ollvm_ast.ID_FORMAT_NamedString,
-                                 string (Buffer.create 10) lexbuf) }
+  | ident_fst ident_nxt* as i { i }
+  | digit+ as i               { i }
+  | '"'                       { "\"" ^ string (Buffer.create 10) lexbuf ^ "\"" }
+
 {
 
   let parse lexbuf =
