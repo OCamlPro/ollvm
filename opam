@@ -8,13 +8,11 @@ bug-reports: "https://github.com/OCamlPro/ollvm/issues"
 license: "LGPL"
 available: [ ocaml-version >= "4.02" ]
 build: [
-  [ "autoreconf" "-vfi" ]
   [ "./configure" ]
   [ make ]
 ]
 install: [ make "install" ]
 remove: [
-          [ "autoreconf" "-vfi" ]
           [ "./configure" ]
           [ make "uninstall" ]
         ]
