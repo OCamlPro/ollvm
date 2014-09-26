@@ -1,4 +1,4 @@
-AC_INIT(ollvm,0.1.0)
+AC_INIT(ollvm,0.9.0)
 AM_INIT_AUTOMAKE
 
 AC_CONFIG_MACRO_DIR([m4])
@@ -44,5 +44,5 @@ if test "$OCAML_PKG_llvm" = "no" ; then
   AC_MSG_WARN([Llvmgateway module will not be installed.])
 fi
 
-AC_CONFIG_FILES([src/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile.common])
 AC_OUTPUT
