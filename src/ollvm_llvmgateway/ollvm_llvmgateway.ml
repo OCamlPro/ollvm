@@ -369,13 +369,14 @@ let rec instr : env -> Ollvm.Ast.instr -> (env * Llvm.llvalue) =
      (env, build_br (label env i) env.b)
 
   | INSTR_Switch ((t, v), (t', i), tvtil)        ->
-(*
      let case = value env t v in
      let elsebb = label env i in
      let count = List.length tvtil in
-*)
-     assert false (* TODO: create cases blocks *)
-     (*build_switch case elsebb count b;*)
+     let switch = Llvm.build_switch case elsebb count env.b in
+     List.iter (fun ((t, v), (t', i)) ->
+                Llvm.add_case switch (value env t v) (label env i))
+               tvtil ;
+     (env, switch)
 
 
   | INSTR_IndirectBr                    -> assert false
