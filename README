@@ -1,4 +1,4 @@
-= ollvm =
+= ollvm 0.99 =
 
 ollvm library offers an interface to manipulate LLVM IR in pure OCaml.
 LLVM already provides binding to its C API, but it still mainly imperative
@@ -90,7 +90,7 @@ else:
 === Install ===
 
 - Via opam: `` opam install ollvm ``
-- From source: `` autoreconf && ./configure && make && make install ``
+- From source: `` ./configure && make && [sudo] make install ``
 
 === Limitations ===
 

@@ -1,4 +1,4 @@
-AC_INIT(ollvm,0.9.0)
+AC_INIT(ollvm,0.99)
 AM_INIT_AUTOMAKE
 
 AC_CONFIG_MACRO_DIR([m4])
