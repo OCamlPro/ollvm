@@ -66,7 +66,7 @@ let typ_attr : Ollvm.Ast.param_attr -> Llvm.Attribute.t =
   | PARAMATTR_Signext   -> Sext
   | PARAMATTR_Inreg     -> Inreg
   | PARAMATTR_Byval     -> Byval
-  | PARAMATTR_Sret      -> assert false
+  | PARAMATTR_Sret      -> Structret
   | PARAMATTR_Noalias   -> Noalias
   | PARAMATTR_Nocapture -> Nocapture
   | PARAMATTR_Nest      -> Nest
@@ -125,7 +125,7 @@ let rec typ : env -> Ollvm.Ast.typ -> Llvm.lltype =
   | TYPE_Double            -> double_type ctx
   | TYPE_X86_fp80          -> x86fp80_type ctx
   | TYPE_Fp128             -> fp128_type ctx
-  | TYPE_Ppc_fp128         -> assert false
+  | TYPE_Ppc_fp128         -> ppc_fp128_type ctx
   | TYPE_Label             -> label_type ctx
   | TYPE_Metadata          -> assert false
   | TYPE_X86_mmx           -> x86_mmx_type ctx
@@ -299,14 +299,20 @@ let rec instr : env -> Ollvm.Ast.instr -> (env * Llvm.llvalue) =
 
   | INSTR_ExtractValue ((t, v), idx)         ->
      (* FIXME: llvm api take an int and not a list... *)
-     let v = value env t v in
-     (env, build_extractvalue v (List.hd idx) "" env.b)
+     begin match idx with
+     | [ idx ] ->
+        let v = value env t v in
+        (env, build_extractvalue v idx "" env.b)
+     | _ -> assert false end
 
   | INSTR_InsertValue ((t, vec), (t', el), idx)    ->
      (* FIXME: llvm api take an int and not a list... *)
-     let vec = value env t vec in
-     let el = value env t' el in
-     (env, build_insertvalue vec el (List.hd idx) "" env.b)
+     begin match idx with
+     | [ idx ] ->
+        let vec = value env t vec in
+        let el = value env t' el in
+        (env, build_insertvalue vec el idx "" env.b)
+     | _ -> assert false end
 
   | INSTR_Call ((t, i), args)                ->
      let fn = lookup_fn env i in
