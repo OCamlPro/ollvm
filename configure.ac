@@ -19,6 +19,12 @@ if test "$OCAMLDOC" = "no"; then
   AC_MSG_ERROR([ocamldoc is required.])
 fi
 
+MAJOR=`echo "$OCAMLVERSION" | cut -d. -f1`
+MINOR=`echo "$OCAMLVERSION" | cut -d. -f2`
+if test "$MAJOR" -lt 4 || (test "$MAJOR" -eq 4 && test "$MINOR" -lt 02) ; then
+  AC_MSG_ERROR([ocaml 4.02 or higher is required.])
+fi
+
 # ocamlfind
 AC_PROG_FINDLIB
 if test "$OCAMLFIND" = "no"; then

@@ -4477,6 +4477,12 @@ if test "$OCAMLDOC" = "no"; then
   as_fn_error $? "ocamldoc is required." "$LINENO" 5
 fi
 
+MAJOR=`echo "$OCAMLVERSION" | cut -d. -f1`
+MINOR=`echo "$OCAMLVERSION" | cut -d. -f2`
+if test "$MAJOR" -lt 4 || (test "$MAJOR" -eq 4 && test "$MINOR" -lt 02) ; then
+  as_fn_error $? "ocaml 4.02 or higher is required." "$LINENO" 5
+fi
+
 # ocamlfind
 
   # checking for ocamlfind
