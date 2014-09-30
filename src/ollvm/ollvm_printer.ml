@@ -387,7 +387,10 @@ and instr : t -> Format.formatter -> Ollvm_ast.instr -> unit =
 
   | INSTR_Unreachable -> pp_print_string ppf "unreachable"
 
-  | INSTR_IndirectBr     -> assert false
+  | INSTR_IndirectBr (tv, til) ->
+    fprintf ppf "indirectbr %a, [%a]"
+      (tvalue env) tv
+      (pp_print_list ~pp_sep:pp_comma_space (tident env)) til
 
   | INSTR_Invoke (ti, tvl, i2, i3) ->
      fprintf ppf "invoke %a(%a) to %a unwind %a"

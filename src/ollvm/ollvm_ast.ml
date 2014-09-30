@@ -198,7 +198,8 @@ and value =
   | INSTR_Br of tvalue * tident * tident (*types are constant *)
   | INSTR_Br_1 of tident
   | INSTR_Switch of tvalue * tident * (tvalue * tident) list
-  | INSTR_IndirectBr
+  | INSTR_IndirectBr of tvalue * tident list (* address
+                                              * possible addresses (labels) *)
   | INSTR_Resume of tvalue
   | INSTR_Unreachable
 

@@ -156,6 +156,9 @@ module Instr = struct
     let cases = List.map (fun (v, i) -> (v, ident i)) cases in
     Ollvm_ast.INSTR_Switch (sw, ident default, cases)
 
+  let indirectbr tv til =
+    Ollvm_ast.INSTR_IndirectBr (tv, List.map ident til)
+
   let ret x = Ollvm_ast.INSTR_Ret x
 
   let ret_void = Ollvm_ast.INSTR_Ret_void

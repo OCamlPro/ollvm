@@ -385,7 +385,13 @@ let rec instr : env -> Ollvm.Ast.instr -> (env * Llvm.llvalue) =
      (env, switch)
 
 
-  | INSTR_IndirectBr                    -> assert false
+  | INSTR_IndirectBr ((t, v), til) ->
+    let addr = value env t v in
+    let count = List.length til in
+    let indirectbr = Llvm.build_indirect_br addr count env.b in
+    List.iter
+      (fun (_, i) -> Llvm.add_destination indirectbr (label env i)) til;
+    (env, indirectbr )
 
   | INSTR_Resume (t, v)                 ->
      let llv = value env t v in
