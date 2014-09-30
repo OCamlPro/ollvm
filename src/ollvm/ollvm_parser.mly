@@ -505,8 +505,9 @@ instr:
     def=tident LSQUARE EOL? table=list(switch_table_entry) RSQUARE
     { INSTR_Switch (c, def, table) }
 
-  | KW_INDIRECTBR
-    { failwith "INSTR_IndirectBr" }
+  | KW_INDIRECTBR tv=tvalue
+    COMMA LSQUARE til=separated_list(COMMA, tident)  RSQUARE
+    { INSTR_IndirectBr (tv, til) }
 
   | KW_RESUME tv=tvalue
     { INSTR_Resume tv }

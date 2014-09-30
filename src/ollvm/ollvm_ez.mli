@@ -173,6 +173,11 @@ module Instr : sig
       If no such integer is found, then jumps to [default] label. *)
   val switch : Value.t -> Value.t -> (Value.t * Value.t) list -> Ollvm_ast.instr
 
+  (** [indirectbr addr possibles] returns the corresponding indirectbr
+      instruction. [addr] is the address where to jump, [possibles] is
+      the full set of values that can take [addr]. *)
+  val indirectbr : Value.t -> Value.t list -> Ollvm_ast.instr
+
   (** [ret val] returns [val]. *)
   val ret : Value.t -> Ollvm_ast.instr
 
