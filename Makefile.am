@@ -16,6 +16,10 @@ doc:
 	make -C src/ollvm doc
 	make -C src/ollvm_llvmgateway doc
 
+clean:
+	make -C src/ollvm clean
+	make -C src/ollvm_llvmgateway clean
+
 else
 
 all:
@@ -23,6 +27,9 @@ all:
 
 uninstall:
 	make -C src/ollvm uninstall
+
+clean:
+	make -C src/ollvm clean
 
 doc:
 	make -C src/ollvm doc

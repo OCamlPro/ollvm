@@ -473,8 +473,6 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-clean: clean-am
-
 clean-am: clean-generic mostlyclean-am
 
 distclean: distclean-am
@@ -575,11 +573,18 @@ uninstall-am:
 @BUILD_LLVMGATEWAY_TRUE@	make -C src/ollvm doc
 @BUILD_LLVMGATEWAY_TRUE@	make -C src/ollvm_llvmgateway doc
 
+@BUILD_LLVMGATEWAY_TRUE@clean:
+@BUILD_LLVMGATEWAY_TRUE@	make -C src/ollvm clean
+@BUILD_LLVMGATEWAY_TRUE@	make -C src/ollvm_llvmgateway clean
+
 @BUILD_LLVMGATEWAY_FALSE@all:
 @BUILD_LLVMGATEWAY_FALSE@	make -C src/ollvm
 
 @BUILD_LLVMGATEWAY_FALSE@uninstall:
 @BUILD_LLVMGATEWAY_FALSE@	make -C src/ollvm uninstall
+
+@BUILD_LLVMGATEWAY_FALSE@clean:
+@BUILD_LLVMGATEWAY_FALSE@	make -C src/ollvm clean
 
 @BUILD_LLVMGATEWAY_FALSE@doc:
 @BUILD_LLVMGATEWAY_FALSE@	make -C src/ollvm doc
