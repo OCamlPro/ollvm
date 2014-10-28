@@ -1,4 +1,12 @@
 open Format
+
+(* Backward compatibility with 4.01.0 *)
+let rec pp_print_list ?(pp_sep = Format.pp_print_cut) pp_v ppf = function
+| [] -> ()
+| v :: vs ->
+    pp_v ppf v; if vs <> [] then (pp_sep ppf ();
+                                  pp_print_list ~pp_sep pp_v ppf vs)
+
 open Ollvm_ast
 
 type t = { local: int ref * (int, int) Hashtbl.t;
