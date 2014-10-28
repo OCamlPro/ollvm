@@ -1,4 +1,4 @@
-= ollvm 0.99 =
+# ollvm 0.99
 
 ollvm library offers an interface to manipulate LLVM IR in pure OCaml.
 LLVM already provides binding to its C API, but it still mainly imperative
@@ -10,14 +10,15 @@ to make LLVM IR writing pleasant.
 
 You may also want to use LLVM IR, but not the whole LLVM compiler
 infrastructure. ollvm allows you to stay independent from llvm library.
-You *may* want to bind you code to official bindings with the provided
-gateway, but you *do not have to*. Make your optimization passes, use
+You **may** want to bind you code to official bindings with the provided
+gateway, but you **do not have to**. Make your optimization passes, use
 your own back-end if you please.
 
-=== Ez interface utilisation example ===
+### Ez interface utilisation example
 
 Input program:
-```
+
+```ocaml
 open Ollvm.Ez.Value
 open Ollvm.Ez.Instr
 open Ollvm.Ez.Block
@@ -60,6 +61,7 @@ let _ =
 ```
 
 Output:
+
 ```
 ; ModuleID = 'name'
 target triple = "x86_64-pc-linux-gnu"
@@ -79,34 +81,34 @@ else:
 }
 ```
 
-=== Ressources ===
+### Ressources
 
-- [[http://www.github.com/OCamlPro/ollvm << ollvm on Github]]: latest sources
+* [Ollvm on Github](http://www.github.com/OCamlPro/ollvm): latest sources
   in the official GIT repository.
-- [[http://llvm.org/ << Official LLVM website]]: more details on LLVM and
+* [Official LLVM website](http://llvm.org/): more details on LLVM and
   its itermediate representation specification.
-- [[http://sagotch.github.io/ollvm << Online documentation]]
+* [Online documentation](http://sagotch.github.io/ollvm)
 
-=== Install ===
+### Install
 
-- Via opam: `` opam install ollvm ``
-- From source: `` ./configure && make && [sudo] make install ``
+* Via opam: ` opam install ollvm `
+* From source: ` ./configure && make && [sudo] make install `
 
-=== Limitations ===
+### Limitations
 
 Ollvm is still work in progress.
 
-- Parser misses some LLVM IR features (e.g. metadata attached to
+* Parser misses some LLVM IR features (e.g. metadata attached to
   instructions).
-- Ollvm does not checks types of your instruction, nor it ensures
+* Ollvm does not checks types of your instruction, nor it ensures
   SSA form (i.e. you can write wrong LLVM IR).
   It *may* ensure good typing (statically) of your LLVM code in futur.
 
-=== Known bugs ===
+### Known bugs
 
-- ``Ez`` / ``Printer`` modules:
-  -- Unnamed labels are not correctly printed with.
-  -- Unnamed function arguments are printed in prototypes while they
+* `Ez` / `Printer` modules:
+  * Unnamed labels are not correctly printed with.
+  * Unnamed function arguments are printed in prototypes while they
      should not.
 
 Note that passing though Llvmgateway and printing with official
