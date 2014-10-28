@@ -25,6 +25,9 @@ else
 all:
 	make -C src/ollvm
 
+install:
+	make -C src/ollvm install
+
 uninstall:
 	make -C src/ollvm uninstall
 

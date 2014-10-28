@@ -445,7 +445,6 @@ check-am: all-am
 check: check-am
 all-am: Makefile
 installdirs:
-@BUILD_LLVMGATEWAY_FALSE@install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
 
@@ -580,6 +579,9 @@ uninstall-am:
 
 @BUILD_LLVMGATEWAY_FALSE@all:
 @BUILD_LLVMGATEWAY_FALSE@	make -C src/ollvm
+
+@BUILD_LLVMGATEWAY_FALSE@install:
+@BUILD_LLVMGATEWAY_FALSE@	make -C src/ollvm install
 
 @BUILD_LLVMGATEWAY_FALSE@uninstall:
 @BUILD_LLVMGATEWAY_FALSE@	make -C src/ollvm uninstall
