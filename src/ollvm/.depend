@@ -1,9 +1,20 @@
-ollvm_ez.cmi : ollvm_ast.cmo
-ollvm_ast.cmo :
-ollvm_ast.cmx :
-ollvm_ez.cmo : ollvm_ast.cmo ollvm_ez.cmi
+ollvm.cmi : ollvm_printer.cmi ollvm_lexer.cmi ollvm_ez.cmi ollvm_ast.cmi
+ollvm_ast.cmi :
+ollvm_ez.cmi : ollvm_ast.cmi
+ollvm_lexer.cmi : ollvm_ast.cmi
+ollvm_parser.cmi : ollvm_ast.cmi
+ollvm_printer.cmi : ollvm_ast.cmi
+ollvm.cmo : ollvm_printer.cmi ollvm_lexer.cmi ollvm_ez.cmi ollvm_ast.cmi \
+    ollvm.cmi
+ollvm.cmx : ollvm_printer.cmx ollvm_lexer.cmx ollvm_ez.cmx ollvm_ast.cmx \
+    ollvm.cmi
+ollvm_ast.cmo : ollvm_ast.cmi
+ollvm_ast.cmx : ollvm_ast.cmi
+ollvm_ez.cmo : ollvm_ast.cmi ollvm_ez.cmi
 ollvm_ez.cmx : ollvm_ast.cmx ollvm_ez.cmi
-ollvm.cmo : ollvm_printer.cmo ollvm_ez.cmi ollvm_ast.cmo
-ollvm.cmx : ollvm_printer.cmx ollvm_ez.cmx ollvm_ast.cmx
-ollvm_printer.cmo : ollvm_ast.cmo
-ollvm_printer.cmx : ollvm_ast.cmx
+ollvm_lexer.cmo : ollvm_parser.cmi ollvm_lexer.cmi
+ollvm_lexer.cmx : ollvm_parser.cmx ollvm_lexer.cmi
+ollvm_parser.cmo : ollvm_ast.cmi ollvm_parser.cmi
+ollvm_parser.cmx : ollvm_ast.cmx ollvm_parser.cmi
+ollvm_printer.cmo : ollvm_ast.cmi ollvm_printer.cmi
+ollvm_printer.cmx : ollvm_ast.cmx ollvm_printer.cmi

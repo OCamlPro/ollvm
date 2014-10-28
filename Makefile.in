@@ -590,6 +590,9 @@ uninstall-am:
 @BUILD_LLVMGATEWAY_FALSE@doc:
 @BUILD_LLVMGATEWAY_FALSE@	make -C src/ollvm doc
 
+README: README.md
+	cp -f README.md README
+
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

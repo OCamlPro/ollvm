@@ -23,8 +23,28 @@ fi
 
 MAJOR=`echo "$OCAMLVERSION" | cut -d. -f1`
 MINOR=`echo "$OCAMLVERSION" | cut -d. -f2`
+if test "$MAJOR" -lt 4 || (test "$MAJOR" -eq 4 && test "$MINOR" -lt 01) ; then
+  AC_MSG_ERROR([ocaml 4.01 or higher is required.])
+fi
+
 if test "$MAJOR" -lt 4 || (test "$MAJOR" -eq 4 && test "$MINOR" -lt 02) ; then
-  AC_MSG_ERROR([ocaml 4.02 or higher is required.])
+
+cat <<EOF > src/ollvm/ollvm.mli
+module Ast : module type of Ollvm_ast
+module Lexer : module type of Ollvm_lexer
+module Printer : module type of Ollvm_printer
+module Ez : module type of Ollvm_ez
+EOF
+
+else 
+
+cat <<EOF > src/ollvm/ollvm.mli
+module Ast = Ollvm_ast
+module Lexer = Ollvm_lexer
+module Printer = Ollvm_printer
+module Ez = Ollvm_ez
+EOF
+
 fi
 
 # ocamlfind

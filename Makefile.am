@@ -35,3 +35,6 @@ doc:
 	make -C src/ollvm doc
 
 endif
+
+README: README.md
+	cp -f README.md README

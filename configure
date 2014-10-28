@@ -2417,6 +2417,7 @@ END
   fi
 fi
 
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable maintainer-specific portions of Makefiles" >&5
 $as_echo_n "checking whether to enable maintainer-specific portions of Makefiles... " >&6; }
     # Check whether --enable-maintainer-mode was given.
@@ -4510,8 +4511,28 @@ fi
 
 MAJOR=`echo "$OCAMLVERSION" | cut -d. -f1`
 MINOR=`echo "$OCAMLVERSION" | cut -d. -f2`
+if test "$MAJOR" -lt 4 || (test "$MAJOR" -eq 4 && test "$MINOR" -lt 01) ; then
+  as_fn_error $? "ocaml 4.01 or higher is required." "$LINENO" 5
+fi
+
 if test "$MAJOR" -lt 4 || (test "$MAJOR" -eq 4 && test "$MINOR" -lt 02) ; then
-  as_fn_error $? "ocaml 4.02 or higher is required." "$LINENO" 5
+
+cat <<EOF > src/ollvm/ollvm.mli
+module Ast : module type of Ollvm_ast
+module Lexer : module type of Ollvm_lexer
+module Printer : module type of Ollvm_printer
+module Ez : module type of Ollvm_ez
+EOF
+
+else
+
+cat <<EOF > src/ollvm/ollvm.mli
+module Ast = Ollvm_ast
+module Lexer = Ollvm_lexer
+module Printer = Ollvm_printer
+module Ez = Ollvm_ez
+EOF
+
 fi
 
 # ocamlfind
