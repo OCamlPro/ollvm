@@ -10,3 +10,5 @@
 /src/ollvm/ollvm_lexer.ml
 /src/ollvm/ollvm_parser.ml
 /src/ollvm/ollvm_parser.mli
+/src/ollvm/ollvm.mli
+*~
