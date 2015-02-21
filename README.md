@@ -36,7 +36,7 @@ let _ =
   (* variables declaration *)
   let (m, x0) =
     M.local m T.i1 "" in
-  let (m, [x1; x2; x3; arg]) =
+  let (m, [x1; x2; x3; x4]) =
     M.locals m T.i32 [""; ""; ""; ""] in
   let (m, [entry_b; then_b; else_b]) =
     M.locals m T.label ["entry"; "then"; "else" ] in
