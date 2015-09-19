@@ -1,4 +1,5 @@
 version = "0.99"
 description = "Convert Ollvm AST to Llvm AST."
+requires = "llvm"
 archive(byte) = "ollvm_llvmgateway.cma"
 archive(native) = "ollvm_llvmgateway.cmxa"
